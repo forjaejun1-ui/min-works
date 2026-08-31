@@ -12,11 +12,11 @@
   "theme_color": "#101311",
   "categories": ["business", "productivity"],
   "icons": [
-    {"src": "assets/icons/min-works-v3-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
-    {"src": "assets/icons/min-works-v3-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+    {"src": "assets/icons/min-works-v4-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "assets/icons/min-works-v4-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
   ],
   "shortcuts": [
-    {"name": "공사일보", "short_name": "일보", "url": "./#daily", "icons": [{"src": "assets/icons/min-works-v3-192.png", "sizes": "192x192"}]},
-    {"name": "현장", "short_name": "현장", "url": "./#sites", "icons": [{"src": "assets/icons/min-works-v3-192.png", "sizes": "192x192"}]}
+    {"name": "공사일보", "short_name": "일보", "url": "./#daily", "icons": [{"src": "assets/icons/min-works-v4-192.png", "sizes": "192x192"}]},
+    {"name": "현장", "short_name": "현장", "url": "./#sites", "icons": [{"src": "assets/icons/min-works-v4-192.png", "sizes": "192x192"}]}
   ]
 }
