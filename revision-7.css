@@ -44,20 +44,110 @@
 @media(min-width:701px) {
   body.force-galaxy main { width: min(430px,100%); }
   body.force-iphone main { width: min(390px,100%); }
-  body.force-fold { background: #e8ebe5; }
+  body.force-fold { background: #e8ebe5; overflow-x: hidden; }
   body.force-fold .sidebar { display: none; }
   body.force-fold main { width: min(884px,100%); min-height: 100vh; margin: 0 auto; padding: 24px 22px 96px; background: #f3f5f1; box-shadow: 0 0 34px #0001; }
   body.force-fold .desktop-only { display: none !important; }
-  body.force-fold .mobile-nav { display: flex; }
-  body.force-fold .current-site { display: flex; }
-  body.force-fold .mobile-focus { display: flex; }
+  body.force-fold .mobile-nav {
+    position: fixed;
+    display: flex;
+    z-index: 20;
+    left: 50%;
+    right: auto;
+    bottom: 0;
+    width: min(884px,100%);
+    height: 76px;
+    transform: translateX(-50%);
+    background: #fff;
+    border-top: 1px solid var(--line);
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 18px 5px;
+  }
+  body.force-fold .mobile-nav button {
+    min-width: 76px;
+    border: 0;
+    background: none;
+    color: #8a96a4;
+    font-size: 11px;
+    display: grid;
+    gap: 4px;
+    place-items: center;
+  }
+  body.force-fold .mobile-nav button span { font-size: 21px; }
+  body.force-fold .mobile-nav button.active { color: #659600; font-weight: 800; }
+  body.force-fold .mobile-nav .fab {
+    width: 58px;
+    height: 58px;
+    min-width: 58px;
+    margin-top: -34px;
+    border-radius: 50%;
+    color: #111;
+    background: #7fbc03;
+    box-shadow: 0 7px 18px rgba(127,188,3,.35);
+  }
+  body.force-fold .mobile-nav .fab span { font-size: 27px; }
+  body.force-fold .current-site {
+    display: flex;
+    width: 100%;
+    min-height: 66px;
+    border: 1px solid var(--line);
+    background: #fff;
+    border-radius: 14px;
+    padding: 13px 17px;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    text-align: left;
+  }
+  body.force-fold .current-site>span:first-child { color: #7fbc03; }
+  body.force-fold .current-site>span:nth-child(2) { flex: 1; min-width: 0; }
+  body.force-fold .current-site small,
+  body.force-fold .current-site b { display: block; }
+  body.force-fold .current-site small { color: #999; font-size: 10px; }
+  body.force-fold .current-site b { margin-top: 3px; font-size: 14px; }
+  body.force-fold .current-site em { color: #659600; font-size: 11px; font-style: normal; font-weight: 700; }
+  body.force-fold .mobile-focus {
+    display: flex;
+    width: 100%;
+    min-height: 142px;
+    margin-bottom: 17px;
+    padding: 23px 25px;
+    border-radius: 18px;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+    overflow: hidden;
+  }
+  body.force-fold .mobile-focus>div { flex: 1 1 auto; min-width: 0; }
+  body.force-fold .mobile-focus h2 { margin: 10px 0 7px; font-size: 25px; line-height: 1.18; }
+  body.force-fold .mobile-focus p { margin: 0; font-size: 12px; line-height: 1.45; white-space: normal; }
+  body.force-fold .mobile-focus .today-label { font-size: 11px; }
+  body.force-fold .mobile-focus button {
+    flex: 0 0 112px;
+    width: 112px;
+    min-height: 92px;
+    padding: 13px 11px;
+    border: 0;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: 800;
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: 6px;
+  }
+  body.force-fold .mobile-focus button span { font-size: 25px; }
   body.force-fold .summary-grid { display: none; }
   body.force-fold .content-grid { grid-template-columns: 1.15fr .85fr; }
+  body.force-fold .content-grid>* { min-width: 0; }
+  body.force-fold .sites-panel,
+  body.force-fold .today-panel { min-width: 0; }
   body.force-fold .quick-grid { grid-template-columns: repeat(4,1fr); }
   body.force-fold .calendar-layout { grid-template-columns: .85fr 1.15fr; }
   body.force-fold .home-event-list { grid-template-columns: 1fr; }
   body.force-fold .topbar { flex-wrap: wrap; gap: 12px; }
-  body.force-fold .top-actions { flex: 1; justify-content: flex-end; }
+  body.force-fold .top-actions { flex: 1; justify-content: flex-end; flex-wrap: wrap; }
 }
 
 @media(max-width:700px) {

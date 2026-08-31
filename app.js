@@ -1,6 +1,6 @@
 const views = document.querySelectorAll('.view');
 const navButtons = document.querySelectorAll('[data-view]');
-const titles = {dashboard:'좋은 아침입니다, 재준님',sites:'현장 관리',daily:'공사일보',finance:'자금 현황',issues:'이슈 관리',calendar:'회사 일정',settings:'사용자 설정'};
+const titles = {dashboard:'좋은 아침입니다, 재준님',sites:'현장 관리',daily:'공사일보',finance:'자금 현황',issues:'이슈 관리',calendar:'회사 일정',settings:'사용자 설정',help:'앱 사용법'};
 function showView(name){views.forEach(v=>v.classList.toggle('active',v.id===name+'View'));navButtons.forEach(b=>b.classList.toggle('active',b.dataset.view===name));document.getElementById('pageTitle').textContent=titles[name];window.scrollTo({top:0,behavior:'smooth'});}
 
 // 서울 시간 기준 인사말 (날씨 값은 Google Weather API 연결 지점)
@@ -65,11 +65,14 @@ document.getElementById('modalClose').addEventListener('click',()=>modal.classLi
 document.getElementById('createSite').addEventListener('click',()=>{
   const name=document.getElementById('newSiteName').value.trim(),type=document.getElementById('newSiteType').value;
   if(!name){notify('현장명을 입력해주세요.');return}
+  const startDate=document.getElementById('newSiteStart').value,endDate=document.getElementById('newSiteEnd').value;
+  if(!startDate||!endDate){notify('착공일과 준공일을 모두 입력해주세요.');return}
+  if(endDate<startDate){notify('준공일은 착공일보다 빠를 수 없습니다.');return}
   const amount=parseMoneyInput(document.getElementById('newSiteAmount').value),extra=parseMoneyInput(document.getElementById('newSiteExtraAmount').value);
   const card=document.createElement('article');card.className='site-card';card.dataset.site=name;card.dataset.amount=amount;card.dataset.extraAmount=extra;card.tabIndex=0;card.innerHTML=`<div class="site-color green"></div><div class="site-main"><div class="site-top"><span class="tag">${type}</span><span>신규</span></div><h3>${name}</h3><p>공사금액 ${won(amount)} · 추가 예상 ${won(extra)}</p><div class="progress-row"><div class="progress"><i style="width:0%"></i></div><b>0%</b></div></div>`;
   document.querySelector('.site-list').prepend(card);attachHomeSiteCard(card);
-  const row=document.createElement('div');row.className='table-row site-table-row';row.dataset.siteRow=name;row.innerHTML=`<span><b>${name}</b><small>${type} · 공사금액 ${won(amount)}</small></span><span class="site-manager">일보 미등록</span><button class="progress-edit" data-progress="0"><div class="inline-progress"><i style="width:0%"></i></div><b>0%</b><span class="material-symbols-rounded">edit</span></button><button class="recent-report-link" data-report-site="${name}">일보 없음</button><span><em class="status ok">신규</em></span>`;
-  document.querySelector('.site-table').appendChild(row);attachRecentReportLink(row.querySelector('.recent-report-link'));
+  const row=document.createElement('div');row.className='table-row site-table-row';row.dataset.siteRow=name;row.dataset.startDate=startDate;row.dataset.endDate=endDate;row.innerHTML=`<span><b>${name}</b><small>${type} · ${startDate} ~ ${endDate}</small></span><span class="site-manager">일보 미등록</span><button class="progress-edit" data-progress="0"><div class="inline-progress"><i style="width:0%"></i></div><b>0%</b><span class="material-symbols-rounded">edit</span></button><button class="recent-report-link" data-report-site="${name}">일보 없음</button><span><em class="status ok">신규</em></span>`;
+  document.querySelector('.site-table').appendChild(row);attachRecentReportLink(row.querySelector('.recent-report-link'));window.refreshProjectStatuses?.();
   ['issueSite','paymentSite','receivableSite'].forEach(id=>{const option=document.createElement('option');option.textContent=name;document.getElementById(id)?.appendChild(option)});
   const dailySite=document.querySelector('#dailyForm select');if(dailySite){const option=document.createElement('option');option.textContent=name;dailySite.appendChild(option)}
   let budgets=document.getElementById('siteBudgetSummary');if(!budgets){budgets=document.createElement('section');budgets.id='siteBudgetSummary';budgets.className='site-budget-summary';budgets.innerHTML='<div class="panel-head"><div><p class="eyebrow">SITE BUDGET</p><h2>현장 계약금액</h2></div></div>';document.querySelector('.finance-tabs').before(budgets)}
@@ -281,7 +284,7 @@ function syncSettingsUI(){document.querySelectorAll('[data-setting]').forEach(g=
 document.querySelectorAll('[data-settings-group]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-settings-group]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('[data-settings-panel]').forEach(x=>x.classList.toggle('active',x.dataset.settingsPanel===b.dataset.settingsGroup));}));
 document.querySelectorAll('[data-setting] button').forEach(b=>b.addEventListener('click',()=>{userSettings[b.parentElement.dataset.setting]=b.dataset.value;syncSettingsUI();saveUserSettings();}));
 document.querySelectorAll('[data-toggle-setting]').forEach(i=>i.addEventListener('change',()=>{userSettings[i.dataset.toggleSetting]=i.checked;saveUserSettings();}));document.querySelectorAll('[data-select-setting]').forEach(i=>i.addEventListener('change',()=>{userSettings[i.dataset.selectSetting]=i.value;saveUserSettings();}));document.querySelectorAll('[data-input-setting]').forEach(i=>i.addEventListener('change',()=>{userSettings[i.dataset.inputSetting]=i.value;saveUserSettings();}));
-document.getElementById('resetSettings').addEventListener('click',()=>{userSettings={...settingDefaults};syncSettingsUI();saveUserSettings();});document.getElementById('exportMySettings').addEventListener('click',()=>notify('내 설정 파일을 준비했습니다. 실제 계정 저장은 서버 연결 후 활성화됩니다.'));
+document.getElementById('resetSettings').addEventListener('click',()=>{userSettings={...settingDefaults};syncSettingsUI();saveUserSettings();});
 syncSettingsUI();applyUserSettings();
 
 // 자금 현황 탭
