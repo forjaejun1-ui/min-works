@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#08111f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>WiFi Drive</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icon.svg" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <img class="logo" src="icon.svg" alt="WiFi Drive" />
+      <div><p class="eyebrow">TESLA OTA WIFI</p><h1>WiFi Drive</h1><p class="sub">차 세우고 업데이트하기 좋은 무료 와이파이 찾기</p></div>
+    </header>
+
+    <section class="search-card">
+      <button id="nearBtn" class="primary">📍 내 주변 와이파이 찾기</button>
+      <div class="row">
+        <input id="query" type="search" placeholder="지역·장소 검색 (예: 시흥, 목감, 휴게소)" />
+        <button id="searchBtn">검색</button>
+      </div>
+      <div class="chips">
+        <button data-radius="1">1km</button><button data-radius="3" class="active">3km</button><button data-radius="5">5km</button><button data-radius="10">10km</button>
+      </div>
+      <p id="status" class="status">데이터 확인 중…</p>
+    </section>
+
+    <section class="toolbar"><strong id="count">0곳</strong><span>가까운 순</span></section>
+    <section id="results" class="results"></section>
+
+    <section id="emptyData" class="empty hidden">
+      <h2>와이파이 데이터만 넣으면 완성 ✨</h2>
+      <p>같은 폴더의 <b>wifi.csv</b>를 읽도록 만들어뒀어. 전국 무료와이파이 CSV를 한 번 넣으면 그 뒤로는 앱만 열면 돼.</p>
+      <a class="secondary" href="https://thininfo.com/tesla-ota-wifi-map/" target="_blank" rel="noopener">지금은 원본 검색기 열기</a>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
