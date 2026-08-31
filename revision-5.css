@@ -1,0 +1,56 @@
+/* Revision 5: usable PC calendar, responsive view control and connected actions */
+.view-mode-toggle{display:flex;padding:3px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.view-mode-toggle button{border:0;background:transparent;border-radius:7px;padding:7px 9px;font-size:9px;font-weight:800;color:#8a8d87}
+.view-mode-toggle button.active{background:#222;color:#fff}
+.site-card{cursor:pointer;transition:border-color .18s,background .18s,transform .18s}
+.site-card:hover{transform:translateY(-1px)}
+.site-card:focus-visible{outline:3px solid color-mix(in srgb,var(--accent,#7fbc03) 35%,transparent);outline-offset:2px}
+.site-table-row.focused-site{outline:3px solid color-mix(in srgb,var(--accent,#7fbc03) 28%,transparent);background:#fbfff5}
+.recent-report-link{border:0;background:transparent;color:#557d0a;text-decoration:underline;text-underline-offset:3px;font:inherit;text-align:left;cursor:pointer;padding:6px 0}
+.recent-report-link:hover{color:#222}
+.money-pair{margin-top:14px}.money-pair label{margin-top:0}.money-help{font-size:9px;color:#81867c;margin:8px 0 0}
+.site-budget-summary{display:grid;gap:8px;margin-bottom:12px}.site-budget-summary .panel-head{margin-bottom:2px}.site-budget-summary article{display:grid;grid-template-columns:1.3fr 1fr 1fr auto;gap:14px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:11px;padding:14px}.site-budget-summary b,.site-budget-summary small{display:block}.site-budget-summary small{font-size:8px;color:#92968d;margin-top:4px}.site-budget-summary span{font-size:9px;color:#777}.site-budget-summary strong{display:block;color:#222;font-size:11px;margin-top:3px}.site-budget-summary em{font-size:10px;font-style:normal;font-weight:800;color:#557d0a}
+.notice-urgent-off .summary-card .danger,.notice-urgent-off .issue-label{opacity:.35}.notice-approval-off .approval-panel{display:none}.notice-money-off .finance-summary small{opacity:.35}.notice-calendar-off .month-grid b:after{display:none}
+
+@media(min-width:901px){
+  .calendar-layout{grid-template-columns:minmax(500px,1.25fr) minmax(360px,.75fr);gap:18px}
+  .mini-month,.calendar-agenda{padding:25px}
+  .mini-month header h3{font-size:18px}.mini-month header button{font-size:21px}
+  .weekdays{font-size:11px;margin:20px 0 9px}.month-grid{gap:6px}
+  .month-grid b,.month-grid i{height:52px;font-size:14px;border-radius:14px}
+  .month-grid .today{border-radius:14px}.month-grid .has-business:after,.month-grid .has-attendance:after,.month-grid .has-both:after{bottom:6px}
+  .agenda-head h3{font-size:18px}.agenda-head>span{font-size:10px}
+  .agenda-date{margin-top:20px}.agenda-date h4{font-size:12px;margin-bottom:9px}
+  .agenda-event{padding:13px 11px;grid-template-columns:7px 42px 1fr 20px;gap:10px}
+  .agenda-event time{font-size:11px}.agenda-event b{font-size:13px}.agenda-event small{font-size:10px}
+  .home-calendar-panel{padding:25px}.home-calendar-panel h2{font-size:20px}
+  .home-event-list{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  .home-event{padding:14px;grid-template-columns:46px 1fr auto}.home-event time{width:44px;height:48px}
+  .home-event time b{font-size:18px}.home-event time small,.home-event>em{font-size:10px}.home-event>div>b{font-size:12px}.event-type{font-size:9px}
+}
+
+/* 글자 크기 설정이 px 기반 화면에서도 실제로 보이도록 전체 업무 영역을 확대/축소 */
+body.font-small main{zoom:.92}body.font-large main{zoom:1.10}
+@media(max-width:700px){body.font-small main{zoom:.96}body.font-large main{zoom:1.04}}
+
+/* PC에서 모바일 작업 화면을 미리 보고 사용할 수 있는 수동 모드 */
+@media(min-width:701px){
+  body.force-mobile{background:#e8ebe5}
+  body.force-mobile .sidebar{display:none}
+  body.force-mobile main{margin:0 auto;width:min(430px,100%);padding:20px 16px 96px;background:#f3f5f7;min-height:100vh;box-shadow:0 0 30px #0001}
+  body.force-mobile .desktop-only{display:none!important}
+  body.force-mobile .mobile-nav{display:flex}
+  body.force-mobile .summary-grid{display:none}
+  body.force-mobile .content-grid{display:flex;flex-direction:column}
+  body.force-mobile .today-panel{order:1;margin-top:0}
+  body.force-mobile .sites-panel{order:2;margin-top:12px}
+  body.force-mobile .mobile-focus{display:flex}
+  body.force-mobile .current-site{display:flex}
+  body.force-mobile .calendar-layout{grid-template-columns:1fr}
+  body.force-mobile .home-event-list{grid-template-columns:1fr}
+  body.force-mobile .topbar h1{font-size:19px}
+  body.force-mobile .weather-pill{display:none}
+  body.force-mobile .site-table .table-head{display:none}
+  body.force-mobile .site-table-row{grid-template-columns:1fr auto}
+}
+@media(max-width:700px){.view-mode-toggle{display:none}.calendar-layout{grid-template-columns:1fr}.mini-month,.calendar-agenda{padding:17px}.home-event-list{grid-template-columns:1fr}.home-event{padding:12px}.money-pair{grid-template-columns:1fr}.site-budget-summary article{grid-template-columns:1fr 1fr}.site-budget-summary article>div,.site-budget-summary article>em{grid-column:1/-1}}

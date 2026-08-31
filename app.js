@@ -26,27 +26,29 @@ document.getElementById('openDailyEditor').addEventListener('click',openDailyEdi
 document.getElementById('closeDailyEditor').addEventListener('click',closeDailyEditor);
 document.getElementById('dailyForm').addEventListener('submit',e=>{
   e.preventDefault();
+  if(userSettings.photoWarning&&!document.querySelector('#tbmPreview .uploaded-photo, #progressPreview .uploaded-photo')){notify('사진 누락 알림: TBM 또는 현장 사진을 1장 이상 추가해주세요.');return}
   const site=e.currentTarget.querySelector('select').value.replace(' 학생식당','');
   const date=e.currentTarget.querySelector('input[type=date]').value;
   const processes=[...document.querySelectorAll('#processRows .process-row')].filter(r=>r.querySelector('input').value.trim());
   const people=processes.reduce((sum,r)=>sum+(Number(r.querySelector('input[type=number]').value)||0),0);
   const card=document.createElement('button');card.className='report-card';card.dataset.author=currentUser;card.dataset.site=site;
   card.innerHTML=`<span class="report-file-icon"><span class="material-symbols-rounded">description</span></span><div><small>${site}</small><b>${Number(date.slice(5,7))}월 ${Number(date.slice(8,10))}일 공사일보</b><p>공정 ${processes.length}개 · 작업인원 ${people}명 · 작성 완료</p></div><div class="report-author"><span>작성자</span><b>${currentUser} 부장</b><em class="owner-mark">내 일보</em></div><span class="report-status">작성 완료</span>`;
-  document.getElementById('todayReports').prepend(card);attachReportCard(card);renderCardCheckSummaries();
-  notify('공사일보가 날짜별 목록에 추가되었습니다.');closeDailyEditor();
+  card.dataset.createdAt=new Date().toISOString();document.getElementById('todayReports').prepend(card);attachReportCard(card);renderCardCheckSummaries();updateSiteManagersFromReports();updateRecentReportLinks();
+  notify('공사일보가 날짜별 목록에 추가되었습니다.');closeDailyEditor();if(userSettings.openAfterSubmit)setTimeout(()=>card.click(),250);
 });
 document.getElementById('photoBtn').addEventListener('click',()=>notify('카메라 기능은 정식 버전에서 연결됩니다.'));
 const tbmGalleryInput=document.getElementById('tbmGalleryInput');
 const tbmCameraInput=document.getElementById('tbmCameraInput');
 const progressGalleryInput=document.getElementById('progressGalleryInput');
-document.getElementById('tbmGalleryBtn').addEventListener('click',()=>tbmGalleryInput.click());
-document.getElementById('tbmCameraBtn').addEventListener('click',()=>tbmCameraInput.click());
-document.getElementById('progressPhotoAdd').addEventListener('click',()=>progressGalleryInput.click());
+function openPhotoPicker(input){const connection=navigator.connection||navigator.mozConnection||navigator.webkitConnection;if(userSettings?.wifiOnly&&connection?.type&&connection.type!=='wifi'){notify('Wi‑Fi에서만 사진 업로드하도록 설정되어 있습니다.');return}input.click()}
+document.getElementById('tbmGalleryBtn').addEventListener('click',()=>openPhotoPicker(tbmGalleryInput));
+document.getElementById('tbmCameraBtn').addEventListener('click',()=>openPhotoPicker(tbmCameraInput));
+document.getElementById('progressPhotoAdd').addEventListener('click',()=>openPhotoPicker(progressGalleryInput));
 function addPhotoPreviews(input,containerId,countId,type){
   const container=document.getElementById(containerId);
   [...input.files].forEach(file=>{
     const card=document.createElement('div');card.className='uploaded-photo';card.style.backgroundImage=`url(${URL.createObjectURL(file)})`;
-    card.innerHTML=`<button type="button">×</button><small>${type} · 방금 전</small>`;
+    card.innerHTML=`<button type="button">×</button><small>${type} · ${userSettings?.photoQuality||'고화질'} · 방금 전</small>`;
     card.querySelector('button').addEventListener('click',()=>{card.remove();updatePhotoCount(containerId,countId)});
     container.appendChild(card);
   });
@@ -59,7 +61,20 @@ progressGalleryInput.addEventListener('change',()=>addPhotoPreviews(progressGall
 const modal=document.getElementById('modal');
 ['newSiteBtn','newSiteBtn2'].forEach(id=>document.getElementById(id).addEventListener('click',()=>modal.classList.add('show')));
 document.getElementById('modalClose').addEventListener('click',()=>modal.classList.remove('show'));
-document.getElementById('createSite').addEventListener('click',()=>{modal.classList.remove('show');notify('새 현장이 생성되었습니다.')});
+document.getElementById('createSite').addEventListener('click',()=>{
+  const name=document.getElementById('newSiteName').value.trim(),type=document.getElementById('newSiteType').value;
+  if(!name){notify('현장명을 입력해주세요.');return}
+  const amount=parseMoneyInput(document.getElementById('newSiteAmount').value),extra=parseMoneyInput(document.getElementById('newSiteExtraAmount').value);
+  const card=document.createElement('article');card.className='site-card';card.dataset.site=name;card.dataset.amount=amount;card.dataset.extraAmount=extra;card.tabIndex=0;card.innerHTML=`<div class="site-color green"></div><div class="site-main"><div class="site-top"><span class="tag">${type}</span><span>신규</span></div><h3>${name}</h3><p>공사금액 ${won(amount)} · 추가 예상 ${won(extra)}</p><div class="progress-row"><div class="progress"><i style="width:0%"></i></div><b>0%</b></div></div>`;
+  document.querySelector('.site-list').prepend(card);attachHomeSiteCard(card);
+  const row=document.createElement('div');row.className='table-row site-table-row';row.dataset.siteRow=name;row.innerHTML=`<span><b>${name}</b><small>${type} · 공사금액 ${won(amount)}</small></span><span class="site-manager">일보 미등록</span><button class="progress-edit" data-progress="0"><div class="inline-progress"><i style="width:0%"></i></div><b>0%</b><span class="material-symbols-rounded">edit</span></button><button class="recent-report-link" data-report-site="${name}">일보 없음</button><span><em class="status ok">신규</em></span>`;
+  document.querySelector('.site-table').appendChild(row);attachRecentReportLink(row.querySelector('.recent-report-link'));
+  ['issueSite','paymentSite','receivableSite'].forEach(id=>{const option=document.createElement('option');option.textContent=name;document.getElementById(id)?.appendChild(option)});
+  const dailySite=document.querySelector('#dailyForm select');if(dailySite){const option=document.createElement('option');option.textContent=name;dailySite.appendChild(option)}
+  let budgets=document.getElementById('siteBudgetSummary');if(!budgets){budgets=document.createElement('section');budgets.id='siteBudgetSummary';budgets.className='site-budget-summary';budgets.innerHTML='<div class="panel-head"><div><p class="eyebrow">SITE BUDGET</p><h2>현장 계약금액</h2></div></div>';document.querySelector('.finance-tabs').before(budgets)}
+  const budget=document.createElement('article');budget.innerHTML=`<div><b>${name}</b><small>${type}</small></div><span>공사금액 <strong>${won(amount)}</strong></span><span>추가 예상 <strong>${won(extra)}</strong></span><em>총 예상 ${won(amount+extra)}</em>`;budgets.appendChild(budget);
+  modal.classList.remove('show');applyExtendedSettings();notify('새 현장과 공사금액을 등록했습니다.');
+});
 modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('show')});
 document.getElementById('newIssue').addEventListener('click',()=>document.getElementById('issueFormModal').classList.add('show'));
 document.querySelectorAll('.filter').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.filter').forEach(x=>x.classList.remove('active'));b.classList.add('active')}));
@@ -217,7 +232,7 @@ document.getElementById('newCalendarEvent').addEventListener('click',()=>notify(
 
 // 사용자 설정: 기기별 자동 저장 및 즉시 반영
 const settingsKey='minWorksUserSettings';
-const settingDefaults={fontSize:'normal',density:'comfortable',accent:'lime',contrast:false,startView:'dashboard',siteCount:'4',weather:true,financeSummary:true,calendarSummary:true,processRows:'5',photoQuality:'고화질',autosave:true,photoWarning:true,openAfterSubmit:false,urgentNotice:true,approvalNotice:true,moneyNotice:true,calendarNotice:true,quietStart:'19:00',quietEnd:'07:00',role:'시공팀장',mySitesFirst:true,hideMoney:false,retention:'1년',wifiOnly:false};
+const settingDefaults={fontSize:'normal',density:'comfortable',accent:'lime',contrast:false,displayMode:'pc',startView:'dashboard',siteCount:'4',weather:true,financeSummary:true,calendarSummary:true,processRows:'5',photoQuality:'고화질',autosave:true,photoWarning:true,openAfterSubmit:false,urgentNotice:true,approvalNotice:true,moneyNotice:true,calendarNotice:true,quietStart:'19:00',quietEnd:'07:00',role:'시공팀장',mySitesFirst:true,hideMoney:false,retention:'1년',wifiOnly:false,selectedSites:['연세대학교','에잇세컨즈','알뜰주유소','힐스테이트']};
 let userSettings={...settingDefaults,...JSON.parse(localStorage.getItem(settingsKey)||'{}')};
 const accentColors={lime:'#7fbc03',blue:'#327ae8',orange:'#ef8d23',charcoal:'#252525'};
 function saveUserSettings(){localStorage.setItem(settingsKey,JSON.stringify(userSettings));applyUserSettings();notify('설정이 저장되었습니다.');}
@@ -225,6 +240,7 @@ function applyUserSettings(){
   document.documentElement.style.setProperty('--accent',accentColors[userSettings.accent]||accentColors.lime);
   document.documentElement.style.setProperty('--green',accentColors[userSettings.accent]||accentColors.lime);
   document.body.classList.toggle('font-small',userSettings.fontSize==='small');document.body.classList.toggle('font-large',userSettings.fontSize==='large');document.body.classList.toggle('density-compact',userSettings.density==='compact');document.body.classList.toggle('high-contrast',!!userSettings.contrast);document.body.classList.toggle('hide-weather',!userSettings.weather);document.body.classList.toggle('hide-finance-summary',!userSettings.financeSummary);document.body.classList.toggle('hide-calendar-summary',!userSettings.calendarSummary);document.body.classList.toggle('hide-money',!!userSettings.hideMoney);
+  applyExtendedSettings();
 }
 function syncSettingsUI(){document.querySelectorAll('[data-setting]').forEach(g=>g.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.value===String(userSettings[g.dataset.setting]))));document.querySelectorAll('[data-toggle-setting]').forEach(i=>i.checked=!!userSettings[i.dataset.toggleSetting]);document.querySelectorAll('[data-select-setting]').forEach(i=>i.value=userSettings[i.dataset.selectSetting]??i.value);document.querySelectorAll('[data-input-setting]').forEach(i=>i.value=userSettings[i.dataset.inputSetting]??i.value);}
 document.querySelectorAll('[data-settings-group]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-settings-group]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('[data-settings-panel]').forEach(x=>x.classList.toggle('active',x.dataset.settingsPanel===b.dataset.settingsGroup));}));
@@ -312,4 +328,56 @@ document.querySelectorAll('.progress-edit').forEach(button=>button.addEventListe
 progressRange.addEventListener('input',()=>document.getElementById('progressValue').textContent=progressRange.value);
 document.getElementById('closeProgressModal').addEventListener('click',()=>progressModal.classList.remove('show'));progressModal.querySelector('.progress-backdrop').addEventListener('click',()=>progressModal.classList.remove('show'));
 document.getElementById('saveProgress').addEventListener('click',()=>{if(!activeProgressButton)return;activeProgressButton.dataset.progress=progressRange.value;activeProgressButton.querySelector('.inline-progress i').style.width=progressRange.value+'%';activeProgressButton.querySelector('b').textContent=progressRange.value+'%';progressModal.classList.remove('show');notify('공정률 변경 이력을 저장했습니다.')});
+
+// Revision 5: 현장 카드, 최근 일보, 담당자, 화면 모드와 설정의 실제 동작
+function parseMoneyInput(value){return Number(String(value||'').replace(/[^0-9]/g,''))||0}
+['newSiteAmount','newSiteExtraAmount'].forEach(id=>document.getElementById(id).addEventListener('input',event=>{const value=parseMoneyInput(event.target.value);event.target.value=value?value.toLocaleString('ko-KR'):''}));
+
+function attachHomeSiteCard(card){
+  const open=()=>{const site=card.dataset.site;showView('sites');document.querySelectorAll('.site-table-row').forEach(row=>row.classList.toggle('focused-site',row.dataset.siteRow===site));const target=document.querySelector(`[data-site-row="${CSS.escape(site)}"]`);target?.scrollIntoView({behavior:'smooth',block:'center'});notify(site+' 현장 상세를 열었습니다.');};
+  card.tabIndex=0;card.setAttribute('role','button');card.setAttribute('aria-label',card.dataset.site+' 현장 상세 열기');card.addEventListener('click',open);card.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();open()}});
+}
+document.querySelectorAll('.site-card').forEach(attachHomeSiteCard);
+
+function updateSiteManagersFromReports(){
+  const latest={};document.querySelectorAll('.report-card').forEach(card=>{if(!latest[card.dataset.site])latest[card.dataset.site]=card.dataset.author});
+  document.querySelectorAll('.site-table-row').forEach(row=>{const manager=latest[row.dataset.siteRow];if(manager)row.querySelector('.site-manager').textContent=manager});
+}
+function updateRecentReportLinks(){
+  document.querySelectorAll('.recent-report-link').forEach(link=>{const card=[...document.querySelectorAll('.report-card')].find(report=>report.dataset.site===link.dataset.reportSite);link.disabled=!card;if(card?.dataset.createdAt)link.textContent='방금 전'});
+}
+function attachRecentReportLink(link){link.addEventListener('click',()=>{const card=[...document.querySelectorAll('.report-card')].find(report=>report.dataset.site===link.dataset.reportSite);if(!card){notify('등록된 공사일보가 없습니다.');return}showView('daily');card.click();});}
+document.querySelectorAll('.recent-report-link').forEach(attachRecentReportLink);updateSiteManagersFromReports();updateRecentReportLinks();
+
+function applyProcessRowCount(){
+  const rows=document.getElementById('processRows'),wanted=Number(userSettings.processRows)||5;
+  while(rows.children.length<wanted)document.getElementById('addProcess').click();
+  while(rows.children.length>wanted&&rows.children.length>1)rows.lastElementChild.remove();
+}
+function applyExtendedSettings(){
+  const count=Number(userSettings.siteCount)||4;document.querySelectorAll('.site-list .site-card').forEach((card,index)=>card.hidden=index>=count);
+  document.body.classList.toggle('force-mobile',userSettings.displayMode==='mobile'&&innerWidth>700);
+  document.querySelectorAll('[data-display-mode]').forEach(button=>button.classList.toggle('active',button.dataset.displayMode===userSettings.displayMode));
+  document.body.classList.toggle('notice-urgent-off',!userSettings.urgentNotice);document.body.classList.toggle('notice-approval-off',!userSettings.approvalNotice);document.body.classList.toggle('notice-money-off',!userSettings.moneyNotice);document.body.classList.toggle('notice-calendar-off',!userSettings.calendarNotice);
+  const role=document.querySelector('.sidebar .user small');if(role)role.textContent=userSettings.role;
+  const retentionMap={'3개월':'3','6개월':'6','1년':'12','계속':'forever'};const retention=document.getElementById('retentionPeriod');if(retention&&retentionMap[userSettings.retention]){retention.value=retentionMap[userSettings.retention];retention.dispatchEvent(new Event('change'))}
+  if(document.getElementById('processRows'))applyProcessRowCount();
+  const selected=new Set(userSettings.selectedSites||[]);document.querySelectorAll('.site-checks label').forEach(label=>{const checked=selected.has(label.textContent.trim());label.querySelector('input').checked=checked});
+  if(userSettings.mySitesFirst){const list=document.querySelector('.site-list');[...list.children].sort((a,b)=>Number(![...selected].some(s=>a.dataset.site.includes(s)))-Number(![...selected].some(s=>b.dataset.site.includes(s)))).forEach(card=>list.appendChild(card))}
+  document.body.dataset.photoQuality=userSettings.photoQuality;document.body.dataset.autosave=userSettings.autosave?'on':'off';document.body.dataset.wifiOnly=userSettings.wifiOnly?'on':'off';
+}
+document.querySelectorAll('[data-display-mode]').forEach(button=>button.addEventListener('click',()=>{userSettings.displayMode=button.dataset.displayMode;saveUserSettings()}));
+document.querySelectorAll('.site-checks input').forEach(input=>input.addEventListener('change',()=>{userSettings.selectedSites=[...document.querySelectorAll('.site-checks input:checked')].map(item=>item.parentElement.textContent.trim());saveUserSettings()}));
+
+// 공사일보 자동 임시 저장
+const draftKey='minWorksDailyDraft';
+function saveDailyDraft(){if(!userSettings.autosave)return;const fields=[...document.querySelectorAll('#dailyForm input, #dailyForm select, #dailyForm textarea')];localStorage.setItem(draftKey,JSON.stringify(fields.map(field=>({name:field.name||field.placeholder||field.type,value:field.value}))));}
+document.getElementById('dailyForm').addEventListener('input',()=>{clearTimeout(window.minWorksDraftTimer);window.minWorksDraftTimer=setTimeout(saveDailyDraft,350)});
+
+// 설정 내보내기를 실제 JSON 파일로 제공
+document.getElementById('exportMySettings').addEventListener('click',()=>{const blob=new Blob([JSON.stringify(userSettings,null,2)],{type:'application/json'}),link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='min-works-settings.json';link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000);});
+
+// 시작 화면 설정은 새로 열 때 적용
+if(userSettings.startView&&userSettings.startView!=='dashboard')showView(userSettings.startView);
+applyExtendedSettings();
 
