@@ -34,7 +34,7 @@ document.getElementById('dailyForm').addEventListener('submit',e=>{
   const card=document.createElement('button');card.className='report-card';card.dataset.author=currentUser;card.dataset.site=site;
   card.innerHTML=`<span class="report-file-icon"><span class="material-symbols-rounded">description</span></span><div><small>${site}</small><b>${Number(date.slice(5,7))}월 ${Number(date.slice(8,10))}일 공사일보</b><p>공정 ${processes.length}개 · 작업인원 ${people}명 · 작성 완료</p></div><div class="report-author"><span>작성자</span><b>${currentUser} 부장</b><em class="owner-mark">내 일보</em></div><span class="report-status">작성 완료</span>`;
   card.reportPhotos=[...document.querySelectorAll('#tbmPreview .uploaded-photo, #progressPreview .uploaded-photo')].map(photo=>({src:photo.dataset.photoSrc,type:photo.dataset.photoType||'현장사진'})).filter(photo=>photo.src);
-  card.dataset.createdAt=new Date().toISOString();document.getElementById('todayReports').prepend(card);attachReportCard(card);renderCardCheckSummaries();updateSiteManagersFromReports();updateRecentReportLinks();
+  card.dataset.reportDate=date;card.dataset.createdAt=new Date().toISOString();document.getElementById('todayReports').prepend(card);attachReportCard(card);renderCardCheckSummaries();updateSiteManagersFromReports();updateRecentReportLinks();
   notify('공사일보가 날짜별 목록에 추가되었습니다.');closeDailyEditor();if(userSettings.openAfterSubmit)setTimeout(()=>card.click(),250);
 });
 document.getElementById('photoBtn').addEventListener('click',()=>notify('카메라 기능은 정식 버전에서 연결됩니다.'));

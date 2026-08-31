@@ -1,0 +1,29 @@
+MIN WORKS v23 최종 전 점검
+
+[완료]
+- PC / 갤럭시 / 갤럭시 폴드 / 아이폰 화면 모드 CSS 정리
+- 모바일 현재 현장 제거, 홈·전체메뉴·이슈 하단 동선 정리
+- 홈 요약 3개 카드 실제 화면 이동 및 화면 내 데이터 재계산
+- 확인 대기 일보 제거
+- 현장 상태를 착공일·준공일 기준으로 자동 분류
+- 현장 주소 숨김
+- 새 현장 등록 시 공사일보 필터 자동 생성
+- 공사일보 선택일 기준 날짜 그룹 분류
+- 일보별 PDF 및 현장별 통합 PDF, 사진 포함/제외 선택
+- 일정 전용 탭 제거, 홈의 개인 Google 일정 영역만 유지
+- 직원 실명 로그인 환영 문구 및 5분 접속코드 인증 화면 연결
+- 앱 사용법을 설명형 카드와 FAQ로 개편
+- 위치 허용 기반 날씨 및 MIN WORKS PWA 아이콘 구성
+
+[배포 전 필수]
+1. Cloudflare 인증 서버 최초 관리자 설정 완료
+2. config.js의 googleOAuthClientId에 Google OAuth 웹 클라이언트 ID 입력
+3. 여러 직원이 같은 현장·일보·사진을 보려면 D1/R2 기반 업무 데이터 API 추가 연결
+4. GitHub Pages에 이 폴더 전체 업로드 후 실제 휴대폰에서 위치·팝업·설치 권한 확인
+
+[검증 결과]
+- 전체 JavaScript 구문 검사 통과
+- manifest.webmanifest JSON 검사 통과
+- 인증 API /setup-status HTTP 200 응답 확인
+- GitHub Pages Origin에 대한 인증 API CORS 허용 확인
+- 현재 인증 서버 상태: setupRequired=true (최초 관리자 설정 필요)

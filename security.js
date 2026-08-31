@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const API = 'https://min-works-api.forjaejun.workers.dev';
+  const API = window.MIN_WORKS_CONFIG?.apiBaseUrl || 'https://min-works-api.forjaejun.workers.dev';
   const TOKEN_KEY = 'minWorksSessionV1';
   let sessionToken = localStorage.getItem(TOKEN_KEY) || '';
   let currentUser = null;
@@ -10,6 +10,7 @@
   document.addEventListener('DOMContentLoaded', initSecurity);
 
   async function initSecurity() {
+    document.body.classList.add('auth-pending');
     createGate();
     try {
       if (sessionToken) {
@@ -279,11 +280,22 @@
   async function api(path, options = {}) {
     const headers = { 'Content-Type': 'application/json' };
     if (options.auth !== false && sessionToken) headers.Authorization = `Bearer ${sessionToken}`;
-    const response = await fetch(API + path, {
-      method: options.method || 'GET',
-      headers,
-      body: options.body ? JSON.stringify(options.body) : undefined,
-    });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    let response;
+    try {
+      response = await fetch(API + path, {
+        method: options.method || 'GET',
+        headers,
+        body: options.body ? JSON.stringify(options.body) : undefined,
+        signal: controller.signal,
+      });
+    } catch (error) {
+      if (error.name === 'AbortError') throw new Error('서버 응답이 늦습니다. 잠시 후 다시 연결해 주세요.');
+      throw error;
+    } finally {
+      clearTimeout(timeout);
+    }
     let result;
     try { result = await response.json(); }
     catch (_) { result = { error: '서버 응답을 확인하지 못했습니다.' }; }

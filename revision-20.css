@@ -1,0 +1,3 @@
+/* Revision 20: 모바일 하단 이슈·전체메뉴 */
+@media(max-width:700px){.mobile-nav{height:74px;padding:0 4px calc(5px + env(safe-area-inset-bottom));justify-content:space-between}.mobile-nav button{flex:1;min-width:0;padding:4px 1px;font-size:8px;white-space:nowrap}.mobile-nav button span{font-size:19px}.mobile-nav .fab{flex:0 0 50px;width:50px;height:50px;margin-inline:2px}.mobile-nav [data-bottom-menu]{color:#56616c}.mobile-nav [data-view="issues"] span{color:#e08a36}}
+@media(min-width:701px){body.force-galaxy .mobile-nav,body.force-iphone .mobile-nav,body.force-fold .mobile-nav{justify-content:space-between;padding-inline:5px}body.force-galaxy .mobile-nav button,body.force-iphone .mobile-nav button,body.force-fold .mobile-nav button{flex:1;min-width:0;font-size:8px}}

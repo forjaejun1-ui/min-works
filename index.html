@@ -3,7 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MIN 현장관리</title>
+  <meta name="theme-color" content="#101311" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="MIN WORKS" />
+  <meta name="description" content="MIN WORKS 현장·공사일보 통합 관리 앱" />
+  <title>MIN WORKS</title>
+  <link rel="manifest" href="manifest.webmanifest?v=23" />
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/min-works-v3-192.png" />
+  <link rel="apple-touch-icon" href="assets/icons/min-works-v3-180.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -22,6 +31,10 @@
   <link rel="stylesheet" href="revision-16.css?v=16" />
   <link rel="stylesheet" href="revision-17.css?v=17" />
   <link rel="stylesheet" href="revision-18.css?v=18" />
+  <link rel="stylesheet" href="revision-19.css?v=20" />
+  <link rel="stylesheet" href="revision-20.css?v=21" />
+  <link rel="stylesheet" href="security.css?v=23" />
+  <link rel="stylesheet" href="revision-21.css?v=23" />
 </head>
 <body>
   <div class="app-shell">
@@ -33,7 +46,6 @@
         <button class="nav-item" data-view="daily"><span class="material-symbols-rounded">description</span> 공사일보</button>
         <button class="nav-item" data-view="finance"><span class="material-symbols-rounded">payments</span> 자금 현황</button>
         <button class="nav-item" data-view="issues"><span>!</span> 이슈</button>
-        <button class="nav-item" data-view="calendar"><span class="material-symbols-rounded">calendar_month</span> 일정</button>
         <button class="nav-item" data-view="settings"><span class="material-symbols-rounded">settings</span> 설정</button>
         <button class="nav-item help-nav" data-view="help"><span class="material-symbols-rounded">help</span> 사용법</button>
       </nav>
@@ -59,7 +71,6 @@
         <div class="summary-grid">
           <article class="summary-card highlight"><div><span>진행 중 현장</span><strong>4</strong></div><div class="mini-bars"><i></i><i></i><i></i><i></i></div></article>
           <article class="summary-card"><span>오늘 현장 보고</span><strong>3<small>/ 4</small></strong><em class="up">3개 현장 보고 완료</em></article>
-          <article class="summary-card"><span>확인 대기 일보</span><strong>3<small>건</small></strong><em>오늘 안에 검토 필요</em></article>
           <article class="summary-card"><span>미처리 이슈</span><strong>2<small>건</small></strong><em class="danger">긴급 1건</em></article>
         </div>
 
@@ -103,10 +114,10 @@
         <div class="filter-row"><button class="filter active">진행 중 4</button><button class="filter">착공 예정 2</button><button class="filter">완료 18</button></div>
         <div class="site-table panel">
           <div class="table-row table-head"><span>현장명</span><span>담당</span><span>공정률</span><span>최근 일보</span><span>상태</span></div>
-          <div class="table-row site-table-row" data-site-row="연세대학교 고를샘"><span><b>연세대학교 고를샘</b><small>서울 서대문구</small></span><span class="site-manager">김재준</span><button class="progress-edit" data-progress="72"><div class="inline-progress"><i style="width:72%"></i></div><b>72%</b><span class="material-symbols-rounded">edit</span></button><button class="recent-report-link" data-report-site="연세대학교 고를샘">오늘 17:40</button><span><button class="site-issue-alert" data-issue-site="연세대학교 고를샘"><span class="material-symbols-rounded">error</span>이슈 1건</button></span></div>
-          <div class="table-row site-table-row" data-site-row="에잇세컨즈 AK분당점"><span><b>에잇세컨즈 AK분당점</b><small>경기 성남시</small></span><span class="site-manager">박민수</span><button class="progress-edit" data-progress="88"><div class="inline-progress"><i style="width:88%"></i></div><b>88%</b><span class="material-symbols-rounded">edit</span></button><button class="recent-report-link" data-report-site="에잇세컨즈 AK분당점">오늘 16:25</button><span><em class="status ok">정상</em></span></div>
-          <div class="table-row site-table-row" data-site-row="알뜰주유소 시설개선"><span><b>알뜰주유소 시설개선</b><small>수도권 8개소</small></span><span class="site-manager">이성호</span><button class="progress-edit" data-progress="34"><div class="inline-progress"><i style="width:34%"></i></div><b>34%</b><span class="material-symbols-rounded">edit</span></button><button class="recent-report-link" data-report-site="알뜰주유소 시설개선">어제 18:10</button><span><em class="status ok">정상</em></span></div>
-          <div class="table-row site-table-row" data-site-row="힐스테이트 아산 커뮤니티"><span><b>힐스테이트 아산 커뮤니티</b><small>충남 아산시</small></span><span class="site-manager">최준혁</span><button class="progress-edit" data-progress="51"><div class="inline-progress"><i style="width:51%"></i></div><b>51%</b><span class="material-symbols-rounded">edit</span></button><button class="recent-report-link" data-report-site="힐스테이트 아산 커뮤니티">어제 17:55</button><span><button class="site-issue-alert normal-alert" data-issue-site="힐스테이트 아산 커뮤니티"><span class="material-symbols-rounded">error</span>이슈 1건</button></span></div>
+          <div class="table-row site-table-row" data-site-row="연세대학교 고를샘"><span><b>연세대학교 고를샘</b></span><span class="site-manager">김재준</span><button class="progress-edit" data-progress="72"><div class="inline-progress"><i style="width:72%"></i></div><b>72%</b><span class="material-symbols-rounded">edit</span></button><button class="recent-report-link" data-report-site="연세대학교 고를샘">오늘 17:40</button><span><button class="site-issue-alert" data-issue-site="연세대학교 고를샘"><span class="material-symbols-rounded">error</span>이슈 1건</button></span></div>
+          <div class="table-row site-table-row" data-site-row="에잇세컨즈 AK분당점"><span><b>에잇세컨즈 AK분당점</b></span><span class="site-manager">박민수</span><button class="progress-edit" data-progress="88"><div class="inline-progress"><i style="width:88%"></i></div><b>88%</b><span class="material-symbols-rounded">edit</span></button><button class="recent-report-link" data-report-site="에잇세컨즈 AK분당점">오늘 16:25</button><span><em class="status ok">정상</em></span></div>
+          <div class="table-row site-table-row" data-site-row="알뜰주유소 시설개선"><span><b>알뜰주유소 시설개선</b></span><span class="site-manager">이성호</span><button class="progress-edit" data-progress="34"><div class="inline-progress"><i style="width:34%"></i></div><b>34%</b><span class="material-symbols-rounded">edit</span></button><button class="recent-report-link" data-report-site="알뜰주유소 시설개선">어제 18:10</button><span><em class="status ok">정상</em></span></div>
+          <div class="table-row site-table-row" data-site-row="힐스테이트 아산 커뮤니티"><span><b>힐스테이트 아산 커뮤니티</b></span><span class="site-manager">최준혁</span><button class="progress-edit" data-progress="51"><div class="inline-progress"><i style="width:51%"></i></div><b>51%</b><span class="material-symbols-rounded">edit</span></button><button class="recent-report-link" data-report-site="힐스테이트 아산 커뮤니티">어제 17:55</button><span><button class="site-issue-alert normal-alert" data-issue-site="힐스테이트 아산 커뮤니티"><span class="material-symbols-rounded">error</span>이슈 1건</button></span></div>
         </div>
       </section>
 
@@ -180,7 +191,7 @@
     </main>
 
     <nav class="mobile-nav">
-      <button class="active" data-view="dashboard"><span class="material-symbols-rounded">home</span>홈</button><button data-view="sites"><span class="material-symbols-rounded">construction</span>현장</button><button class="fab" data-view="daily"><span class="material-symbols-rounded">description</span></button><button data-view="finance"><span class="material-symbols-rounded">payments</span>자금</button><button data-view="settings"><span class="material-symbols-rounded">settings</span>설정</button>
+      <button class="active" data-view="dashboard"><span class="material-symbols-rounded">home</span>홈</button><button data-view="sites"><span class="material-symbols-rounded">construction</span>현장</button><button class="fab" data-view="daily" aria-label="공사일보"><span class="material-symbols-rounded">description</span></button><button data-view="finance"><span class="material-symbols-rounded">payments</span>자금</button><button data-view="issues"><span class="material-symbols-rounded">report_problem</span>이슈</button><button type="button" data-bottom-menu><span class="material-symbols-rounded">apps</span>전체메뉴</button>
     </nav>
   </div>
 
@@ -201,6 +212,11 @@
   <script src="weather.js?v=16"></script>
   <script src="revision-17.js?v=17"></script>
   <script src="revision-18.js?v=18"></script>
+  <script src="revision-19.js?v=22"></script>
+  <script src="revision-20.js?v=21"></script>
+  <script src="config.js?v=23"></script>
+  <script src="revision-21.js?v=23"></script>
+  <script src="security.js?v=23"></script>
 </body>
 </html>
 
