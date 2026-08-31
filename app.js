@@ -20,7 +20,7 @@ const toast=document.getElementById('toast');
 function notify(message){toast.textContent=message;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),2200)}
 document.querySelectorAll('.task input').forEach(input=>input.addEventListener('change',()=>notify(input.checked?'업무를 완료 처리했습니다.':'완료를 취소했습니다.')));
 const dailyListScreen=document.getElementById('dailyListScreen'),dailyEditor=document.getElementById('dailyEditor');
-function openDailyEditor(){dailyListScreen.hidden=true;dailyEditor.hidden=false;document.getElementById('openDailyEditor').style.display='none';window.scrollTo({top:0,behavior:'smooth'})}
+function openDailyEditor(){dailyListScreen.hidden=true;dailyEditor.hidden=false;document.getElementById('openDailyEditor').style.display='none';restoreDailyDraft();window.scrollTo({top:0,behavior:'smooth'})}
 function closeDailyEditor(){dailyEditor.hidden=true;dailyListScreen.hidden=false;document.getElementById('openDailyEditor').style.display='flex';window.scrollTo({top:0,behavior:'smooth'})}
 document.getElementById('openDailyEditor').addEventListener('click',openDailyEditor);
 document.getElementById('closeDailyEditor').addEventListener('click',closeDailyEditor);
@@ -355,23 +355,28 @@ function applyProcessRowCount(){
   while(rows.children.length>wanted&&rows.children.length>1)rows.lastElementChild.remove();
 }
 function applyExtendedSettings(){
-  const count=Number(userSettings.siteCount)||4;document.querySelectorAll('.site-list .site-card').forEach((card,index)=>card.hidden=index>=count);
+  const list=document.querySelector('.site-list'),selected=new Set(userSettings.selectedSites||[]),cards=[...list.children];
+  cards.forEach((card,index)=>{if(card.dataset.originalOrder==null)card.dataset.originalOrder=String(index)});
+  cards.sort((a,b)=>userSettings.mySitesFirst?Number(![...selected].some(s=>a.dataset.site.includes(s)))-Number(![...selected].some(s=>b.dataset.site.includes(s))):Number(a.dataset.originalOrder)-Number(b.dataset.originalOrder)).forEach(card=>list.appendChild(card));
+  const count=Number(userSettings.siteCount)||4;[...list.querySelectorAll('.site-card')].forEach((card,index)=>{card.hidden=index>=count;card.classList.toggle('is-setting-hidden',index>=count)});
   document.body.classList.toggle('force-mobile',userSettings.displayMode==='mobile'&&innerWidth>700);
   document.querySelectorAll('[data-display-mode]').forEach(button=>button.classList.toggle('active',button.dataset.displayMode===userSettings.displayMode));
   document.body.classList.toggle('notice-urgent-off',!userSettings.urgentNotice);document.body.classList.toggle('notice-approval-off',!userSettings.approvalNotice);document.body.classList.toggle('notice-money-off',!userSettings.moneyNotice);document.body.classList.toggle('notice-calendar-off',!userSettings.calendarNotice);
   const role=document.querySelector('.sidebar .user small');if(role)role.textContent=userSettings.role;
   const retentionMap={'3개월':'3','6개월':'6','1년':'12','계속':'forever'};const retention=document.getElementById('retentionPeriod');if(retention&&retentionMap[userSettings.retention]){retention.value=retentionMap[userSettings.retention];retention.dispatchEvent(new Event('change'))}
   if(document.getElementById('processRows'))applyProcessRowCount();
-  const selected=new Set(userSettings.selectedSites||[]);document.querySelectorAll('.site-checks label').forEach(label=>{const checked=selected.has(label.textContent.trim());label.querySelector('input').checked=checked});
-  if(userSettings.mySitesFirst){const list=document.querySelector('.site-list');[...list.children].sort((a,b)=>Number(![...selected].some(s=>a.dataset.site.includes(s)))-Number(![...selected].some(s=>b.dataset.site.includes(s)))).forEach(card=>list.appendChild(card))}
+  document.querySelectorAll('.site-checks label').forEach(label=>{const checked=selected.has(label.textContent.trim());label.querySelector('input').checked=checked});
   document.body.dataset.photoQuality=userSettings.photoQuality;document.body.dataset.autosave=userSettings.autosave?'on':'off';document.body.dataset.wifiOnly=userSettings.wifiOnly?'on':'off';
+  document.body.dataset.quietHours=`${userSettings.quietStart}-${userSettings.quietEnd}`;
 }
 document.querySelectorAll('[data-display-mode]').forEach(button=>button.addEventListener('click',()=>{userSettings.displayMode=button.dataset.displayMode;saveUserSettings()}));
 document.querySelectorAll('.site-checks input').forEach(input=>input.addEventListener('change',()=>{userSettings.selectedSites=[...document.querySelectorAll('.site-checks input:checked')].map(item=>item.parentElement.textContent.trim());saveUserSettings()}));
+document.querySelector('[data-select-setting="startView"]').addEventListener('change',event=>showView(event.target.value));
 
 // 공사일보 자동 임시 저장
 const draftKey='minWorksDailyDraft';
 function saveDailyDraft(){if(!userSettings.autosave)return;const fields=[...document.querySelectorAll('#dailyForm input, #dailyForm select, #dailyForm textarea')];localStorage.setItem(draftKey,JSON.stringify(fields.map(field=>({name:field.name||field.placeholder||field.type,value:field.value}))));}
+function restoreDailyDraft(){if(!userSettings?.autosave)return;try{const saved=JSON.parse(localStorage.getItem(draftKey)||'[]'),fields=[...document.querySelectorAll('#dailyForm input, #dailyForm select, #dailyForm textarea')];saved.forEach((item,index)=>{if(fields[index]&&item.value)fields[index].value=item.value});if(saved.length)notify('자동 저장된 공사일보 초안을 불러왔습니다.')}catch{localStorage.removeItem(draftKey)}}
 document.getElementById('dailyForm').addEventListener('input',()=>{clearTimeout(window.minWorksDraftTimer);window.minWorksDraftTimer=setTimeout(saveDailyDraft,350)});
 
 // 설정 내보내기를 실제 JSON 파일로 제공

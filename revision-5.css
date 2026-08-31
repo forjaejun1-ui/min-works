@@ -3,6 +3,7 @@
 .view-mode-toggle button{border:0;background:transparent;border-radius:7px;padding:7px 9px;font-size:9px;font-weight:800;color:#8a8d87}
 .view-mode-toggle button.active{background:#222;color:#fff}
 .site-card{cursor:pointer;transition:border-color .18s,background .18s,transform .18s}
+.site-card.is-setting-hidden{display:none!important}
 .site-card:hover{transform:translateY(-1px)}
 .site-card:focus-visible{outline:3px solid color-mix(in srgb,var(--accent,#7fbc03) 35%,transparent);outline-offset:2px}
 .site-table-row.focused-site{outline:3px solid color-mix(in srgb,var(--accent,#7fbc03) 28%,transparent);background:#fbfff5}
@@ -11,6 +12,15 @@
 .money-pair{margin-top:14px}.money-pair label{margin-top:0}.money-help{font-size:9px;color:#81867c;margin:8px 0 0}
 .site-budget-summary{display:grid;gap:8px;margin-bottom:12px}.site-budget-summary .panel-head{margin-bottom:2px}.site-budget-summary article{display:grid;grid-template-columns:1.3fr 1fr 1fr auto;gap:14px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:11px;padding:14px}.site-budget-summary b,.site-budget-summary small{display:block}.site-budget-summary small{font-size:8px;color:#92968d;margin-top:4px}.site-budget-summary span{font-size:9px;color:#777}.site-budget-summary strong{display:block;color:#222;font-size:11px;margin-top:3px}.site-budget-summary em{font-size:10px;font-style:normal;font-weight:800;color:#557d0a}
 .notice-urgent-off .summary-card .danger,.notice-urgent-off .issue-label{opacity:.35}.notice-approval-off .approval-panel{display:none}.notice-money-off .finance-summary small{opacity:.35}.notice-calendar-off .month-grid b:after{display:none}
+
+/* 강조색 설정이 화면 전반에서 즉시 눈에 보이도록 연결 */
+.eyebrow,.today-label,.owner-mark,.connection-card em,.current-site>span:first-child,.current-site em{color:var(--accent,#7fbc03)!important}
+.progress i,.inline-progress i,.briefing-state.live,.mini-bars i:last-child,.count-badge,.switch-row input:checked+i,.mobile-focus button,.report-stepper .active i{background:var(--accent,#7fbc03)!important}
+.site-card.selected,.site-card:hover,.site-option.active{border-color:var(--accent,#7fbc03)!important}
+.nav-item.active{border-left-color:var(--accent,#7fbc03)!important}
+.settings-group>header>span,.quick>span{color:var(--accent,#7fbc03)!important;background:color-mix(in srgb,var(--accent,#7fbc03) 13%,white)!important}
+.segmented button.active,.settings-menu button.active,.view-mode-toggle button.active{background:var(--accent,#7fbc03)!important;color:#fff!important}
+.color-options button.active{box-shadow:0 0 0 3px color-mix(in srgb,var(--accent,#7fbc03) 55%,#222)!important}
 
 @media(min-width:901px){
   .calendar-layout{grid-template-columns:minmax(500px,1.25fr) minmax(360px,.75fr);gap:18px}
