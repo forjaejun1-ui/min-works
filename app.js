@@ -33,6 +33,7 @@ document.getElementById('dailyForm').addEventListener('submit',e=>{
   const people=processes.reduce((sum,r)=>sum+(Number(r.querySelector('input[type=number]').value)||0),0);
   const card=document.createElement('button');card.className='report-card';card.dataset.author=currentUser;card.dataset.site=site;
   card.innerHTML=`<span class="report-file-icon"><span class="material-symbols-rounded">description</span></span><div><small>${site}</small><b>${Number(date.slice(5,7))}월 ${Number(date.slice(8,10))}일 공사일보</b><p>공정 ${processes.length}개 · 작업인원 ${people}명 · 작성 완료</p></div><div class="report-author"><span>작성자</span><b>${currentUser} 부장</b><em class="owner-mark">내 일보</em></div><span class="report-status">작성 완료</span>`;
+  card.reportPhotos=[...document.querySelectorAll('#tbmPreview .uploaded-photo, #progressPreview .uploaded-photo')].map(photo=>({src:photo.dataset.photoSrc,type:photo.dataset.photoType||'현장사진'})).filter(photo=>photo.src);
   card.dataset.createdAt=new Date().toISOString();document.getElementById('todayReports').prepend(card);attachReportCard(card);renderCardCheckSummaries();updateSiteManagersFromReports();updateRecentReportLinks();
   notify('공사일보가 날짜별 목록에 추가되었습니다.');closeDailyEditor();if(userSettings.openAfterSubmit)setTimeout(()=>card.click(),250);
 });
@@ -47,7 +48,7 @@ document.getElementById('progressPhotoAdd').addEventListener('click',()=>openPho
 function addPhotoPreviews(input,containerId,countId,type){
   const container=document.getElementById(containerId);
   [...input.files].forEach(file=>{
-    const card=document.createElement('div');card.className='uploaded-photo';card.style.backgroundImage=`url(${URL.createObjectURL(file)})`;
+    const card=document.createElement('div'),photoUrl=URL.createObjectURL(file);card.className='uploaded-photo';card.style.backgroundImage=`url(${photoUrl})`;card.dataset.photoSrc=photoUrl;card.dataset.photoType=type;
     card.innerHTML=`<button type="button">×</button><small>${type} · ${userSettings?.photoQuality||'고화질'} · 방금 전</small>`;
     card.querySelector('button').addEventListener('click',()=>{card.remove();updatePhotoCount(containerId,countId)});
     container.appendChild(card);
@@ -125,7 +126,25 @@ document.getElementById('addProcess').addEventListener('click',()=>{
 });
 
 // 완료된 공사일보: 작성자만 수정, 그 외 사용자는 열람 전용
-const currentUser='김재준';
+let currentUser='김재준';
+window.setMinWorksUser=function(user){
+  if(!user)return;
+  if(user.role==='employee'&&user.name){
+    currentUser=user.name;
+    const nameOnly=user.name.replace(/\s/g,'');
+    const hour=Number(new Intl.DateTimeFormat('ko-KR',{hour:'2-digit',hour12:false,timeZone:'Asia/Seoul'}).format(new Date()).replace('시','').trim());
+    const greeting=hour>=18||hour<5?'오늘도 수고하셨습니다':hour>=12?'좋은 오후입니다':'좋은 아침입니다';
+    titles.dashboard=`${greeting}, ${nameOnly}님`;
+    if(document.getElementById('dashboardView').classList.contains('active'))document.getElementById('pageTitle').textContent=titles.dashboard;
+  }else if(user.role==='admin'){
+    titles.dashboard='관리자님, 안녕하세요';
+    if(document.getElementById('dashboardView').classList.contains('active'))document.getElementById('pageTitle').textContent=titles.dashboard;
+  }
+};
+const legacyViewerPhotos=document.querySelector('#reportViewer .viewer-photos');
+legacyViewerPhotos.className='viewer-photo-gallery';
+legacyViewerPhotos.setAttribute('aria-label','공사일보 현장사진');
+legacyViewerPhotos.innerHTML='<div class="viewer-photo-head"><div><span class="material-symbols-rounded">photo_library</span><div><b>현장사진</b><small id="viewerPhotoSummary">사진을 옆으로 넘겨 확인하세요.</small></div></div><em id="viewerPhotoCounter">0 / 0</em></div><div class="viewer-photo-stage"><button type="button" class="viewer-photo-arrow prev" id="viewerPhotoPrev" aria-label="이전 사진"><span class="material-symbols-rounded">chevron_left</span></button><div class="viewer-photo-track" id="viewerPhotoTrack"></div><button type="button" class="viewer-photo-arrow next" id="viewerPhotoNext" aria-label="다음 사진"><span class="material-symbols-rounded">chevron_right</span></button></div><div class="viewer-photo-dots" id="viewerPhotoDots"></div>';
 const reportViewer=document.getElementById('reportViewer');
 const checkRecords={
   '연세대학교 고를샘':[{name:'최진영 대표',time:'오전 9:18'},{name:'박민수 과장',time:'오전 9:24'}],
@@ -155,9 +174,24 @@ function attachReportCard(card){card.addEventListener('click',()=>{
   document.getElementById('viewerSite').textContent=card.dataset.site;
   document.getElementById('viewerAuthor').textContent=card.querySelector('.report-author b').textContent;
   document.getElementById('editOwnReport').classList.toggle('visible',card.dataset.author===currentUser);
+  renderViewerPhotos(card);
   renderCheckHistory();
   reportViewer.classList.add('show');
 })}
+let viewerPhotoIndex=0;
+function reportPhotos(card){
+  if(Array.isArray(card.reportPhotos))return card.reportPhotos;
+  try{return JSON.parse(card.dataset.photos||'[]')}catch{return []}
+}
+function renderViewerPhotos(card){
+  const photos=reportPhotos(card),track=document.getElementById('viewerPhotoTrack'),dots=document.getElementById('viewerPhotoDots');viewerPhotoIndex=0;track.style.transform='translateX(0)';track.replaceChildren();dots.replaceChildren();
+  if(!photos.length){const empty=document.createElement('div');empty.className='viewer-photo-empty';empty.innerHTML='<span class="material-symbols-rounded">photo_camera</span><b>등록된 현장사진이 없습니다.</b><small>사진을 첨부한 일보는 이곳에서 좌우로 넘겨볼 수 있습니다.</small>';track.appendChild(empty);updateViewerPhotoState(photos);return}
+  photos.forEach((photo,index)=>{const figure=document.createElement('figure');figure.className='viewer-photo-slide';const img=document.createElement('img');img.src=photo.src;img.alt=`${photo.type||'현장사진'} ${index+1}`;const caption=document.createElement('figcaption');caption.innerHTML=`<span>${photo.type||'현장사진'}</span><b>${index+1} / ${photos.length}</b>`;figure.append(img,caption);track.appendChild(figure);const dot=document.createElement('button');dot.type='button';dot.setAttribute('aria-label',`${index+1}번 사진`);dot.addEventListener('click',()=>goViewerPhoto(index,photos));dots.appendChild(dot)});updateViewerPhotoState(photos);
+}
+function updateViewerPhotoState(photos){const count=photos.length;document.getElementById('viewerPhotoCounter').textContent=count?`${viewerPhotoIndex+1} / ${count}`:'0 / 0';document.getElementById('viewerPhotoSummary').textContent=count?`등록 사진 ${count}장 · 좌우로 넘겨보기`:'등록 사진 없음';document.getElementById('viewerPhotoPrev').disabled=count<2;document.getElementById('viewerPhotoNext').disabled=count<2;document.querySelectorAll('#viewerPhotoDots button').forEach((dot,index)=>dot.classList.toggle('active',index===viewerPhotoIndex));}
+function goViewerPhoto(index,photos){if(!photos.length)return;viewerPhotoIndex=(index+photos.length)%photos.length;document.getElementById('viewerPhotoTrack').style.transform=`translateX(-${viewerPhotoIndex*100}%)`;updateViewerPhotoState(photos)}
+document.getElementById('viewerPhotoPrev').addEventListener('click',()=>{const card=[...document.querySelectorAll('.report-card')].find(item=>item.dataset.site===activeReportSite);goViewerPhoto(viewerPhotoIndex-1,reportPhotos(card||{}))});
+document.getElementById('viewerPhotoNext').addEventListener('click',()=>{const card=[...document.querySelectorAll('.report-card')].find(item=>item.dataset.site===activeReportSite);goViewerPhoto(viewerPhotoIndex+1,reportPhotos(card||{}))});
 document.querySelectorAll('.report-card').forEach(attachReportCard);
 document.getElementById('closeReportViewer').addEventListener('click',()=>reportViewer.classList.remove('show'));
 reportViewer.querySelector('.viewer-backdrop').addEventListener('click',()=>reportViewer.classList.remove('show'));
@@ -234,6 +268,7 @@ document.getElementById('newCalendarEvent').addEventListener('click',()=>notify(
 const settingsKey='minWorksUserSettings';
 const settingDefaults={fontSize:'normal',density:'comfortable',accent:'lime',contrast:false,displayMode:'pc',startView:'dashboard',siteCount:'4',weather:true,financeSummary:true,calendarSummary:true,processRows:'5',photoQuality:'고화질',autosave:true,photoWarning:true,openAfterSubmit:false,urgentNotice:true,approvalNotice:true,moneyNotice:true,calendarNotice:true,quietStart:'19:00',quietEnd:'07:00',role:'시공팀장',mySitesFirst:true,hideMoney:false,retention:'1년',wifiOnly:false,selectedSites:['연세대학교','에잇세컨즈','알뜰주유소','힐스테이트']};
 let userSettings={...settingDefaults,...JSON.parse(localStorage.getItem(settingsKey)||'{}')};
+if(userSettings.displayMode==='mobile')userSettings.displayMode='galaxy';
 const accentColors={lime:'#7fbc03',blue:'#327ae8',orange:'#ef8d23',charcoal:'#252525'};
 function saveUserSettings(){localStorage.setItem(settingsKey,JSON.stringify(userSettings));applyUserSettings();notify('설정이 저장되었습니다.');}
 function applyUserSettings(){
@@ -359,7 +394,10 @@ function applyExtendedSettings(){
   cards.forEach((card,index)=>{if(card.dataset.originalOrder==null)card.dataset.originalOrder=String(index)});
   cards.sort((a,b)=>userSettings.mySitesFirst?Number(![...selected].some(s=>a.dataset.site.includes(s)))-Number(![...selected].some(s=>b.dataset.site.includes(s))):Number(a.dataset.originalOrder)-Number(b.dataset.originalOrder)).forEach(card=>list.appendChild(card));
   const count=Number(userSettings.siteCount)||4;[...list.querySelectorAll('.site-card')].forEach((card,index)=>{card.hidden=index>=count;card.classList.toggle('is-setting-hidden',index>=count)});
-  document.body.classList.toggle('force-mobile',userSettings.displayMode==='mobile'&&innerWidth>700);
+  document.body.classList.toggle('force-mobile',['galaxy','iphone'].includes(userSettings.displayMode));
+  document.body.classList.toggle('force-galaxy',userSettings.displayMode==='galaxy');
+  document.body.classList.toggle('force-fold',userSettings.displayMode==='fold');
+  document.body.classList.toggle('force-iphone',userSettings.displayMode==='iphone');
   document.querySelectorAll('[data-display-mode]').forEach(button=>button.classList.toggle('active',button.dataset.displayMode===userSettings.displayMode));
   document.body.classList.toggle('notice-urgent-off',!userSettings.urgentNotice);document.body.classList.toggle('notice-approval-off',!userSettings.approvalNotice);document.body.classList.toggle('notice-money-off',!userSettings.moneyNotice);document.body.classList.toggle('notice-calendar-off',!userSettings.calendarNotice);
   const role=document.querySelector('.sidebar .user small');if(role)role.textContent=userSettings.role;
