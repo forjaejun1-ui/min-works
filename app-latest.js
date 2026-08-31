@@ -1319,7 +1319,9 @@ window.MIN_WORKS_CONFIG = Object.freeze({
       }
     };
     window.refreshMinWorksSummary = refresh;
-    new MutationObserver(refresh).observe(document.querySelector('.site-table'), { childList: true, subtree: true });
+    // 현장 행의 추가/삭제만 감시한다. subtree까지 감시하면 refreshProjectStatuses가
+    // 빈 상태 문구를 갱신할 때 다시 refresh가 호출되어 무한 반복할 수 있다.
+    new MutationObserver(refresh).observe(document.querySelector('.site-table'), { childList: true });
     new MutationObserver(refresh).observe(document.querySelector('#dailyView'), { childList: true, subtree: true });
     new MutationObserver(refresh).observe(document.querySelector('#issuesView'), { childList: true, subtree: true });
     setTimeout(refresh, 0);
