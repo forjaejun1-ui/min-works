@@ -17,6 +17,11 @@
   <link rel="stylesheet" href="revision-7.css?v=11" />
   <link rel="stylesheet" href="revision-8.css?v=9" />
   <link rel="stylesheet" href="revision-11.css?v=11" />
+  <link rel="stylesheet" href="revision-14.css?v=14" />
+  <link rel="stylesheet" href="revision-15.css?v=15" />
+  <link rel="stylesheet" href="revision-16.css?v=16" />
+  <link rel="stylesheet" href="revision-17.css?v=17" />
+  <link rel="stylesheet" href="revision-18.css?v=18" />
 </head>
 <body>
   <div class="app-shell">
@@ -151,7 +156,7 @@
           <details open><summary><span>1</span>공사일보는 어떻게 작성하나요?<i class="material-symbols-rounded">expand_more</i></summary><div><p><b>공사일보</b> 탭 중앙의 작성 버튼을 누릅니다.</p><p>현장과 날짜 → 작업 내용·인원 → 사진·특이사항 → 최종 확인 순서로 입력합니다.</p><p>등록된 일보를 누르면 다른 직원도 내용과 사진을 함께 볼 수 있습니다.</p></div></details>
           <details><summary><span>2</span>담당자는 어떻게 정해지나요?<i class="material-symbols-rounded">expand_more</i></summary><div><p>해당 현장에서 가장 최근에 등록된 공사일보의 작성자가 담당자로 자동 표시됩니다.</p><p>담당자가 바뀌면 새 담당자가 일보를 올린 뒤 자동으로 이름이 변경됩니다.</p></div></details>
           <details><summary><span>3</span>현장이나 최근 일보를 자세히 보려면?<i class="material-symbols-rounded">expand_more</i></summary><div><p>홈의 진행 현장 카드를 누르면 해당 현장으로 바로 이동합니다.</p><p>현장 탭의 최근 일보 시간을 누르면 그 날짜의 공사일보가 열립니다.</p></div></details>
-          <details><summary><span>4</span>회사 일정은 어떻게 공유하나요?<i class="material-symbols-rounded">expand_more</i></summary><div><p>일정 탭에서 <b>일정 등록</b>을 누르면 회사 공동 일정에 추가됩니다.</p><p>오늘 이후 일정만 홈에 표시되며 지난 일정은 자동으로 숨겨집니다.</p></div></details>
+          <details><summary><span>4</span>회사 일정과 개인 Google 일정은 어떻게 다른가요?<i class="material-symbols-rounded">expand_more</i></summary><div><p>일정 탭에서 <b>일정 등록</b>을 누르면 전 직원이 보는 회사 공동 일정에 추가됩니다.</p><p>개인 Google 캘린더는 원하는 직원만 연결하며 본인 화면에만 표시됩니다. 회사에 공유할 일정은 공동 일정에 별도로 등록해야 합니다.</p></div></details>
           <details><summary><span>5</span>휴대폰 화면이 이상할 때는?<i class="material-symbols-rounded">expand_more</i></summary><div><p>화면 오른쪽 위에서 PC·갤럭시·갤럭시 폴드·아이폰 중 현재 기기에 맞는 보기를 선택합니다.</p><p>갤럭시 폴드는 접은 상태와 펼친 상태 모두 같은 폴드 보기를 사용하면 됩니다.</p></div></details>
           <details><summary><span>6</span>현장 상태는 언제 바뀌나요?<i class="material-symbols-rounded">expand_more</i></summary><div><p>착공일 전에는 <b>착공 예정</b>, 착공일부터 준공일까지는 <b>진행 중</b>으로 표시됩니다.</p><p>준공일 다음 날부터 <b>완료</b> 목록으로 자동 이동합니다.</p></div></details>
           <details><summary><span>7</span>이전 화면으로 돌아가려면?<i class="material-symbols-rounded">expand_more</i></summary><div><p>휴대폰 또는 브라우저의 뒤로가기 버튼을 누르면 직전에 보던 앱 화면으로 돌아갑니다.</p><p>왼쪽 위 MIN WORKS 로고를 누르면 언제든 홈으로 이동합니다.</p></div></details>
@@ -192,7 +197,10 @@
   <div class="money-form-modal" id="paymentFormModal"><div class="money-modal-backdrop"></div><section><header><div><p class="eyebrow">SITE PAYMENT</p><h2>지출·기성 작성</h2><small>현장소장 작성</small></div><button data-close-money="paymentFormModal">×</button></header><div class="money-form-grid"><label>현장<select id="paymentSite"><option>연세대학교 고를샘</option><option>에잇세컨즈 AK분당점</option><option>알뜰주유소 시설개선</option><option>힐스테이트 아산</option></select></label><label>구분<select id="paymentType"><option>월 기성</option><option>월요일 긴급지출</option></select></label><label>금액<input id="paymentAmount" type="number" placeholder="금액 입력"></label><label>지급 희망일<input id="paymentDate" type="date" value="2026-09-10"></label></div><label>내용<textarea id="paymentMemo" rows="3" placeholder="인건비, 현지업체 결제 등 내용을 입력하세요."></textarea></label><button class="primary full" id="savePayment">작성 완료 · 공무부로 전달</button></section></div>
   <div class="money-form-modal" id="receivableFormModal"><div class="money-modal-backdrop"></div><section><header><div><p class="eyebrow">RECEIVABLE</p><h2>거래처 수금 예정 작성</h2><small>공무부·경리부 작성</small></div><button data-close-money="receivableFormModal">×</button></header><div class="money-form-grid"><label>거래처<input id="receivableClient" placeholder="거래처명"></label><label>현장<select id="receivableSite"><option>연세대학교 고를샘</option><option>에잇세컨즈 AK분당점</option><option>알뜰주유소 시설개선</option><option>힐스테이트 아산</option></select></label><label>청구 금액<input id="receivableAmount" type="number" placeholder="금액 입력"></label><label>입금 예정일<input id="receivableDate" type="date"></label></div><label>비고<textarea id="receivableMemo" rows="3" placeholder="청구 조건이나 입금 관련 내용을 입력하세요."></textarea></label><button class="primary full" id="saveReceivable">수금 예정 등록</button></section></div>
   <script src="app.js?v=13"></script>
-  <script src="revision-8.js?v=13"></script>
+  <script src="revision-8.js?v=14"></script>
+  <script src="weather.js?v=16"></script>
+  <script src="revision-17.js?v=17"></script>
+  <script src="revision-18.js?v=18"></script>
 </body>
 </html>
 

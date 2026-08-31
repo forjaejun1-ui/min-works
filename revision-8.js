@@ -15,6 +15,7 @@
   connectPhotoShortcut();
   connectFinanceMonthButtons();
   initializeInternalCalendar();
+  initializePersonalGoogleCalendar();
 
   function enableBackNavigation() {
     const originalShowView = showView;
@@ -210,6 +211,61 @@
       });
     });
     renderCalendar();
+  }
+
+  function initializePersonalGoogleCalendar() {
+    const calendarView = document.getElementById('calendarView');
+    const companyBar = calendarView?.querySelector('.internal-calendar-bar');
+    if (!calendarView || !companyBar) return;
+    const storageKey = 'minWorksPersonalGoogleCalendarV1';
+    let connected = localStorage.getItem(storageKey) === 'connected';
+    const settingsGoogle = document.querySelector('[data-settings-panel="data"] .connection-card');
+    const card = document.createElement('section');
+    card.className = 'personal-calendar-card';
+    companyBar.insertAdjacentElement('afterend', card);
+
+    const modal = document.createElement('div');
+    modal.className = 'google-consent-modal';
+    modal.innerHTML = `<div class="google-consent-backdrop"></div><section><button class="google-consent-close" aria-label="닫기">×</button><header><span class="google-g">G</span><div><p class="eyebrow">OPTIONAL CONNECTION</p><h2>개인 Google 캘린더 연결</h2></div></header><div class="google-warning"><span class="material-symbols-rounded">privacy_tip</span><div><b>연결 전에 꼭 확인해주세요.</b><p>개인 캘린더 연결은 선택 사항이며 회사 공동 일정 사용에는 영향을 주지 않습니다.</p></div></div><ul><li><b>나에게만 표시</b><span>개인 일정은 본인 화면에서만 보이고 다른 직원에게 자동 공유되지 않습니다.</span></li><li><b>회사 공유는 별도 등록</b><span>직원들과 공유할 일정은 MIN WORKS 회사 일정에 따로 등록해야 합니다.</span></li><li><b>읽기 전용 연결</b><span>앱은 일정을 보여주기 위한 권한만 요청하며 Google 원본 일정을 수정하지 않습니다.</span></li><li><b>언제든 연결 해제</b><span>연결을 해제해도 Google 캘린더의 원본 일정은 삭제되지 않습니다.</span></li></ul><label class="google-consent-check"><input type="checkbox"><span>위 내용을 확인했고 개인 캘린더 연결에 동의합니다.</span></label><div class="google-consent-actions"><button class="google-consent-cancel">취소</button><button class="google-consent-confirm" disabled>동의하고 연결</button></div></section>`;
+    document.body.appendChild(modal);
+
+    const render = () => {
+      card.classList.toggle('connected', connected);
+      card.innerHTML = connected
+        ? `<div class="google-calendar-icon">G</div><div><b>개인 Google 캘린더</b><small>내 화면에만 표시 · 회사 공동 일정과 분리</small></div><span class="google-connected"><i></i>연결됨</span><button class="google-disconnect">연결 해제</button>`
+        : `<div class="google-calendar-icon">G</div><div><b>개인 Google 캘린더</b><small>원하는 직원만 선택적으로 연결할 수 있습니다.</small></div><em>선택 사항</em><button class="google-connect">주의사항 확인 후 연결</button>`;
+      card.querySelector('.google-connect')?.addEventListener('click', () => modal.classList.add('show'));
+      card.querySelector('.google-disconnect')?.addEventListener('click', () => {
+        if (!confirm('개인 Google 캘린더 연결을 해제할까요?\nGoogle의 원본 일정은 삭제되지 않습니다.')) return;
+        connected = false;
+        localStorage.removeItem(storageKey);
+        render();
+        notify('개인 Google 캘린더 연결을 해제했습니다.');
+      });
+      if (settingsGoogle) {
+        settingsGoogle.querySelector('b').textContent = '개인 Google 캘린더';
+        settingsGoogle.querySelector('small').textContent = connected ? '내 계정에만 연결됨 · 회사 일정과 분리' : '선택 사항 · 일정 탭에서 연결';
+        settingsGoogle.querySelector('em').textContent = connected ? '연결됨' : '미연결';
+        settingsGoogle.querySelector('em').classList.toggle('waiting', !connected);
+      }
+    };
+    const close = () => {
+      modal.classList.remove('show');
+      modal.querySelector('input').checked = false;
+      modal.querySelector('.google-consent-confirm').disabled = true;
+    };
+    modal.querySelector('.google-consent-close').addEventListener('click', close);
+    modal.querySelector('.google-consent-cancel').addEventListener('click', close);
+    modal.querySelector('.google-consent-backdrop').addEventListener('click', close);
+    modal.querySelector('input').addEventListener('change', event => modal.querySelector('.google-consent-confirm').disabled = !event.target.checked);
+    modal.querySelector('.google-consent-confirm').addEventListener('click', () => {
+      connected = true;
+      localStorage.setItem(storageKey, 'connected');
+      close();
+      render();
+      notify('개인 Google 캘린더 연결을 저장했습니다.');
+    });
+    render();
   }
 
   function changeCalendarMonth(amount) {
