@@ -584,7 +584,7 @@ applyExtendedSettings();
     const buttons = [...document.querySelectorAll('.filter-row .filter')];
     const table = document.querySelector('.site-table');
     if (!buttons.length || !table) return;
-    const keys = ['active','scheduled','complete'];
+    const keys = ['active','complete'];
     const sampleDates = [
       ['2026-07-01','2026-09-30'],
       ['2026-08-01','2026-09-15'],
@@ -603,7 +603,6 @@ applyExtendedSettings();
     let activeKey = buttons.find(button => button.classList.contains('active'))?.dataset.siteStatus || 'active';
     const classify = row => {
       const today = dateKey(kstToday);
-      if (row.dataset.startDate && row.dataset.startDate > today) return 'scheduled';
       if (row.dataset.endDate && row.dataset.endDate < today) return 'complete';
       return 'active';
     };
@@ -616,7 +615,7 @@ applyExtendedSettings();
       });
       buttons.forEach(button => {
         const key = button.dataset.siteStatus;
-        const label = key === 'active' ? '진행 중' : key === 'scheduled' ? '착공 예정' : '완료';
+        const label = key === 'active' ? '진행 중' : '완료';
         button.textContent = `${label} ${counts[key]}`;
         button.classList.toggle('active', key === activeKey);
       });
@@ -627,7 +626,7 @@ applyExtendedSettings();
         if (show) visible += 1;
       });
       empty.hidden = visible > 0;
-      empty.textContent = activeKey === 'scheduled' ? '등록된 착공 예정 현장이 없습니다.' : activeKey === 'complete' ? '준공일이 지난 현장이 없습니다.' : '진행 중인 현장이 없습니다.';
+      empty.textContent = activeKey === 'complete' ? '준공일이 지난 현장이 없습니다.' : '진행 중인 현장이 없습니다.';
     };
     buttons.forEach(button => button.addEventListener('click', () => {
       activeKey = button.dataset.siteStatus;
@@ -1627,7 +1626,7 @@ window.MIN_WORKS_CONFIG = Object.freeze({
     const grid = document.querySelector('.help-grid');
     if (grid) grid.innerHTML = [
       ['home','홈','진행 현장·오늘 보고·미처리 이슈를 확인합니다. 요약 카드를 누르면 해당 업무로 이동합니다.'],
-      ['construction','현장','착공일 전은 착공 예정, 공사 기간은 진행 중, 준공일이 지나면 완료로 자동 분류됩니다.'],
+      ['construction','현장','개설한 현장은 진행 중으로 표시되며, 준공일이 지나면 완료로 자동 분류됩니다.'],
       ['description','공사일보','현장과 날짜, 공정·인원, 사진·특이사항을 입력합니다. 개별 또는 현장별 통합 PDF로 저장할 수 있습니다.'],
       ['payments','자금 집행','월별 예정 지출과 거래처 수금 예정 내역을 확인합니다.'],
       ['report_problem','이슈','현장 문제를 긴급도와 담당자 기준으로 등록하고 미처리 항목을 확인합니다.'],
@@ -1643,7 +1642,7 @@ window.MIN_WORKS_CONFIG = Object.freeze({
     ['공사일보는 어떻게 작성하나요?','공사일보 탭의 작성 버튼을 누르고 현장·날짜, 공정·인원, 특이사항을 한 화면에서 입력한 뒤 공사일보 등록을 누릅니다. 사진은 없어도 등록할 수 있습니다.'],
     ['사진을 포함해 PDF로 저장하려면?','일보 오른쪽 다운로드 또는 현장별 통합 PDF 내보내기를 누른 뒤 사진 포함 PDF를 선택합니다.'],
     ['현장 담당자는 어떻게 바뀌나요?','해당 현장에 가장 최근 공사일보를 등록한 직원 이름으로 자동 갱신됩니다.'],
-    ['현장 상태는 언제 바뀌나요?','착공일 전에는 착공 예정, 착공일부터 준공일까지 진행 중, 준공일 다음 날부터 완료입니다.'],
+    ['현장 상태는 언제 바뀌나요?','개설한 현장은 진행 중으로 표시되며, 준공일 다음 날부터 완료입니다.'],
     ['Google 일정이 보이지 않아요.','설정된 Google OAuth로 연결을 완료한 본인에게만 향후 일정이 표시됩니다. 미연결 또는 권한 오류 상태를 먼저 확인하세요.'],
     ['앱은 어떻게 설치하나요?','모바일 상단 MIN WORKS 설치를 누르거나 브라우저 메뉴에서 홈 화면에 추가를 선택합니다.'],
     ['폴드 화면이 깨져 보여요.','상단 기기 보기에서 갤럭시 폴드를 선택하고 접힘·펼침 상태에 맞춰 화면을 다시 불러오세요.'],
