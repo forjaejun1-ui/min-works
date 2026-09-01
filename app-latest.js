@@ -1,3 +1,44 @@
+/* v38 cloud snapshot bootstrap: apply the last server copy before event handlers are attached. */
+(() => {
+  try {
+    const cached=JSON.parse(localStorage.getItem('minWorksCloudSnapshotV1')||'null');
+    const state=cached?.payload;if(!state)return;
+    const parseNodes=html=>{const host=document.createElement('div');host.innerHTML=html||'';return [...host.children]};
+    if(state.siteCards!=null){const host=document.querySelector('.site-list');if(host)host.replaceChildren(...parseNodes(state.siteCards))}
+    if(state.siteRows!=null){const table=document.querySelector('.site-table');if(table){document.querySelectorAll('.site-table-row').forEach(node=>node.remove());parseNodes(state.siteRows).forEach(node=>table.appendChild(node))}}
+    if(state.reports!=null){document.querySelectorAll('.report-card').forEach(node=>node.remove());const target=document.getElementById('todayReports');parseNodes(state.reports).forEach(node=>{try{node.reportProcesses=JSON.parse(node.dataset.cloudProcesses||'[]');node.reportPhotos=JSON.parse(node.dataset.cloudPhotos||'[]')}catch{}target?.appendChild(node)})}
+    if(state.issues!=null){const host=document.querySelector('.issue-board');if(host)host.replaceChildren(...parseNodes(state.issues))}
+    if(Array.isArray(state.payments))localStorage.setItem('minWorksPlannedPaymentsV2',JSON.stringify(state.payments));
+    if(Array.isArray(state.receivables))localStorage.setItem('minWorksReceivablesV2',JSON.stringify(state.receivables));
+    window.MIN_WORKS_CLOUD_VERSION=Number(cached.version)||0;
+  } catch(error) { console.warn('Cloud snapshot bootstrap skipped',error); }
+})();
+
+/* v38 shared company data and R2 photo synchronization */
+(() => {
+  'use strict';
+  const API='https://min-works-api.forjaejun.workers.dev',TOKEN_KEY='minWorksSessionV1',CACHE_KEY='minWorksCloudSnapshotV1';
+  let version=Number(window.MIN_WORKS_CLOUD_VERSION)||0,timer=null,started=false,saving=false,dirty=false;
+  const token=()=>localStorage.getItem(TOKEN_KEY)||'';
+  async function request(path,options={}){const headers={...(options.headers||{}),Authorization:`Bearer ${token()}`};if(options.json)headers['Content-Type']='application/json';const response=await fetch(API+path,{method:options.method||'GET',headers,body:options.form||options.json&&JSON.stringify(options.json)});let data={};try{data=await response.json()}catch{}return{response,data}}
+  function cleanOuter(node){const clone=node.cloneNode(true);clone.querySelectorAll('.site-record-actions,.report-record-actions,.record-edit-button,.record-delete-button').forEach(item=>item.remove());clone.hidden=false;clone.removeAttribute('style');return clone.outerHTML}
+  function readArray(key){try{const value=JSON.parse(localStorage.getItem(key)||'[]');return Array.isArray(value)?value:[]}catch{return[]}}
+  async function uploadPendingPhotos(){for(const card of document.querySelectorAll('.report-card')){const photos=Array.isArray(card.reportPhotos)?card.reportPhotos:[];for(const photo of photos){if(!(photo.file instanceof File))continue;const form=new FormData();form.append('file',photo.file,photo.file.name);form.append('site',card.dataset.site||'');const{response,data}=await request('/files',{method:'POST',form});if(!response.ok)throw new Error(data.error||'사진을 클라우드에 저장하지 못했습니다.');if(String(photo.src).startsWith('blob:'))URL.revokeObjectURL(photo.src);photo.src=data.url;photo.size=data.size;photo.id=data.id;delete photo.file}card.dataset.cloudProcesses=JSON.stringify(card.reportProcesses||[]);card.dataset.cloudPhotos=JSON.stringify(photos.map(({file,...photo})=>photo))}}
+  function capture(){document.querySelectorAll('.report-card').forEach(card=>{card.dataset.cloudProcesses=JSON.stringify(card.reportProcesses||[]);card.dataset.cloudPhotos=JSON.stringify((card.reportPhotos||[]).map(({file,...photo})=>photo))});return{
+    siteCards:[...document.querySelectorAll('.site-list .site-card')].map(cleanOuter).join(''),
+    siteRows:[...document.querySelectorAll('.site-table-row')].map(cleanOuter).join(''),
+    reports:[...document.querySelectorAll('.report-card')].map(cleanOuter).join(''),
+    issues:[...document.querySelectorAll('.issue-detail-card')].map(cleanOuter).join(''),
+    payments:readArray('minWorksPlannedPaymentsV2'),receivables:readArray('minWorksReceivablesV2'),savedAt:new Date().toISOString()
+  }}
+  function cache(payload,nextVersion){localStorage.setItem(CACHE_KEY,JSON.stringify({version:nextVersion,payload}));window.MIN_WORKS_CLOUD_VERSION=nextVersion;version=nextVersion}
+  async function pull(reload=true){const{response,data}=await request('/company-state');if(!response.ok)throw new Error(data.error||'회사 자료를 불러오지 못했습니다.');if(data.version>version&&data.payload){cache(data.payload,data.version);if(reload)location.reload()}return data}
+  async function save(){if(saving||!token())return;clearTimeout(timer);saving=true;dirty=false;try{await uploadPendingPhotos();const payload=capture();const{response,data}=await request('/company-state',{method:'PUT',json:{baseVersion:version,payload}});if(response.status===409){notify('다른 직원의 최신 자료를 불러옵니다.');await pull(true);return}if(!response.ok)throw new Error(data.error||'회사 자료를 저장하지 못했습니다.');cache(payload,data.version);window.refreshMinWorksStorage?.()}catch(error){dirty=true;notify(error.message)}finally{saving=false}}
+  function queue(){if(!started||saving||document.body.classList.contains('auth-pending'))return;dirty=true;clearTimeout(timer);timer=setTimeout(save,900)}
+  function startObservers(){if(started)return;started=true;['.site-list','.site-table','#dailyListScreen','#issuesView','#mwPaymentList','#mwReceivableList'].forEach(selector=>{const node=document.querySelector(selector);if(node)new MutationObserver(queue).observe(node,{childList:true,subtree:true,attributes:true,attributeFilter:['data-progress','data-status','data-comments','data-due']})});document.addEventListener('click',event=>{if(event.target.closest('#savePayment,#saveReceivable,#mwSavePayment,#mwSaveReceivable,#saveIssue,#createSite,#deleteIssue,#toggleIssueStatus,#addIssueComment,[data-site-edit],[data-site-delete],.record-edit-button,.record-delete-button'))setTimeout(queue,100)});setInterval(async()=>{if(saving||dirty||!token())return;try{await pull(true)}catch{}},15000)}
+  async function init(){if(!token())return;try{const remote=await pull(false);if(remote.version>version&&remote.payload){cache(remote.payload,remote.version);location.reload();return}startObservers();if(remote.version===0)queue();window.refreshMinWorksStorage?.()}catch(error){notify(error.message)}}
+  document.addEventListener('minworks:user-ready',()=>setTimeout(init,200));
+})();
 
 /* SOURCE: app.js */
 const views = document.querySelectorAll('.view');
@@ -68,7 +109,7 @@ document.getElementById('dailyForm').addEventListener('submit',e=>{
   const card=document.createElement('button');card.className='report-card';card.dataset.author=currentUser;card.dataset.site=site;
   card.innerHTML=`<span class="report-file-icon"><span class="material-symbols-rounded">description</span></span><div><small>${site}</small><b>${Number(date.slice(5,7))}월 ${Number(date.slice(8,10))}일 공사일보</b><p>${processSummary||`공정 ${processes.length}개`} · 총출력 ${people}명 · 사진 ${photoCount}장</p></div><div class="report-author"><span>작성자</span><b>${currentUser} 부장</b><em class="owner-mark">내 일보</em></div><span class="report-status">작성 완료</span>`;
   card.dataset.totalPeople=String(people);
-  card.reportPhotos=[...document.querySelectorAll('#tbmPreview .uploaded-photo, #progressPreview .uploaded-photo')].map(photo=>({src:photo.dataset.photoSrc,type:photo.dataset.photoType||'현장사진',size:Number(photo.dataset.photoSize)||0})).filter(photo=>photo.src);
+  card.reportPhotos=[...document.querySelectorAll('#tbmPreview .uploaded-photo, #progressPreview .uploaded-photo')].map(photo=>({src:photo.dataset.photoSrc,type:photo.dataset.photoType||'현장사진',size:Number(photo.dataset.photoSize)||0,file:photo.photoFile||null})).filter(photo=>photo.src);
   card.reportProcesses=processData;
   card.dataset.reportDate=date;card.dataset.createdAt=new Date().toISOString();document.getElementById('todayReports').prepend(card);attachReportCard(card);renderCardCheckSummaries();updateSiteManagersFromReports();updateRecentReportLinks();
   notify('공사일보가 날짜별 목록에 추가되었습니다.');closeDailyEditor();if(userSettings.openAfterSubmit)setTimeout(()=>card.click(),250);
@@ -84,7 +125,7 @@ document.getElementById('progressPhotoAdd').addEventListener('click',()=>openPho
 function addPhotoPreviews(input,containerId,countId,type){
   const container=document.getElementById(containerId);
   [...input.files].forEach(file=>{
-    const card=document.createElement('div'),photoUrl=URL.createObjectURL(file);card.className='uploaded-photo';card.style.backgroundImage=`url(${photoUrl})`;card.dataset.photoSrc=photoUrl;card.dataset.photoType=type;card.dataset.photoSize=String(file.size||0);
+    const card=document.createElement('div'),photoUrl=URL.createObjectURL(file);card.className='uploaded-photo';card.style.backgroundImage=`url(${photoUrl})`;card.dataset.photoSrc=photoUrl;card.dataset.photoType=type;card.dataset.photoSize=String(file.size||0);card.photoFile=file;
     card.innerHTML=`<button type="button">×</button><small>${type} · ${userSettings?.photoQuality||'고화질'} · 방금 전</small>`;
     card.querySelector('button').addEventListener('click',()=>{card.remove();updatePhotoCount(containerId,countId)});
     container.appendChild(card);
@@ -996,13 +1037,14 @@ applyExtendedSettings();
   function read(key,fallback){try{return JSON.parse(localStorage.getItem(key)||JSON.stringify(fallback))}catch{return fallback}}
   function siteStats(){const map=new Map();cards().forEach(card=>{const site=card.dataset.site||'현장 미지정',current=map.get(site)||{site,reports:0,photos:0,photoBytes:0,documentBytes:0};current.reports+=1;current.documentBytes+=bytes(card.textContent)+bytes(JSON.stringify(card.reportProcesses||[]));cardPhotos(card).forEach(photo=>{current.photos+=1;current.photoBytes+=Number(photo.size)||0});map.set(site,current)});return [...map.values()]}
   function localDataBytes(){let total=0;for(let index=0;index<localStorage.length;index+=1){const key=localStorage.key(index);total+=bytes(key)+bytes(localStorage.getItem(key))}return total}
+  async function cloudStats(){const token=localStorage.getItem('minWorksSessionV1');if(!token)return null;try{const response=await fetch('https://min-works-api.forjaejun.workers.dev/storage-stats',{headers:{Authorization:`Bearer ${token}`}});return response.ok?response.json():null}catch{return null}}
   async function refreshStorage(){
     const stats=siteStats(),photoBytes=stats.reduce((sum,item)=>sum+item.photoBytes,0),documentBytes=localDataBytes()+stats.reduce((sum,item)=>sum+item.documentBytes,0);
-    let usage=photoBytes+documentBytes,quota=0;try{const estimate=await navigator.storage?.estimate?.();usage=Number(estimate?.usage)||usage;quota=Number(estimate?.quota)||0}catch{}
-    const other=Math.max(0,usage-photoBytes-documentBytes),percent=quota?Math.min(100,usage/quota*100):0;
+    const cloud=await cloudStats();const shownPhotoBytes=Number(cloud?.photoBytes)||photoBytes,shownDocumentBytes=Number(cloud?.documentBytes)||documentBytes;
+    const usage=Number(cloud?.totalBytes)||(shownPhotoBytes+shownDocumentBytes),quota=Number(cloud?.quotaBytes)||0,other=Math.max(0,usage-shownPhotoBytes-shownDocumentBytes),percent=quota?Math.min(100,usage/quota*100):0;
     const set=(id,value)=>{const element=document.getElementById(id);if(element)element.textContent=value};
-    set('storageMiniValue',quota?`${formatBytes(usage)} / ${formatBytes(quota)}`:formatBytes(usage));set('storageMiniBreakdown',`사진 ${formatBytes(photoBytes)} · 문서 ${formatBytes(documentBytes)}`);
-    set('storageUsed',formatBytes(usage));set('storageQuota',quota?`전체 ${formatBytes(quota)} 중 사용`:'이 기기 사용량');set('storagePercent',`${percent.toFixed(percent<1?2:0)}%`);set('storagePhotos',formatBytes(photoBytes));set('storageDocuments',formatBytes(documentBytes));set('storageOther',formatBytes(other));
+    set('storageMiniValue',quota?`${formatBytes(usage)} / ${formatBytes(quota)}`:formatBytes(usage));set('storageMiniBreakdown',`사진 ${formatBytes(shownPhotoBytes)} · 문서 ${formatBytes(shownDocumentBytes)}`);
+    set('storageUsed',formatBytes(usage));set('storageQuota',cloud?`회사 클라우드 ${formatBytes(quota)} 중 사용`:'연결 전 임시 사용량');set('storagePercent',`${percent.toFixed(percent<1?2:0)}%`);set('storagePhotos',formatBytes(shownPhotoBytes));set('storageDocuments',formatBytes(shownDocumentBytes));set('storageOther',formatBytes(other));
     ['storageMiniBar','storageMainBar'].forEach(id=>{const bar=document.getElementById(id);if(bar)bar.style.width=`${Math.max(percent,usage?1:0)}%`});
     renderSites(stats);renderTrash();
   }
@@ -1038,6 +1080,7 @@ applyExtendedSettings();
   document.querySelectorAll('[data-view="storage"]').forEach(button=>button.addEventListener('click',()=>setTimeout(refreshStorage,0)));
   document.addEventListener('minworks:exported',event=>offerRetention(event.detail?.site,event.detail?.type));
   new MutationObserver(()=>refreshStorage()).observe(document.getElementById('dailyListScreen'),{childList:true,subtree:true});
+  window.refreshMinWorksStorage=refreshStorage;
   refreshStorage();
 })();
 
@@ -2060,6 +2103,7 @@ window.MIN_WORKS_CONFIG = Object.freeze({
     updateProfile(user);
     window.applyMinWorksAccess?.(user);
     addAccountButton(user);
+    document.dispatchEvent(new CustomEvent('minworks:user-ready',{detail:{user}}));
   }
 
   function updateProfile(user) {
