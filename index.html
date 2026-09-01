@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0,0" rel="stylesheet">
-<link rel="stylesheet" href="app-latest.css?v=30" />
+<link rel="stylesheet" href="app-latest.css?v=33" />
 </head>
 <body>
   <div class="app-shell">
@@ -53,7 +53,7 @@
           <button id="mobileDailyStart"><span class="material-symbols-rounded">edit_note</span>일보 작성</button>
         </section>
         <div class="summary-grid">
-          <article class="summary-card highlight"><div><span>진행 중 현장</span><strong>4</strong></div><div class="mini-bars"><i></i><i></i><i></i><i></i></div></article>
+          <article class="summary-card highlight"><div><span>진행 중 현장</span><strong>4</strong><em class="active-site-copy">4개 현장 운영 중</em></div><div class="mini-bars"><i></i><i></i><i></i><i></i></div></article>
           <article class="summary-card"><span>오늘 현장 보고</span><strong>3<small>/ 4</small></strong><em class="up">3개 현장 보고 완료</em></article>
           <article class="summary-card"><span>미처리 이슈</span><strong>2<small>건</small></strong><em class="danger">긴급 1건</em></article>
         </div>
@@ -111,7 +111,7 @@
         <div class="daily-editor" id="dailyEditor" hidden><div class="editor-head"><button id="closeDailyEditor"><span class="material-symbols-rounded">arrow_back</span></button><div><small>작성자 · 김재준 부장</small><h3>새 공사일보 작성</h3></div><span class="draft-state">작성 중</span></div>
         <form class="daily-form panel" id="dailyForm">
           <div class="form-grid two"><label>현장<select><option>연세대학교 고를샘 학생식당</option><option>에잇세컨즈 AK분당점</option><option>알뜰주유소 시설개선</option><option>힐스테이트 아산 커뮤니티</option></select></label><label>작업일<input type="date" value="2026-08-20"></label></div>
-          <div class="form-section process-section"><div class="label-row"><h3>공정별 작업 현황</h3><small>기본 5개 · 필요시 추가</small></div><div class="process-head"><span>공정</span><span>인원</span><span>작업내용</span></div><div class="process-rows" id="processRows">
+          <div class="form-section process-section"><div class="label-row"><h3>공정별 작업 현황</h3><small>기본 5개 · 필요시 추가</small></div><div class="process-head"><span>공정</span><span>금일인원</span><span>누계인원</span><span>작업내용</span></div><div class="process-rows" id="processRows">
             <div class="process-row"><label><span>공정 1</span><input placeholder="예: 목공" value="목공"></label><label><span>인원</span><input type="number" value="3" min="0"><i>명</i></label><label><span>작업내용</span><input placeholder="세부 작업내용" value="홀 천장틀 및 벽체 마감"></label></div>
             <div class="process-row"><label><span>공정 2</span><input placeholder="예: 타일" value="타일"></label><label><span>인원</span><input type="number" value="4" min="0"><i>명</i></label><label><span>작업내용</span><input placeholder="세부 작업내용" value="주방 벽체 타일 시공"></label></div>
             <div class="process-row"><label><span>공정 3</span><input placeholder="공정명"></label><label><span>인원</span><input type="number" min="0"><i>명</i></label><label><span>작업내용</span><input placeholder="세부 작업내용"></label></div>
@@ -160,7 +160,10 @@
       <section class="view" id="patchView">
         <div class="section-title patch-title"><div><p class="eyebrow">MIN WORKS UPDATE</p><h2>패치노트</h2><small>주요 기능이 적용될 때마다 간단히 알려드립니다.</small></div></div>
         <section class="patch-list panel">
-          <article class="patch-item latest"><time datetime="2026-09-01">2026. 09. 01</time><div><span>v30</span><h3>패치노트 추가</h3><p>주요 기능의 적용 날짜와 변경 내용을 앱에서 간단히 확인할 수 있습니다.</p></div></article>
+          <article class="patch-item latest"><time datetime="2026-09-01">2026. 09. 01</time><div><span>v33</span><h3>공정별 누계인원 자동 계산</h3><p>금일인원을 입력하면 같은 현장과 공정의 이전 공사일보 인원을 더해 누계인원을 자동 표시합니다.</p></div></article>
+          <article class="patch-item"><time datetime="2026-09-01">2026. 09. 01</time><div><span>v32</span><h3>공사일보 표준 공정 선택</h3><p>공사일보의 공정명을 회사 공통 목록에서 선택하여 현장별 기록을 통일할 수 있습니다.</p></div></article>
+          <article class="patch-item"><time datetime="2026-09-01">2026. 09. 01</time><div><span>v31</span><h3>진행 현장 수 표시 통일</h3><p>PC와 모바일 홈에서 동일한 진행 현장 수와 운영 현황을 확인할 수 있습니다.</p></div></article>
+          <article class="patch-item"><time datetime="2026-09-01">2026. 09. 01</time><div><span>v30</span><h3>패치노트 추가</h3><p>주요 기능의 적용 날짜와 변경 내용을 앱에서 간단히 확인할 수 있습니다.</p></div></article>
           <article class="patch-item"><time datetime="2026-09-01">2026. 09. 01</time><div><span>v29</span><h3>공사일보 간편 등록</h3><p>단계 이동 없이 한 화면에서 작성하고, 사진 유무와 관계없이 한 번에 등록할 수 있습니다.</p></div></article>
           <article class="patch-item"><time datetime="2026-09-01">2026. 09. 01</time><div><span>v28</span><h3>직원 승인과 자금 집행 개선</h3><p>직원 부서·직급 및 관리자 승인 기능을 추가하고, 예정 지출과 수금 화면을 월별로 정리했습니다.</p></div></article>
           <article class="patch-item"><time datetime="2026-08-31">2026. 08. 31</time><div><span>v27</span><h3>현장 업무 기능 연결</h3><p>공사일보와 이슈의 수정·삭제, 현장 상태 자동 분류, 홈 화면 요약 연결을 적용했습니다.</p></div></article>
@@ -199,7 +202,7 @@
   <div class="progress-modal" id="progressModal"><div class="progress-backdrop"></div><section><header><div><p class="eyebrow">PROGRESS UPDATE</p><h2>공정률 변경</h2><small id="progressSiteName">연세대학교 고를샘</small></div><button id="closeProgressModal">×</button></header><div class="progress-value"><b id="progressValue">72</b><span>%</span></div><input type="range" id="progressRange" min="0" max="100" value="72"><label>변경 사유<textarea id="progressNote" rows="3" placeholder="예: 목공 및 타일 공정 완료"></textarea></label><p><span class="material-symbols-rounded">history</span>변경자와 변경 시간이 자동으로 기록됩니다.</p><button class="primary full" id="saveProgress">공정률 저장</button></section></div>
   <div class="money-form-modal" id="paymentFormModal"><div class="money-modal-backdrop"></div><section><header><div><p class="eyebrow">SITE PAYMENT</p><h2>지출·기성 작성</h2><small>현장소장 작성</small></div><button data-close-money="paymentFormModal">×</button></header><div class="money-form-grid"><label>현장<select id="paymentSite"><option>연세대학교 고를샘</option><option>에잇세컨즈 AK분당점</option><option>알뜰주유소 시설개선</option><option>힐스테이트 아산</option></select></label><label>구분<select id="paymentType"><option>월 기성</option><option>월요일 긴급지출</option></select></label><label>금액<input id="paymentAmount" type="number" placeholder="금액 입력"></label><label>지급 희망일<input id="paymentDate" type="date" value="2026-09-10"></label></div><label>내용<textarea id="paymentMemo" rows="3" placeholder="인건비, 현지업체 결제 등 내용을 입력하세요."></textarea></label><button class="primary full" id="savePayment">작성 완료 · 공무부로 전달</button></section></div>
   <div class="money-form-modal" id="receivableFormModal"><div class="money-modal-backdrop"></div><section><header><div><p class="eyebrow">RECEIVABLE</p><h2>거래처 수금 예정 작성</h2><small>공무부·경리부 작성</small></div><button data-close-money="receivableFormModal">×</button></header><div class="money-form-grid"><label>거래처<input id="receivableClient" placeholder="거래처명"></label><label>현장<select id="receivableSite"><option>연세대학교 고를샘</option><option>에잇세컨즈 AK분당점</option><option>알뜰주유소 시설개선</option><option>힐스테이트 아산</option></select></label><label>청구 금액<input id="receivableAmount" type="number" placeholder="금액 입력"></label><label>입금 예정일<input id="receivableDate" type="date"></label></div><label>비고<textarea id="receivableMemo" rows="3" placeholder="청구 조건이나 입금 관련 내용을 입력하세요."></textarea></label><button class="primary full" id="saveReceivable">수금 예정 등록</button></section></div>
-<script src="app-latest.js?v=30"></script>
+<script src="app-latest.js?v=33"></script>
 </body>
 </html>
 

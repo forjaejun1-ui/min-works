@@ -22,19 +22,52 @@ const toast=document.getElementById('toast');
 function notify(message){toast.textContent=message;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),2200)}
 document.querySelectorAll('.task input').forEach(input=>input.addEventListener('change',()=>notify(input.checked?'업무를 완료 처리했습니다.':'완료를 취소했습니다.')));
 const dailyListScreen=document.getElementById('dailyListScreen'),dailyEditor=document.getElementById('dailyEditor');
-function openDailyEditor(){dailyListScreen.hidden=true;dailyEditor.hidden=false;document.getElementById('openDailyEditor').style.display='none';restoreDailyDraft();window.scrollTo({top:0,behavior:'smooth'})}
+function openDailyEditor(){dailyListScreen.hidden=true;dailyEditor.hidden=false;document.getElementById('openDailyEditor').style.display='none';restoreDailyDraft();updateCumulativePeople();window.scrollTo({top:0,behavior:'smooth'})}
 function closeDailyEditor(){dailyEditor.hidden=true;dailyListScreen.hidden=false;document.getElementById('openDailyEditor').style.display='flex';window.scrollTo({top:0,behavior:'smooth'})}
 document.getElementById('openDailyEditor').addEventListener('click',openDailyEditor);
 document.getElementById('closeDailyEditor').addEventListener('click',closeDailyEditor);
+const workProcessOptions=['철거','제작가구','경량','금속','샷시','수장','도장','목공','석공','습식','미장','방수','준공청소','청소','용역','유리','인조석','조경(생화)','조경(조화)','큐비클','타일','필름','사인','전기','통신','전기통신','소방전기','소방','기계설비','위생설비','공조설비','에어컨','가설','폐기물','이동식가구','매트','건축','토목','잡철물','어닝','디지털사이니지','방송','영상','DID','살균','조형','DP'];
+function createProcessSelect(value=''){
+  const select=document.createElement('select');select.className='process-name';select.setAttribute('aria-label','공정 선택');
+  select.innerHTML='<option value="">공정 선택</option>'+workProcessOptions.map(name=>`<option value="${name}">${name}</option>`).join('');
+  select.value=workProcessOptions.includes(value)?value:'';return select;
+}
+function addCumulativeField(row){
+  if(row.querySelector('.cumulative-people'))return;
+  const label=document.createElement('label');label.className='cumulative-field';label.innerHTML='<span>누계인원</span><input class="cumulative-people" type="number" value="0" readonly tabindex="-1"><i>명</i>';
+  row.insertBefore(label,row.children[2]||null);
+}
+function cardProcessEntries(card){
+  if(Array.isArray(card.reportProcesses))return card.reportProcesses;
+  const summary=card.querySelector('p')?.textContent||'';const entries=[];
+  summary.replace(/([^·]+?)\s+(\d+)명/g,(_,name,count)=>{const clean=name.trim();if(workProcessOptions.includes(clean))entries.push({name:clean,today:Number(count)||0})});
+  return entries;
+}
+function updateCumulativePeople(){
+  const form=document.getElementById('dailyForm');if(!form)return;
+  const site=form.querySelector('select')?.value.replace(' 학생식당','')||'';const date=form.querySelector('input[type=date]')?.value||'';
+  document.querySelectorAll('#processRows .process-row').forEach(row=>{
+    const process=row.querySelector('.process-name')?.value||'';const today=Number(row.querySelector('input[type=number]:not(.cumulative-people)')?.value)||0;
+    const previous=[...document.querySelectorAll('.report-card')].filter(card=>card.dataset.site===site&&card.dataset.reportDate&&card.dataset.reportDate<date).reduce((total,card)=>total+cardProcessEntries(card).filter(item=>item.name===process).reduce((sum,item)=>sum+(Number(item.today)||0),0),0);
+    const cumulative=row.querySelector('.cumulative-people');if(cumulative)cumulative.value=process?previous+today:0;
+  });
+}
+document.querySelectorAll('#processRows .process-row').forEach(row=>{const input=row.querySelector('label:first-child input');if(input)input.replaceWith(createProcessSelect(input.value.trim()));const peopleLabel=row.children[1];if(peopleLabel?.querySelector('span'))peopleLabel.querySelector('span').textContent='금일인원';addCumulativeField(row)});
+document.getElementById('dailyForm').addEventListener('input',updateCumulativePeople);
+document.getElementById('dailyForm').addEventListener('change',updateCumulativePeople);
 document.getElementById('dailyForm').addEventListener('submit',e=>{
   e.preventDefault();
   const site=e.currentTarget.querySelector('select').value.replace(' 학생식당','');
   const date=e.currentTarget.querySelector('input[type=date]').value;
-  const processes=[...document.querySelectorAll('#processRows .process-row')].filter(r=>r.querySelector('input').value.trim());
+  const processes=[...document.querySelectorAll('#processRows .process-row')].filter(r=>r.querySelector('.process-name')?.value);
   const people=processes.reduce((sum,r)=>sum+(Number(r.querySelector('input[type=number]').value)||0),0);
+  const processData=processes.map(row=>({name:row.querySelector('.process-name').value,today:Number(row.querySelector('input[type=number]:not(.cumulative-people)').value)||0,cumulative:Number(row.querySelector('.cumulative-people').value)||0}));
+  const photoCount=document.querySelectorAll('#tbmPreview .uploaded-photo, #progressPreview .uploaded-photo').length;
+  const processSummary=processData.map(item=>`${item.name} ${item.today}명`).join(' · ');
   const card=document.createElement('button');card.className='report-card';card.dataset.author=currentUser;card.dataset.site=site;
-  card.innerHTML=`<span class="report-file-icon"><span class="material-symbols-rounded">description</span></span><div><small>${site}</small><b>${Number(date.slice(5,7))}월 ${Number(date.slice(8,10))}일 공사일보</b><p>공정 ${processes.length}개 · 작업인원 ${people}명 · 작성 완료</p></div><div class="report-author"><span>작성자</span><b>${currentUser} 부장</b><em class="owner-mark">내 일보</em></div><span class="report-status">작성 완료</span>`;
+  card.innerHTML=`<span class="report-file-icon"><span class="material-symbols-rounded">description</span></span><div><small>${site}</small><b>${Number(date.slice(5,7))}월 ${Number(date.slice(8,10))}일 공사일보</b><p>${processSummary||`공정 ${processes.length}개`} · 사진 ${photoCount}장</p></div><div class="report-author"><span>작성자</span><b>${currentUser} 부장</b><em class="owner-mark">내 일보</em></div><span class="report-status">작성 완료</span>`;
   card.reportPhotos=[...document.querySelectorAll('#tbmPreview .uploaded-photo, #progressPreview .uploaded-photo')].map(photo=>({src:photo.dataset.photoSrc,type:photo.dataset.photoType||'현장사진'})).filter(photo=>photo.src);
+  card.reportProcesses=processData;
   card.dataset.reportDate=date;card.dataset.createdAt=new Date().toISOString();document.getElementById('todayReports').prepend(card);attachReportCard(card);renderCardCheckSummaries();updateSiteManagersFromReports();updateRecentReportLinks();
   notify('공사일보가 날짜별 목록에 추가되었습니다.');closeDailyEditor();if(userSettings.openAfterSubmit)setTimeout(()=>card.click(),250);
 });
@@ -108,9 +141,11 @@ document.getElementById('addProcess').addEventListener('click',()=>{
   const number=rows.children.length+1;
   const row=document.createElement('div');
   row.className='process-row';
-  row.innerHTML=`<label><span>공정 ${number}</span><input placeholder="공정명"></label><label><span>인원</span><input type="number" min="0"><i>명</i></label><label><span>작업내용</span><input placeholder="세부 작업내용"></label>`;
+  row.innerHTML=`<label><span>공정 ${number}</span></label><label><span>금일인원</span><input type="number" min="0"><i>명</i></label><label><span>작업내용</span><input placeholder="세부 작업내용"></label>`;
+  row.querySelector('label:first-child').appendChild(createProcessSelect());
+  addCumulativeField(row);
   rows.appendChild(row);
-  row.querySelector('input').focus();
+  row.querySelector('.process-name').focus();
   notify(`공정 ${number} 입력줄을 추가했습니다.`);
 });
 
@@ -1394,7 +1429,7 @@ window.MIN_WORKS_CONFIG = Object.freeze({
       const issues = [...document.querySelectorAll('.issue-detail-card')].filter(card => card.dataset.status !== 'complete');
       const urgent = issues.filter(card => card.querySelector('.issue-label:not(.normal)')).length;
       const liveCards = [...document.querySelectorAll('.summary-grid .summary-card')];
-      if (liveCards[0]) { liveCards[0].querySelector('strong').textContent = activeRows.length; liveCards[0].dataset.target = 'sites'; }
+      if (liveCards[0]) { liveCards[0].querySelector('strong').textContent = activeRows.length; const copy=liveCards[0].querySelector('.active-site-copy'); if(copy)copy.textContent=`${activeRows.length}개 현장 운영 중`; liveCards[0].dataset.target = 'sites'; }
       if (liveCards[1]) { liveCards[1].querySelector('strong').innerHTML = `${todaySites.size}<small>/ ${activeRows.length}</small>`; liveCards[1].querySelector('em').textContent = `${todaySites.size}개 현장 보고 완료`; liveCards[1].dataset.target = 'daily'; }
       if (liveCards[2]) { liveCards[2].querySelector('strong').innerHTML = `${issues.length}<small>건</small>`; liveCards[2].querySelector('em').textContent = urgent ? `긴급 ${urgent}건` : '긴급 이슈 없음'; liveCards[2].dataset.target = 'issues'; }
       const focus = document.querySelector('.mobile-focus');
