@@ -158,6 +158,7 @@ const checkRecords={
   '힐스테이트 아산 커뮤니티':[{name:'김재준 부장',time:'어제 오후 6:20'}]
 };
 let activeReportSite='';
+let activeReportCard=null;
 function renderCardCheckSummaries(){
   document.querySelectorAll('.report-card').forEach(card=>{
     const records=checkRecords[card.dataset.site]||[];
@@ -175,6 +176,7 @@ function renderCheckHistory(){
   const button=document.getElementById('checkReport');button.disabled=checked;button.classList.toggle('checked',checked);button.innerHTML=checked?'<span class="material-symbols-rounded">done_all</span>확인 완료':'<span class="material-symbols-rounded">done</span>확인했습니다';
 }
 function attachReportCard(card){card.addEventListener('click',()=>{
+  activeReportCard=card;
   activeReportSite=card.dataset.site;
   document.getElementById('viewerSite').textContent=card.dataset.site;
   document.getElementById('viewerAuthor').textContent=card.querySelector('.report-author b').textContent;
@@ -201,6 +203,34 @@ document.querySelectorAll('.report-card').forEach(attachReportCard);
 document.getElementById('closeReportViewer').addEventListener('click',()=>reportViewer.classList.remove('show'));
 reportViewer.querySelector('.viewer-backdrop').addEventListener('click',()=>reportViewer.classList.remove('show'));
 document.getElementById('editOwnReport').addEventListener('click',()=>{reportViewer.classList.remove('show');openDailyEditor();notify('내 공사일보 수정 화면을 열었습니다.')});
+
+// 공사일보·현장 이슈 삭제 상태는 이 기기에 보관합니다.
+const deletedRecordKey='minWorksDeletedRecordsV1';
+function deletedRecords(){try{return JSON.parse(localStorage.getItem(deletedRecordKey)||'{"reports":[],"issues":[]}')}catch{return {reports:[],issues:[]}}}
+function saveDeletedRecord(type,id){const saved=deletedRecords();if(!saved[type].includes(id))saved[type].push(id);localStorage.setItem(deletedRecordKey,JSON.stringify(saved))}
+function recordId(element,type){
+  if(element.dataset.recordId)return element.dataset.recordId;
+  const parts=type==='reports'
+    ?[element.dataset.site,element.dataset.author,element.querySelector('b')?.textContent,element.dataset.reportDate]
+    :[element.dataset.issueCard,element.querySelector('h3')?.textContent,element.querySelector('small')?.textContent];
+  element.dataset.recordId=parts.filter(Boolean).join('|').replace(/\s+/g,' ').trim();
+  return element.dataset.recordId;
+}
+function removeReportCard(card){const group=card.closest('.date-group');card.remove();if(group&&!group.querySelector('.report-card'))group.remove()}
+function syncSiteIssueAlerts(){document.querySelectorAll('[data-issue-site]').forEach(alert=>{const site=alert.dataset.issueSite;if(![...document.querySelectorAll('.issue-detail-card')].some(card=>card.dataset.issueCard===site))alert.closest('span').innerHTML='<em class="status ok">이슈 없음</em>'})}
+function refreshAfterRecordDelete(){renderCardCheckSummaries();updateSiteManagersFromReports();updateRecentReportLinks();refreshIssueSummary();syncSiteIssueAlerts();window.refreshProjectStatuses?.();window.refreshMinWorksSummary?.()}
+function canDeleteReport(card){const user=window.MIN_WORKS_USER;return user?.role==='admin'||card?.dataset.author===currentUser}
+const reportDeleteButton=document.createElement('button');
+reportDeleteButton.type='button';reportDeleteButton.id='deleteReport';reportDeleteButton.className='record-delete-button';
+reportDeleteButton.innerHTML='<span class="material-symbols-rounded">delete</span>일보 삭제';
+document.querySelector('#reportViewer .viewer-actions')?.prepend(reportDeleteButton);
+reportDeleteButton.addEventListener('click',()=>{
+  const card=activeReportCard;if(!card)return;
+  if(!canDeleteReport(card)){notify('관리자 또는 작성자만 공사일보를 삭제할 수 있습니다.');return}
+  const title=card.querySelector('div>b')?.textContent||'공사일보';
+  if(!confirm(`${card.dataset.site} · ${title}\n\n이 공사일보를 삭제할까요? 삭제 후 되돌릴 수 없습니다.`))return;
+  saveDeletedRecord('reports',recordId(card,'reports'));removeReportCard(card);reportViewer.classList.remove('show');activeReportCard=null;refreshAfterRecordDelete();notify('공사일보를 삭제했습니다.');
+});
 document.getElementById('checkReport').addEventListener('click',()=>{
   const records=checkRecords[activeReportSite]||(checkRecords[activeReportSite]=[]);
   if(!records.some(r=>r.name.startsWith(currentUser)))records.push({name:currentUser+' 부장',time:'방금 전'});
@@ -341,7 +371,7 @@ const issueFilterButtons=[...document.querySelectorAll('.issue-summary button')]
 function refreshIssueSummary(){const cards=[...document.querySelectorAll('.issue-detail-card')],counts=[cards.length,cards.filter(c=>c.dataset.urgency==='urgent').length,cards.filter(c=>c.dataset.status!=='complete').length,cards.filter(c=>c.dataset.status==='complete').length];issueFilterButtons.forEach((button,index)=>button.textContent=['전체 ','긴급 ','진행 중 ','완료 '][index]+counts[index]);}
 document.querySelectorAll('.issue-detail-card').forEach(card=>{card.dataset.urgency=card.classList.contains('urgent')?'urgent':'normal';card.dataset.status='active';card.dataset.comments=card.querySelector('.issue-meta span:last-child')?.textContent.match(/\d+/)?.[0]||'0';card.dataset.due=card.querySelector('.issue-meta span:nth-child(2)')?.textContent.trim()||'기한 미정';});
 issueFilterButtons.forEach(button=>button.addEventListener('click',()=>{issueFilterButtons.forEach(x=>x.classList.toggle('active',x===button));document.querySelectorAll('.issue-detail-card').forEach(card=>{const f=button.dataset.issueFilter;card.style.display=f==='all'||f===card.dataset.urgency||(f==='active'&&card.dataset.status==='active')||(f==='complete'&&card.dataset.status==='complete')?'block':'none';});}));
-const issueDetailActions=document.createElement('div');issueDetailActions.className='issue-detail-actions';issueDetailActions.innerHTML='<div class="issue-status-row"><span id="peekDue">기한 미정</span><button id="toggleIssueStatus">완료 처리</button></div><section class="issue-comments"><b>댓글 <em id="peekCommentCount">0</em></b><div id="peekCommentList"><p><strong>김재준 부장</strong> 발주처 확인 후 공유하겠습니다.</p></div><label><input id="issueCommentInput" placeholder="댓글을 입력하세요"><button id="addIssueComment">등록</button></label></section>';issuePeek.querySelector('section').appendChild(issueDetailActions);let activeIssueCard=null;
+const issueDetailActions=document.createElement('div');issueDetailActions.className='issue-detail-actions';issueDetailActions.innerHTML='<div class="issue-status-row"><span id="peekDue">기한 미정</span><div><button id="deleteIssue" class="record-delete-button"><span class="material-symbols-rounded">delete</span>이슈 삭제</button><button id="toggleIssueStatus">완료 처리</button></div></div><section class="issue-comments"><b>댓글 <em id="peekCommentCount">0</em></b><div id="peekCommentList"><p><strong>김재준 부장</strong> 발주처 확인 후 공유하겠습니다.</p></div><label><input id="issueCommentInput" placeholder="댓글을 입력하세요"><button id="addIssueComment">등록</button></label></section>';issuePeek.querySelector('section').appendChild(issueDetailActions);let activeIssueCard=null;
 document.getElementById('closeIssueForm').addEventListener('click',()=>issueFormModal.classList.remove('show'));
 issueFormModal.querySelector('.issue-modal-backdrop').addEventListener('click',()=>issueFormModal.classList.remove('show'));
 document.getElementById('saveIssue').addEventListener('click',()=>{
@@ -360,7 +390,21 @@ document.querySelectorAll('.site-issue-alert').forEach(attachSiteIssueAlert);doc
 document.getElementById('closeIssuePeek').addEventListener('click',()=>issuePeek.classList.remove('show'));issuePeek.querySelector('.issue-peek-backdrop').addEventListener('click',()=>issuePeek.classList.remove('show'));
 document.getElementById('goToIssue').addEventListener('click',()=>{issuePeek.classList.remove('show');showView('issues')});
 document.getElementById('toggleIssueStatus').addEventListener('click',()=>{if(!activeIssueCard)return;const complete=activeIssueCard.dataset.status!=='complete';activeIssueCard.dataset.status=complete?'complete':'active';activeIssueCard.classList.toggle('issue-completed',complete);activeIssueCard.querySelector('header>em').textContent=complete?'완료':'진행 중';document.getElementById('toggleIssueStatus').textContent=complete?'다시 진행':'완료 처리';refreshIssueSummary();notify(complete?'이슈를 완료 처리했습니다.':'이슈를 다시 진행 상태로 바꿨습니다.');});
+document.getElementById('deleteIssue').addEventListener('click',()=>{
+  if(!activeIssueCard)return;
+  const user=window.MIN_WORKS_USER,owner=activeIssueCard.querySelector('.issue-meta span')?.textContent||'';
+  if(user?.role!=='admin'&&!owner.includes(currentUser)){notify('관리자 또는 담당자만 이슈를 삭제할 수 있습니다.');return}
+  const site=activeIssueCard.dataset.issueCard,title=activeIssueCard.querySelector('h3')?.textContent||'현장 이슈';
+  if(!confirm(`${site} · ${title}\n\n이 이슈를 삭제할까요? 삭제 후 되돌릴 수 없습니다.`))return;
+  saveDeletedRecord('issues',recordId(activeIssueCard,'issues'));activeIssueCard.remove();issuePeek.classList.remove('show');activeIssueCard=null;
+  const remaining=[...document.querySelectorAll('.issue-detail-card')].some(card=>card.dataset.issueCard===site);
+  if(!remaining){const alert=[...document.querySelectorAll('[data-issue-site]')].find(item=>item.dataset.issueSite===site);if(alert)alert.closest('span').innerHTML='<em class="status ok">이슈 없음</em>'}
+  refreshAfterRecordDelete();notify('현장 이슈를 삭제했습니다.');
+});
 document.getElementById('addIssueComment').addEventListener('click',()=>{const input=document.getElementById('issueCommentInput'),text=input.value.trim();if(!text||!activeIssueCard)return;const comment=document.createElement('p');comment.innerHTML=`<strong>김재준 부장</strong> ${text}`;document.getElementById('peekCommentList').appendChild(comment);activeIssueCard.dataset.comments=String(Number(activeIssueCard.dataset.comments||0)+1);activeIssueCard.querySelector('.issue-meta span:last-child').innerHTML=`<i class="material-symbols-rounded">chat</i>댓글 ${activeIssueCard.dataset.comments}`;document.getElementById('peekCommentCount').textContent=activeIssueCard.dataset.comments;input.value='';notify('댓글을 등록했습니다.');});refreshIssueSummary();
+
+// 삭제한 샘플은 새로고침해도 다시 나타나지 않습니다.
+(()=>{const saved=deletedRecords();document.querySelectorAll('.report-card').forEach(card=>{if(saved.reports.includes(recordId(card,'reports')))removeReportCard(card)});document.querySelectorAll('.issue-detail-card').forEach(card=>{if(saved.issues.includes(recordId(card,'issues')))card.remove()});refreshAfterRecordDelete()})();
 
 // 공정률은 현장소장이 직접 갱신하고 이력을 남김
 const progressModal=document.getElementById('progressModal'),progressRange=document.getElementById('progressRange');let activeProgressButton=null;
