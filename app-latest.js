@@ -2,7 +2,7 @@
 /* SOURCE: app.js */
 const views = document.querySelectorAll('.view');
 const navButtons = document.querySelectorAll('[data-view]');
-const titles = {dashboard:'좋은 아침입니다, 재준님',sites:'현장 관리',daily:'공사일보',finance:'자금 현황',issues:'이슈 관리',calendar:'회사 일정',settings:'사용자 설정',help:'앱 사용법'};
+const titles = {dashboard:'좋은 아침입니다, 재준님',sites:'현장 관리',daily:'공사일보',finance:'자금 집행',issues:'이슈 관리',calendar:'회사 일정',settings:'사용자 설정',help:'앱 사용법',patch:'패치노트'};
 function showView(name){views.forEach(v=>v.classList.toggle('active',v.id===name+'View'));navButtons.forEach(b=>b.classList.toggle('active',b.dataset.view===name));document.getElementById('pageTitle').textContent=titles[name];window.scrollTo({top:0,behavior:'smooth'});}
 
 // 서울 시간 기준 인사말 (날씨 값은 Google Weather API 연결 지점)
@@ -28,7 +28,6 @@ document.getElementById('openDailyEditor').addEventListener('click',openDailyEdi
 document.getElementById('closeDailyEditor').addEventListener('click',closeDailyEditor);
 document.getElementById('dailyForm').addEventListener('submit',e=>{
   e.preventDefault();
-  if(userSettings.photoWarning&&!document.querySelector('#tbmPreview .uploaded-photo, #progressPreview .uploaded-photo')){notify('사진 누락 알림: TBM 또는 현장 사진을 1장 이상 추가해주세요.');return}
   const site=e.currentTarget.querySelector('select').value.replace(' 학생식당','');
   const date=e.currentTarget.querySelector('input[type=date]').value;
   const processes=[...document.querySelectorAll('#processRows .process-row')].filter(r=>r.querySelector('input').value.trim());
@@ -102,21 +101,6 @@ document.getElementById('mobileDailyStart').addEventListener('click',()=>{showVi
 document.querySelectorAll('.photo-categories button').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('.photo-categories button').forEach(x=>x.classList.remove('active'));b.classList.add('active');
 }));
-
-// 모바일 단계형 공사일보
-const dailyChildren=[...document.querySelector('.daily-form').children];
-const reportGroups=[[dailyChildren[0]],[dailyChildren[1],dailyChildren[2]],[dailyChildren[3],dailyChildren[4]]];
-let reportStep=0;
-const prevBtn=document.getElementById('reportPrev'),nextBtn=document.getElementById('reportNext'),submitBtn=document.getElementById('reportSubmit');
-function renderReportStep(){
-  dailyChildren.forEach(x=>x.classList.remove('step-visible'));
-  reportGroups[reportStep].forEach(x=>x.classList.add('step-visible'));
-  document.querySelectorAll('.report-stepper div').forEach((x,i)=>x.classList.toggle('active',i<=reportStep));
-  prevBtn.style.visibility=reportStep===0?'hidden':'visible';nextBtn.style.display=reportStep===2?'none':'inline-block';submitBtn.style.display=reportStep===2?'inline-block':'none';
-}
-prevBtn.addEventListener('click',()=>{if(reportStep>0){reportStep--;renderReportStep();window.scrollTo({top:0,behavior:'smooth'})}});
-nextBtn.addEventListener('click',()=>{if(reportStep<2){reportStep++;renderReportStep();window.scrollTo({top:0,behavior:'smooth'})}});
-renderReportStep();
 
 // 공정 입력줄 추가
 document.getElementById('addProcess').addEventListener('click',()=>{
@@ -623,10 +607,6 @@ applyExtendedSettings();
     button.addEventListener('click', () => {
       showView('daily');
       openDailyEditor();
-      if (typeof reportStep !== 'undefined') {
-        reportStep = 1;
-        if (typeof renderReportStep === 'function') renderReportStep();
-      }
       setTimeout(() => document.querySelector('.photo-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
       notify('공사일보의 현장사진 등록 화면을 열었습니다.');
     });
@@ -966,6 +946,69 @@ applyExtendedSettings();
   }
 })();
 
+/* v28 unified workflow and dashboard enhancements */
+(() => {
+  'use strict';
+  const financeAllowed=user=>user?.role==='admin'||['임원','공무팀','관리팀','시공팀'].includes(user?.department);
+  window.applyMinWorksAccess=user=>{
+    document.querySelectorAll('[data-view="finance"],[data-go="finance"],[data-menu-view="finance"],[data-bottom-view="finance"]').forEach(node=>node.hidden=!financeAllowed(user));
+    const canWritePayment=user?.role==='admin'||user?.department==='시공팀';const canWriteReceivable=user?.role==='admin'||['공무팀','관리팀'].includes(user?.department);
+    if(document.getElementById('mwOpenPayment'))document.getElementById('mwOpenPayment').hidden=!canWritePayment;
+    if(document.getElementById('mwOpenReceivable'))document.getElementById('mwOpenReceivable').hidden=!canWriteReceivable;
+    document.body.classList.toggle('finance-restricted',!financeAllowed(user));
+    if(!financeAllowed(user)&&document.getElementById('financeView')?.classList.contains('active'))window.showView?.('dashboard');
+    const eyebrow=document.querySelector('.greeting-wrap .eyebrow');if(eyebrow)eyebrow.textContent='MIN WORKS';
+    const profile=user?.role==='admin'?'관리자':`${user?.department||''} ${user?.name||''} ${user?.rank||''}`.trim();
+    const live=document.querySelector('.live-user-welcome');if(live)live.textContent=`${profile} 님, MIN WORKS에 오신 것을 환영합니다.`;
+  };
+
+  document.querySelector('.greeting-wrap .eyebrow')?.replaceChildren(document.createTextNode('MIN WORKS'));
+  const financeNav=document.querySelector('.nav-item[data-view="finance"]');if(financeNav)financeNav.lastChild.textContent=' 자금 집행';
+  document.querySelectorAll('[data-go="finance"] b').forEach(node=>node.textContent='자금 집행');
+  document.querySelectorAll('[data-menu-view="finance"] b').forEach(node=>node.textContent='자금 집행');
+  document.querySelectorAll('option[value="finance"]').forEach(node=>node.textContent='자금 집행');
+  const mobileFinance=document.querySelector('.mobile-nav [data-view="finance"]');if(mobileFinance)mobileFinance.lastChild.textContent='자금집행';
+  const dailyBottom=document.querySelector('.mobile-nav .fab[data-view="daily"]');if(dailyBottom){dailyBottom.classList.remove('fab');dailyBottom.classList.add('daily-highlight');dailyBottom.append(document.createTextNode('공사일보'))}
+
+  const reportEdit=document.createElement('button');reportEdit.type='button';reportEdit.className='record-edit-button';reportEdit.innerHTML='<span class="material-symbols-rounded">edit</span>일보 수정';document.querySelector('#reportViewer .viewer-actions')?.prepend(reportEdit);
+  reportEdit.addEventListener('click',()=>{const card=activeReportCard,user=window.MIN_WORKS_USER;if(!card)return;if(user?.role!=='admin'&&card.dataset.author!==currentUser)return notify('관리자 또는 작성자만 수정할 수 있습니다.');const title=prompt('공사일보 제목을 수정하세요.',card.querySelector('div>b')?.textContent||'');if(!title)return;card.querySelector('div>b').textContent=title;document.querySelector('#reportViewer header h2').textContent=title;reportViewer.classList.remove('show');notify('공사일보를 수정했습니다.')});
+  const issueEdit=document.createElement('button');issueEdit.type='button';issueEdit.className='record-edit-button';issueEdit.innerHTML='<span class="material-symbols-rounded">edit</span>이슈 수정';document.querySelector('.issue-status-row>div')?.prepend(issueEdit);
+  issueEdit.addEventListener('click',()=>{const card=activeIssueCard,user=window.MIN_WORKS_USER;if(!card)return;const owner=card.querySelector('.issue-meta span')?.textContent||'';if(user?.role!=='admin'&&!owner.includes(currentUser))return notify('관리자 또는 담당자만 수정할 수 있습니다.');const title=prompt('이슈 제목을 수정하세요.',card.querySelector('h3')?.textContent||'');if(!title)return;const description=prompt('상세 내용을 수정하세요.',card.querySelector('p')?.textContent||'');if(description===null)return;card.querySelector('h3').textContent=title;card.querySelector('p').textContent=description;document.getElementById('peekTitle').textContent=title;document.getElementById('peekDescription').textContent=description;notify('현장 이슈를 수정했습니다.');refreshHomeExtras()});
+
+  const photos=document.createElement('section');photos.className='panel today-photo-panel';photos.innerHTML='<div class="panel-head"><div><p class="eyebrow">TODAY SITE PHOTOS</p><h2>오늘 현장 사진</h2></div><button class="text-btn" data-photo-all>전체보기 →</button></div><div class="today-photo-strip"></div>';
+  document.querySelector('.quick-panel')?.before(photos);
+  photos.querySelector('[data-photo-all]').addEventListener('click',()=>window.showView?.('daily'));
+
+  const issueHost=document.createElement('section');issueHost.className='home-issue-briefing';issueHost.innerHTML='<header><div><p class="eyebrow">SITE ISSUES</p><h2>현장 이슈사항</h2></div><span class="count-badge">0</span></header><div class="home-issue-list"></div><button class="text-btn" data-issue-all>전체보기 →</button>';
+  document.querySelector('.briefing-list')?.after(issueHost);
+  issueHost.querySelector('[data-issue-all]').addEventListener('click',()=>window.showView?.('issues'));
+
+  function refreshHomeExtras(){
+    const strip=photos.querySelector('.today-photo-strip');strip.replaceChildren();
+    const reportCards=[...document.querySelectorAll('.report-card')];
+    const photoItems=reportCards.flatMap(card=>(Array.isArray(card.reportPhotos)?card.reportPhotos:[]).map(photo=>({card,photo}))).slice(0,8);
+    if(!photoItems.length)strip.innerHTML='<div class="home-extra-empty"><span class="material-symbols-rounded">photo_camera</span><b>오늘 등록된 현장 사진이 없습니다.</b><small>공사일보에 사진을 올리면 여기에 표시됩니다.</small></div>';
+    photoItems.forEach(({card,photo})=>{const button=document.createElement('button');button.innerHTML=`<img src="${photo.src}" alt=""><span><b>${card.dataset.site}</b><small>${photo.type||'현장사진'} · ${card.dataset.author||'작성자'}</small></span>`;button.addEventListener('click',()=>card.click());strip.appendChild(button)});
+    const list=issueHost.querySelector('.home-issue-list'),issues=[...document.querySelectorAll('.issue-detail-card')].filter(card=>card.dataset.status!=='complete');list.replaceChildren();issueHost.querySelector('.count-badge').textContent=issues.length;
+    if(!issues.length)list.innerHTML='<div class="home-extra-empty"><b>현재 진행 중인 이슈가 없습니다.</b></div>';
+    issues.slice(0,5).forEach(card=>{const button=document.createElement('button');const urgent=card.dataset.urgency==='urgent';button.innerHTML=`<i class="${urgent?'urgent':''}"></i><span><b>${card.dataset.issueCard}</b><small>${card.querySelector('h3')?.textContent||'현장 이슈'} · ${card.querySelector('.issue-meta span')?.textContent||''}</small></span><em>${urgent?'긴급':'일반'}</em>`;button.addEventListener('click',()=>card.click());list.appendChild(button)});
+  }
+
+  const SITE_KEY='minWorksSiteStateV28';
+  function siteState(){try{return JSON.parse(localStorage.getItem(SITE_KEY)||'{"deleted":[],"updated":{}}')}catch{return {deleted:[],updated:{}}}}
+  function saveSiteState(state){localStorage.setItem(SITE_KEY,JSON.stringify(state))}
+  function enhanceSiteRows(){document.querySelectorAll('.site-table-row').forEach(row=>{if(row.querySelector('.site-record-actions'))return;const actions=document.createElement('div');actions.className='site-record-actions';actions.innerHTML='<button data-site-edit>수정</button><button class="danger" data-site-delete>삭제</button>';row.appendChild(actions);actions.querySelector('[data-site-edit]').addEventListener('click',()=>editSite(row));actions.querySelector('[data-site-delete]').addEventListener('click',()=>deleteSite(row))})}
+  function editSite(row){const old=row.dataset.siteRow,name=prompt('현장명을 수정하세요.',old);if(!name)return;const start=prompt('착공일을 입력하세요. (YYYY-MM-DD)',row.dataset.startDate||'');if(start===null)return;const end=prompt('준공일을 입력하세요. (YYYY-MM-DD)',row.dataset.endDate||'');if(end===null)return;if(start&&end&&end<start)return notify('준공일은 착공일보다 빠를 수 없습니다.');document.querySelectorAll(`[data-site="${CSS.escape(old)}"]`).forEach(node=>node.dataset.site=name);document.querySelectorAll(`[data-issue-card="${CSS.escape(old)}"]`).forEach(node=>node.dataset.issueCard=name);document.querySelectorAll(`[data-report-site="${CSS.escape(old)}"]`).forEach(node=>node.dataset.reportSite=name);row.dataset.siteRow=name;row.dataset.startDate=start;row.dataset.endDate=end;row.querySelector('span:first-child b').textContent=name;document.querySelectorAll('select option').forEach(option=>{if(option.textContent===old||option.textContent===`${old} 학생식당`)option.textContent=name});const state=siteState();state.updated[old]={name,start,end};saveSiteState(state);notify('현장 정보를 수정했습니다.');refreshHomeExtras()}
+  function deleteSite(row){const site=row.dataset.siteRow,linked=document.querySelectorAll(`[data-site="${CSS.escape(site)}"],[data-issue-card="${CSS.escape(site)}"]`).length;if(!confirm(`${site}\n\n현장과 연결된 일보·이슈 ${linked}건을 함께 삭제할까요?`))return;document.querySelectorAll(`[data-site="${CSS.escape(site)}"],[data-issue-card="${CSS.escape(site)}"],[data-site-row="${CSS.escape(site)}"]`).forEach(node=>node.remove());document.querySelectorAll('select option').forEach(option=>{if(option.textContent===site)option.remove()});const state=siteState();if(!state.deleted.includes(site))state.deleted.push(site);saveSiteState(state);notify('현장과 연결 자료를 삭제했습니다.');refreshHomeExtras()}
+  function restoreSiteState(){const state=siteState();state.deleted.forEach(site=>document.querySelectorAll(`[data-site="${CSS.escape(site)}"],[data-issue-card="${CSS.escape(site)}"],[data-site-row="${CSS.escape(site)}"]`).forEach(node=>node.remove()));Object.entries(state.updated).forEach(([old,data])=>{const value=typeof data==='string'?{name:data}:data,row=document.querySelector(`[data-site-row="${CSS.escape(old)}"]`);if(row){row.dataset.siteRow=value.name;row.dataset.startDate=value.start||row.dataset.startDate||'';row.dataset.endDate=value.end||row.dataset.endDate||'';row.querySelector('span:first-child b').textContent=value.name}})}
+
+  restoreSiteState();enhanceSiteRows();refreshHomeExtras();
+  new MutationObserver(()=>{enhanceSiteRows();refreshHomeExtras()}).observe(document.querySelector('.site-table'),{childList:true});
+  new MutationObserver(refreshHomeExtras).observe(document.querySelector('#dailyView'),{childList:true,subtree:true});
+  new MutationObserver(refreshHomeExtras).observe(document.querySelector('#issuesView'),{childList:true,subtree:true});
+  if(window.MIN_WORKS_USER)window.applyMinWorksAccess(window.MIN_WORKS_USER);
+})();
+
 
 /* SOURCE: weather.js */
 (() => {
@@ -1084,7 +1127,7 @@ applyExtendedSettings();
     }
     const sheet = document.createElement('div');
     sheet.className = 'mobile-all-menu';
-    sheet.innerHTML = `<div class="mobile-menu-backdrop"></div><section><header><div><p class="eyebrow">ALL MENU</p><h2>전체 메뉴</h2></div><button class="mobile-menu-close" aria-label="닫기">×</button></header><div class="mobile-menu-grid"><button data-menu-view="dashboard"><span class="material-symbols-rounded">home</span><b>홈</b></button><button data-menu-view="sites"><span class="material-symbols-rounded">construction</span><b>현장</b></button><button data-menu-view="daily"><span class="material-symbols-rounded">description</span><b>공사일보</b></button><button data-menu-view="finance"><span class="material-symbols-rounded">payments</span><b>자금 현황</b></button><button data-menu-view="issues"><span class="material-symbols-rounded">report_problem</span><b>이슈</b></button><button data-menu-view="settings"><span class="material-symbols-rounded">settings</span><b>설정</b></button><button data-menu-view="help"><span class="material-symbols-rounded">help</span><b>사용법</b></button></div></section>`;
+    sheet.innerHTML = `<div class="mobile-menu-backdrop"></div><section><header><div><p class="eyebrow">ALL MENU</p><h2>전체 메뉴</h2></div><button class="mobile-menu-close" aria-label="닫기">×</button></header><div class="mobile-menu-grid"><button data-menu-view="dashboard"><span class="material-symbols-rounded">home</span><b>홈</b></button><button data-menu-view="sites"><span class="material-symbols-rounded">construction</span><b>현장</b></button><button data-menu-view="daily"><span class="material-symbols-rounded">description</span><b>공사일보</b></button><button data-menu-view="finance"><span class="material-symbols-rounded">payments</span><b>자금 집행</b></button><button data-menu-view="issues"><span class="material-symbols-rounded">report_problem</span><b>이슈</b></button><button data-menu-view="settings"><span class="material-symbols-rounded">settings</span><b>설정</b></button><button data-menu-view="help"><span class="material-symbols-rounded">help</span><b>사용법</b></button><button data-menu-view="patch"><span class="material-symbols-rounded">new_releases</span><b>패치노트</b></button></div></section>`;
     document.body.appendChild(sheet);
     sheet.querySelector('.mobile-menu-close').addEventListener('click', closeMenu);
     sheet.querySelector('.mobile-menu-backdrop').addEventListener('click', closeMenu);
@@ -1462,7 +1505,7 @@ window.MIN_WORKS_CONFIG = Object.freeze({
       ['home','홈','진행 현장·오늘 보고·미처리 이슈를 확인합니다. 요약 카드를 누르면 해당 업무로 이동합니다.'],
       ['construction','현장','착공일 전은 착공 예정, 공사 기간은 진행 중, 준공일이 지나면 완료로 자동 분류됩니다.'],
       ['description','공사일보','현장과 날짜, 공정·인원, 사진·특이사항을 입력합니다. 개별 또는 현장별 통합 PDF로 저장할 수 있습니다.'],
-      ['payments','자금 현황','현장 지출·기성과 거래처 수금 예정 내역을 등록하고 처리 상태를 확인합니다.'],
+      ['payments','자금 집행','월별 예정 지출과 거래처 수금 예정 내역을 확인합니다.'],
       ['report_problem','이슈','현장 문제를 긴급도와 담당자 기준으로 등록하고 미처리 항목을 확인합니다.'],
       ['settings','설정','글자 크기, 화면 밀도, 강조색과 알림 방식을 내 기기에 맞게 저장합니다.'],
       ['apps','전체메뉴','모바일 하단 전체메뉴에서 설정과 사용법을 포함한 모든 기능을 열 수 있습니다.']
@@ -1473,7 +1516,7 @@ window.MIN_WORKS_CONFIG = Object.freeze({
 
   function faqItems() { return [
     ['새 현장이 공사일보 필터에 안 보여요.','현장을 개설하면 공사일보 상단 필터가 즉시 갱신됩니다. 보이지 않으면 전체 현장을 누른 뒤 다시 확인하세요.'],
-    ['공사일보는 어떻게 작성하나요?','공사일보 탭의 작성 버튼을 누르고 현장·날짜 → 공정·인원 → 사진·특이사항 순서로 등록합니다.'],
+    ['공사일보는 어떻게 작성하나요?','공사일보 탭의 작성 버튼을 누르고 현장·날짜, 공정·인원, 특이사항을 한 화면에서 입력한 뒤 공사일보 등록을 누릅니다. 사진은 없어도 등록할 수 있습니다.'],
     ['사진을 포함해 PDF로 저장하려면?','일보 오른쪽 다운로드 또는 현장별 통합 PDF 내보내기를 누른 뒤 사진 포함 PDF를 선택합니다.'],
     ['현장 담당자는 어떻게 바뀌나요?','해당 현장에 가장 최근 공사일보를 등록한 직원 이름으로 자동 갱신됩니다.'],
     ['현장 상태는 언제 바뀌나요?','착공일 전에는 착공 예정, 착공일부터 준공일까지 진행 중, 준공일 다음 날부터 완료입니다.'],
@@ -1563,6 +1606,9 @@ window.MIN_WORKS_CONFIG = Object.freeze({
   const roles = ['담당자', '공무부', '관리부', '대표', '이사'];
   let payments = read(PAYMENT_KEY);
   let receivables = read(RECEIVABLE_KEY);
+  let selectedMonth = todayKey().slice(0,7);
+  let editingPaymentId = null;
+  let editingReceivableId = null;
 
   document.querySelector('.approval-panel')?.remove();
   rebuildFinance();
@@ -1571,15 +1617,16 @@ window.MIN_WORKS_CONFIG = Object.freeze({
     const view = document.getElementById('financeView');
     if (!view) return;
     view.innerHTML = `
-      <div class="section-title mw-finance-title"><div><p class="eyebrow">CASH FLOW</p><h2>현장 자금 현황</h2><small>예정 지출과 거래처 수금을 자동 합산합니다.</small></div></div>
+      <div class="section-title mw-finance-title"><div><p class="eyebrow">FUND EXECUTION</p><h2>자금 집행</h2><small>예정 지출과 거래처 수금을 월별로 확인합니다.</small></div></div>
+      <div class="mw-month-nav"><button id="mwPrevMonth">‹</button><b id="mwSelectedMonth"></b><button id="mwNextMonth">›</button></div>
       <div class="mw-finance-summary">
         <article class="monthly"><span>월기성 예정</span><b id="mwMonthlyTotal">₩0</b><small id="mwMonthlyCount">0건</small></article>
-        <article class="urgent"><span>긴급지출 예정</span><b id="mwUrgentTotal">₩0</b><small id="mwUrgentCount">0건</small></article>
+        <article class="urgent"><span>긴급기성 예정</span><b id="mwUrgentTotal">₩0</b><small id="mwUrgentCount">0건</small></article>
         <article class="receivable"><span>이번 달 수금 예정</span><b id="mwReceivableTotal">₩0</b><small id="mwReceivableCount">0건</small></article>
       </div>
       <div class="mw-finance-tabs"><button class="active" data-mw-finance="payment">예정 지출서</button><button data-mw-finance="receivable">거래처 수금 예정</button></div>
       <section class="mw-money-panel active" data-mw-panel="payment">
-        <div class="mw-panel-head"><div><p class="eyebrow">PLANNED PAYMENT</p><h2>예정 지출서</h2><small>월기성과 긴급지출은 색상으로 구분됩니다.</small></div><button class="mw-write-button" id="mwOpenPayment"><span class="material-symbols-rounded">edit_square</span>예정 지출서 작성</button></div>
+        <div class="mw-panel-head"><div><p class="eyebrow">PLANNED PAYMENT</p><h2>예정 지출서</h2><small class="mw-type-guide"><i></i>월기성 <i></i>긴급기성 · 색상으로 구분됩니다.</small><p class="mw-reference-note"><span class="material-symbols-rounded">info</span>이번 달 예상 지출을 미리 공유하는 참고 자료입니다. 실제 지급 및 결재 금액은 사무실에 제출된 서류를 기준으로 합니다.</p></div><button class="mw-write-button" id="mwOpenPayment"><span class="material-symbols-rounded">edit_square</span>예정 지출서 작성</button></div>
         <div class="mw-payment-list" id="mwPaymentList"></div>
       </section>
       <section class="mw-money-panel" data-mw-panel="receivable">
@@ -1595,7 +1642,11 @@ window.MIN_WORKS_CONFIG = Object.freeze({
     }));
     document.getElementById('mwOpenPayment').addEventListener('click', () => openModal('paymentFormModal'));
     document.getElementById('mwOpenReceivable').addEventListener('click', () => openModal('receivableFormModal'));
+    document.getElementById('mwPrevMonth').addEventListener('click',()=>changeMonth(-1));
+    document.getElementById('mwNextMonth').addEventListener('click',()=>changeMonth(1));
+    prunePaidItems();
     renderAll();
+    if(window.MIN_WORKS_USER)window.applyMinWorksAccess?.(window.MIN_WORKS_USER);
   }
 
   function buildPaymentModal() {
@@ -1603,7 +1654,7 @@ window.MIN_WORKS_CONFIG = Object.freeze({
     if (!modal) return;
     modal.innerHTML = `<div class="money-modal-backdrop"></div><section><header><div><p class="eyebrow">PLANNED PAYMENT</p><h2>예정 지출서 작성</h2><small>금액을 입력하면 금회까지 기성률이 자동 계산됩니다.</small></div><button type="button" data-mw-close>×</button></header><div class="money-form-grid">
       <label>현장명<select id="mwPaymentSite"></select></label><label>작성자<input id="mwPaymentAuthor" readonly></label>
-      <label>구분<select id="mwPaymentType"><option value="monthly">월기성</option><option value="urgent">긴급지출</option></select></label><label>공정명<input id="mwProcessName" placeholder="작성자가 공정명을 입력"></label>
+      <label>구분<select id="mwPaymentType"><option value="monthly">월기성</option><option value="urgent">긴급기성</option></select></label><label>공정명<input id="mwProcessName" placeholder="작성자가 공정명을 입력"></label>
       <label>공정별 공사금액<input id="mwProcessTotal" type="number" min="0" placeholder="예: 50000000"></label><label>지출 예정금액<input id="mwPlannedAmount" type="number" min="0" placeholder="예: 10000000"></label>
       <label>금회까지 기성률<input id="mwProgressRate" readonly value="0%"></label><label>지급 요청 예정일<input id="mwRequestDate" type="date"></label>
     </div><button class="primary full" id="mwSavePayment">예정 지출서 저장</button></section>`;
@@ -1611,6 +1662,7 @@ window.MIN_WORKS_CONFIG = Object.freeze({
     modal.querySelector('.money-modal-backdrop').addEventListener('click', () => closeModal(modal));
     ['mwProcessName','mwProcessTotal','mwPlannedAmount'].forEach(id => document.getElementById(id).addEventListener('input', updatePaymentRate));
     document.getElementById('mwPaymentSite').addEventListener('change', updatePaymentRate);
+    document.getElementById('mwPaymentType').addEventListener('change',event=>{if(!editingPaymentId)document.getElementById('mwRequestDate').value=defaultPaymentDate(event.target.value)});
     document.getElementById('mwSavePayment').addEventListener('click', savePayment);
   }
 
@@ -1635,7 +1687,7 @@ window.MIN_WORKS_CONFIG = Object.freeze({
     const modal = document.getElementById(id);
     if (id === 'paymentFormModal') {
       document.getElementById('mwPaymentAuthor').value = currentName();
-      document.getElementById('mwRequestDate').value ||= todayKey();
+      document.getElementById('mwRequestDate').value ||= defaultPaymentDate(value('mwPaymentType'));
       updatePaymentRate();
     } else {
       document.getElementById('mwDueDate').value ||= todayKey();
@@ -1673,25 +1725,31 @@ window.MIN_WORKS_CONFIG = Object.freeze({
   }
 
   function savePayment() {
-    const item = { id:crypto.randomUUID(), site:value('mwPaymentSite'), author:currentName(), type:value('mwPaymentType'), process:value('mwProcessName').trim(), processTotal:number('mwProcessTotal'), amount:number('mwPlannedAmount'), requestDate:value('mwRequestDate'), confirmations:{}, createdAt:new Date().toISOString() };
+    const existing=payments.find(entry=>entry.id===editingPaymentId);
+    const item = { id:existing?.id||crypto.randomUUID(), site:value('mwPaymentSite'), author:existing?.author||currentName(), type:value('mwPaymentType'), process:value('mwProcessName').trim(), processTotal:number('mwProcessTotal'), amount:number('mwPlannedAmount'), requestDate:value('mwRequestDate'), confirmations:existing?.confirmations||{}, createdAt:existing?.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString() };
     if (!item.site || !item.process || !item.processTotal || !item.amount || !item.requestDate) return notify('현장·공정·금액·예정일을 모두 입력해주세요.');
-    payments.unshift(item); persist(PAYMENT_KEY,payments); closeModal(document.getElementById('paymentFormModal')); clearPaymentForm(); renderAll(); notify('예정 지출서를 저장했습니다.');
+    if(existing)payments[payments.indexOf(existing)]=item;else payments.unshift(item);editingPaymentId=null;persist(PAYMENT_KEY,payments);closeModal(document.getElementById('paymentFormModal'));clearPaymentForm();renderAll();notify(existing?'예정 지출서를 수정했습니다.':'예정 지출서를 저장했습니다.');
   }
   function saveReceivable() {
-    const item = { id:crypto.randomUUID(), site:value('mwReceivableSite'), period:value('mwSitePeriod'), contract:number('mwContractAmount'), received:number('mwReceivedAmount'), dueDate:value('mwDueDate'), createdAt:new Date().toISOString() };
+    const existing=receivables.find(entry=>entry.id===editingReceivableId);
+    const item = { id:existing?.id||crypto.randomUUID(), site:value('mwReceivableSite'), period:value('mwSitePeriod'), contract:number('mwContractAmount'), received:number('mwReceivedAmount'), dueDate:value('mwDueDate'), createdAt:existing?.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString() };
     if (!item.site || !item.contract || !item.dueDate) return notify('현장·계약금액·입금 예정일을 입력해주세요.');
-    receivables.unshift(item); persist(RECEIVABLE_KEY,receivables); closeModal(document.getElementById('receivableFormModal')); clearReceivableForm(); renderAll(); notify('수금 예정 내역을 저장했습니다.');
+    if(existing)receivables[receivables.indexOf(existing)]=item;else receivables.unshift(item);editingReceivableId=null;persist(RECEIVABLE_KEY,receivables);closeModal(document.getElementById('receivableFormModal'));clearReceivableForm();renderAll();notify(existing?'수금 예정 내역을 수정했습니다.':'수금 예정 내역을 저장했습니다.');
   }
 
   function renderAll() { renderPayments(); renderReceivables(); renderSummary(); }
   function renderPayments() {
     const list = document.getElementById('mwPaymentList'); list.replaceChildren();
-    if (!payments.length) return list.append(empty('아직 작성된 예정 지출서가 없습니다.'));
-    payments.forEach(item => {
+    const visible=payments.filter(item=>item.requestDate?.startsWith(selectedMonth));
+    if (!visible.length) return list.append(empty('선택한 달의 예정 지출서가 없습니다.'));
+    visible.forEach(item => {
       const card=document.createElement('article'); card.className=`mw-payment-card ${item.type}`;
       const cumulative=payments.filter(entry=>entry.site===item.site&&entry.process===item.process&&entry.createdAt<=item.createdAt).reduce((sum,entry)=>sum+entry.amount,0);
-      card.innerHTML=`<header><div><span>${item.type==='urgent'?'긴급지출':'월기성'}</span><h3>${escapeHtml(item.site)}</h3><small>작성자 ${escapeHtml(item.author)}</small></div><time>${dateLabel(item.requestDate)} 지급 요청</time></header><div class="mw-payment-values"><div><small>공정명</small><b>${escapeHtml(item.process)}</b></div><div><small>공정별 공사금액</small><b>${won(item.processTotal)}</b></div><div><small>지출 예정금액</small><b>${won(item.amount)}</b></div><div><small>금회까지 기성률</small><b>${percent(cumulative,item.processTotal)}%</b></div></div><div class="mw-confirm-row">${roles.map(role => confirmButton(item,role)).join('')}</div>`;
+      card.innerHTML=`<header><div><span>${item.type==='urgent'?'긴급기성':'월기성'}</span><h3>${escapeHtml(item.site)}</h3><small>작성자 ${escapeHtml(item.author)}</small></div><time>${dateLabel(item.requestDate)} 지급 예정</time></header><div class="mw-payment-values"><div><small>공정명</small><b>${escapeHtml(item.process)}</b></div><div><small>공정별 공사금액</small><b>${won(item.processTotal)}</b></div><div><small>지출 예정금액</small><b>${won(item.amount)}</b></div><div><small>금회까지 기성률</small><b>${percent(cumulative,item.processTotal)}%</b></div></div><div class="mw-confirm-row">${['담당자','공무팀','관리팀','대표이사','상무이사'].map(role => confirmButton(item,role)).join('')}</div><div class="mw-record-actions"><button data-payment-edit>수정</button><button data-payment-complete>지출 완료</button><button class="danger" data-payment-delete>삭제</button></div>`;
       card.querySelectorAll('[data-confirm-role]').forEach(button => button.addEventListener('click', () => confirmPayment(item.id,button.dataset.confirmRole)));
+      card.querySelector('[data-payment-edit]').addEventListener('click',()=>editPayment(item));
+      card.querySelector('[data-payment-complete]').addEventListener('click',()=>removePayment(item,'지출 완료'));
+      card.querySelector('[data-payment-delete]').addEventListener('click',()=>removePayment(item,'삭제'));
       list.appendChild(card);
     });
   }
@@ -1701,23 +1759,35 @@ window.MIN_WORKS_CONFIG = Object.freeze({
   }
   function confirmPayment(id,role) {
     const item=payments.find(entry=>entry.id===id); if(!item)return;
+    const user=window.MIN_WORKS_USER;
+    const allowed=user?.role==='admin'||(role==='담당자'&&item.author===currentName())||(role==='공무팀'&&user?.department==='공무팀')||(role==='관리팀'&&user?.department==='관리팀')||(role==='대표이사'&&user?.rank==='대표이사')||(role==='상무이사'&&user?.rank==='상무이사');
+    if(!allowed)return notify('해당 확인 권한이 없습니다.');
     item.confirmations ||= {}; item.confirmations[role]=currentName(); persist(PAYMENT_KEY,payments); renderAll(); notify(`${role} 확인을 기록했습니다.`);
   }
   function renderReceivables() {
     const list=document.getElementById('mwReceivableList'); list.replaceChildren();
-    if(!receivables.length)return list.append(empty('아직 등록된 거래처 수금 예정이 없습니다.'));
-    receivables.forEach(item=>{const row=document.createElement('article');row.className='mw-receivable-row';row.innerHTML=`<div><b>${escapeHtml(item.site)}</b><small>${escapeHtml(item.period)}</small></div><b>${won(item.contract)}</b><b>${won(item.received)}</b><b>${percent(item.received,item.contract)}%</b><b>${won(Math.max(0,item.contract-item.received))}</b><time>${dateLabel(item.dueDate)}</time>`;list.appendChild(row)});
+    const visible=receivables.filter(item=>item.dueDate?.startsWith(selectedMonth));if(!visible.length)return list.append(empty('선택한 달의 수금 예정이 없습니다.'));
+    visible.forEach(item=>{const row=document.createElement('article');row.className='mw-receivable-row';row.innerHTML=`<div><b>${escapeHtml(item.site)}</b><small>${escapeHtml(item.period)}</small></div><b>${won(item.contract)}</b><b>${won(item.received)}</b><b>${percent(item.received,item.contract)}%</b><b>${won(Math.max(0,item.contract-item.received))}</b><time>${dateLabel(item.dueDate)}</time><div class="mw-inline-actions"><button data-receivable-edit>수정</button><button data-receivable-delete>삭제</button></div>`;row.querySelector('[data-receivable-edit]').addEventListener('click',()=>editReceivable(item));row.querySelector('[data-receivable-delete]').addEventListener('click',()=>removeReceivable(item));list.appendChild(row)});
   }
   function renderSummary() {
-    const monthly=payments.filter(item=>item.type==='monthly'),urgent=payments.filter(item=>item.type==='urgent');
-    const month=todayKey().slice(0,7); const due=receivables.filter(item=>item.dueDate?.startsWith(month));
+    const monthly=payments.filter(item=>item.type==='monthly'&&item.requestDate?.startsWith(selectedMonth)),urgent=payments.filter(item=>item.type==='urgent'&&item.requestDate?.startsWith(selectedMonth));
+    const due=receivables.filter(item=>item.dueDate?.startsWith(selectedMonth));
+    setText('mwSelectedMonth',new Intl.DateTimeFormat('ko-KR',{year:'numeric',month:'long'}).format(new Date(`${selectedMonth}-01T00:00:00+09:00`)));
     setText('mwMonthlyTotal',won(sum(monthly,'amount')));setText('mwMonthlyCount',`${monthly.length}건`);
     setText('mwUrgentTotal',won(sum(urgent,'amount')));setText('mwUrgentCount',`${urgent.length}건`);
     setText('mwReceivableTotal',won(due.reduce((total,item)=>total+Math.max(0,item.contract-item.received),0)));setText('mwReceivableCount',`${due.length}건`);
   }
 
-  function clearPaymentForm(){['mwProcessName','mwProcessTotal','mwPlannedAmount'].forEach(id=>document.getElementById(id).value='');updatePaymentRate()}
-  function clearReceivableForm(){['mwContractAmount','mwReceivedAmount'].forEach(id=>document.getElementById(id).value='');updateReceivableMath()}
+  function changeMonth(delta){const date=new Date(`${selectedMonth}-01T00:00:00+09:00`);date.setMonth(date.getMonth()+delta);selectedMonth=`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}`;renderAll()}
+  function editPayment(item){editingPaymentId=item.id;openModal('paymentFormModal');document.getElementById('mwPaymentSite').value=item.site;document.getElementById('mwPaymentType').value=item.type;document.getElementById('mwProcessName').value=item.process;document.getElementById('mwProcessTotal').value=item.processTotal;document.getElementById('mwPlannedAmount').value=item.amount;document.getElementById('mwRequestDate').value=item.requestDate;document.querySelector('#paymentFormModal h2').textContent='예정 지출서 수정';document.getElementById('mwSavePayment').textContent='수정 내용 저장';updatePaymentRate()}
+  function removePayment(item,label){if(!confirm(`${item.site} · ${item.process}\n\n${label} 처리할까요? 목록과 월 합계에서 제외됩니다.`))return;payments=payments.filter(entry=>entry.id!==item.id);persist(PAYMENT_KEY,payments);renderAll();notify(`예정 지출서를 ${label} 처리했습니다.`)}
+  function editReceivable(item){editingReceivableId=item.id;openModal('receivableFormModal');document.getElementById('mwReceivableSite').value=item.site;document.getElementById('mwSitePeriod').value=item.period;document.getElementById('mwContractAmount').value=item.contract;document.getElementById('mwReceivedAmount').value=item.received;document.getElementById('mwDueDate').value=item.dueDate;document.querySelector('#receivableFormModal h2').textContent='수금 예정 수정';document.getElementById('mwSaveReceivable').textContent='수정 내용 저장';updateReceivableMath()}
+  function removeReceivable(item){if(!confirm(`${item.site} 수금 예정 내역을 삭제할까요?`))return;receivables=receivables.filter(entry=>entry.id!==item.id);persist(RECEIVABLE_KEY,receivables);renderAll();notify('수금 예정 내역을 삭제했습니다.')}
+  function prunePaidItems(){const today=todayKey(),before=payments.length;payments=payments.filter(item=>!item.requestDate||today<=item.requestDate);if(payments.length!==before)persist(PAYMENT_KEY,payments)}
+  function defaultPaymentDate(type){const now=new Date(`${todayKey()}T00:00:00+09:00`);if(type==='urgent'){const days=(8-now.getDay())%7||7;now.setDate(now.getDate()+days)}else{now.setMonth(now.getMonth()+1,10)}return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`}
+
+  function clearPaymentForm(){editingPaymentId=null;['mwProcessName','mwProcessTotal','mwPlannedAmount'].forEach(id=>document.getElementById(id).value='');document.querySelector('#paymentFormModal h2').textContent='예정 지출서 작성';document.getElementById('mwSavePayment').textContent='예정 지출서 저장';updatePaymentRate()}
+  function clearReceivableForm(){editingReceivableId=null;['mwContractAmount','mwReceivedAmount'].forEach(id=>document.getElementById(id).value='');document.querySelector('#receivableFormModal h2').textContent='거래처 수금 예정 작성';document.getElementById('mwSaveReceivable').textContent='수금 예정 저장';updateReceivableMath()}
   function currentName(){const user=window.MIN_WORKS_USER;return user?.role==='admin'?'관리자':user?.name||'접속 직원'}
   function value(id){return document.getElementById(id)?.value||''} function number(id){return Number(value(id))||0}
   function percent(value,total){return total?Math.min(100,Math.round(value/total*1000)/10):0}
@@ -1752,6 +1822,7 @@ window.MIN_WORKS_CONFIG = Object.freeze({
       if (sessionToken) {
         const session = await api('/session');
         if (session.ok) return unlock(session.user);
+        if (session.pending) return showPendingApproval();
         clearToken();
       }
       const status = await api('/setup-status', { auth: false });
@@ -1798,8 +1869,9 @@ window.MIN_WORKS_CONFIG = Object.freeze({
       <form class="auth-form" id="employeeRegisterForm">
         <label>6자리 접속코드<input name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required placeholder="000000"></label>
         <label>이름(실명)<input name="name" autocomplete="name" minlength="2" maxlength="30" required placeholder="홍길동"></label>
-        <label>직급<input name="rank" maxlength="30" required placeholder="예: 대리, 과장, 부장"></label>
-        <button class="auth-submit">이 휴대폰 등록하기</button>
+        <label>부서명<select name="department" required><option value="">선택</option><option>임원</option><option>공무팀</option><option>관리팀</option><option>사인팀</option><option>시공팀</option><option>설계팀</option></select></label>
+        <label>직급<select name="rank" required><option value="">선택</option><option>대표이사</option><option>상무이사</option><option>실장</option><option>부장</option><option>차장</option><option>과장</option><option>대리</option><option>주임</option><option>사원</option></select></label>
+        <button class="auth-submit">이 기기 등록 신청</button>
       </form>
       <form class="auth-form" id="adminLoginForm" hidden>
         <label>관리자 이메일<input name="email" type="email" autocomplete="username" required></label>
@@ -1828,13 +1900,16 @@ window.MIN_WORKS_CONFIG = Object.freeze({
 
   async function registerEmployee(event) {
     event.preventDefault();
-    await submitAuth(event.currentTarget, '/employee/register');
+    const button=event.currentTarget.querySelector('button');setBusy(button,true);setMessage('');
+    try{const data=Object.fromEntries(new FormData(event.currentTarget));const result=await api('/employee/register',{method:'POST',body:data,auth:false});if(!result.ok)throw new Error(result.error||'등록하지 못했습니다.');saveToken(result.token);event.currentTarget.reset();showPendingApproval()}catch(error){setMessage(error.message)}finally{setBusy(button,false)}
   }
 
   async function loginAdmin(event) {
     event.preventDefault();
     await submitAuth(event.currentTarget, '/admin/login');
   }
+
+  function showPendingApproval(){const content=document.getElementById('authContent');content.innerHTML='<h1>관리자 승인 대기</h1><p class="auth-copy">등록 신청이 완료되었습니다. 관리자가 부서와 직급을 확인해 승인하면 이 기기에서 사용할 수 있습니다.</p><button class="auth-submit" id="checkApproval">승인 상태 다시 확인</button><p class="auth-note">관리자 승인 후 위 버튼을 누르거나 앱을 다시 열어주세요.</p>';document.getElementById('checkApproval').addEventListener('click',()=>location.reload())}
 
   async function submitAuth(form, endpoint) {
     const button = form.querySelector('button');
@@ -1860,6 +1935,7 @@ window.MIN_WORKS_CONFIG = Object.freeze({
     document.getElementById('authGate').hidden = true;
     if (typeof window.setMinWorksUser === 'function') window.setMinWorksUser(user);
     updateProfile(user);
+    window.applyMinWorksAccess?.(user);
     addAccountButton(user);
   }
 
@@ -1872,8 +1948,8 @@ window.MIN_WORKS_CONFIG = Object.freeze({
     const strong = profile.querySelector('strong');
     const small = profile.querySelector('small');
     if (avatar) avatar.textContent = name.slice(0, 1);
-    if (strong) strong.textContent = `${name}${user.role === 'admin' ? '' : ' ' + rank}`;
-    if (small) small.textContent = rank;
+    if (strong) strong.textContent = user.role === 'admin' ? name : `${user.department||'부서 미지정'} ${name} ${rank}`;
+    if (small) small.textContent = user.role === 'admin' ? rank : `${user.department||'부서 미지정'} · ${rank}`;
   }
 
   function addAccountButton(user) {
@@ -1974,23 +2050,26 @@ window.MIN_WORKS_CONFIG = Object.freeze({
 
   function employeeRow(employee) {
     const row = document.createElement('div');
-    row.className = `employee-row ${employee.status === 'active' ? '' : 'inactive'}`;
+    row.className = `employee-row ${employee.status === 'active' ? '' : 'inactive'} ${employee.status === 'pending' ? 'pending' : ''}`;
     const info = document.createElement('div');
     const name = document.createElement('b');
     const detail = document.createElement('small');
-    name.textContent = `${employee.name} · ${employee.rank}`;
-    detail.textContent = `${employee.status === 'active' ? '사용 중' : '접속 중지'} · 등록 ${formatDate(employee.created_at)}`;
+    name.textContent = `${employee.department||'부서 미지정'} ${employee.name} ${employee.rank}`;
+    detail.textContent = `${employee.status === 'pending'?'승인 대기':employee.status === 'active' ? '사용 중' : '접속 중지'} · 등록 ${formatDate(employee.created_at)}`;
     info.append(name, detail);
     const actions = document.createElement('div');
     actions.className = 'employee-actions';
+    const edit = document.createElement('button');
+    edit.textContent = '부서·직급 수정';
+    edit.addEventListener('click', () => editEmployeeProfile(employee));
     const toggle = document.createElement('button');
-    toggle.textContent = employee.status === 'active' ? '접속 중지' : '다시 허용';
+    toggle.textContent = employee.status === 'pending' ? '가입 승인' : employee.status === 'active' ? '접속 중지' : '다시 허용';
     toggle.addEventListener('click', () => employeeAction(employee, employee.status === 'active' ? 'deactivate' : 'activate'));
     const remove = document.createElement('button');
     remove.className = 'danger';
     remove.textContent = '퇴사자 삭제';
     remove.addEventListener('click', () => employeeAction(employee, 'delete'));
-    actions.append(toggle, remove);
+    actions.append(edit, toggle, remove);
     row.append(info, actions);
     return row;
   }
@@ -2000,6 +2079,17 @@ window.MIN_WORKS_CONFIG = Object.freeze({
     if (!confirm(`${employee.name} ${employee.rank}\n\n${labels[action]}`)) return;
     const result = await api(`/admin/employees/${encodeURIComponent(employee.id)}/${action}`, { method: 'POST' });
     if (!result.ok) return alert(result.error || '처리하지 못했습니다.');
+    await loadEmployees();
+  }
+
+  async function editEmployeeProfile(employee) {
+    const departments=['임원','공무팀','관리팀','사인팀','시공팀','설계팀'];
+    const ranks=['대표이사','상무이사','실장','부장','차장','과장','대리','주임','사원'];
+    const department=prompt(`부서를 입력하세요.\n${departments.join(' / ')}`,employee.department||'시공팀');if(department===null)return;
+    const rank=prompt(`직급을 입력하세요.\n${ranks.join(' / ')}`,employee.rank);if(rank===null)return;
+    if(!departments.includes(department)||!ranks.includes(rank))return alert('목록에 있는 부서와 직급을 정확히 입력해 주세요.');
+    const result=await api(`/admin/employees/${encodeURIComponent(employee.id)}/update`,{method:'POST',body:{department,rank}});
+    if(!result.ok)return alert(result.error||'수정하지 못했습니다.');
     await loadEmployees();
   }
 
