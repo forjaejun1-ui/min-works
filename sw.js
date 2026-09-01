@@ -1,4 +1,4 @@
-const CACHE = 'min-works-v33';
+const CACHE = 'min-works-v35';
 const ASSETS = [
   './', './index.html', './app-latest.css', './app-latest.js', './manifest.webmanifest',
   './assets/icons/min-works-v4-180.png', './assets/icons/min-works-v4-192.png',
