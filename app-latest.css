@@ -588,10 +588,39 @@ body.auth-pending > .app-shell {
 
 .daily-section-actions{justify-content:flex-end}
 
-/* v41: explicit light/dark theme; mobile browsers must not invent their own palette. */
-html{color-scheme:light}html[data-theme="dark"]{color-scheme:dark;--light:#111411;--line:#343934;--text:#f1f3ee;--muted:#a8afa5;--white:#1b1f1b;--navy:#151915;--navy2:#0d100d}
-html[data-theme="dark"] body,html[data-theme="dark"] main{background:#111411;color:#f1f3ee}
-html[data-theme="dark"] .panel,html[data-theme="dark"] .summary-card,html[data-theme="dark"] .quick,html[data-theme="dark"] .filter,html[data-theme="dark"] .site-card,html[data-theme="dark"] .settings-menu,html[data-theme="dark"] .settings-group,html[data-theme="dark"] .modal-card,html[data-theme="dark"] .storage-sites,html[data-theme="dark"] .storage-trash,html[data-theme="dark"] .mobile-nav,html[data-theme="dark"] .issue-card,html[data-theme="dark"] .connection-card,html[data-theme="dark"] .setting-action,html[data-theme="dark"] .storage-refresh{background:#1b1f1b;color:#f1f3ee;border-color:#343934}
-html[data-theme="dark"] .settings-group>header,html[data-theme="dark"] .table-head,html[data-theme="dark"] .finance-row>div:nth-child(5),html[data-theme="dark"] .storage-types article,html[data-theme="dark"] .site-card:hover,html[data-theme="dark"] .site-card.selected,html[data-theme="dark"] .daily-form input,html[data-theme="dark"] .daily-form select,html[data-theme="dark"] .daily-form textarea,html[data-theme="dark"] .modal-card input,html[data-theme="dark"] .modal-card select,html[data-theme="dark"] .setting-row select,html[data-theme="dark"] .quiet-time input{background:#242924;color:#f1f3ee;border-color:#3c433c}
-html[data-theme="dark"] .segmented{background:#303530}html[data-theme="dark"] .segmented button{color:#c9cec6}html[data-theme="dark"] .setting-row{border-color:#303530}html[data-theme="dark"] .high-contrast b,html[data-theme="dark"] .high-contrast h1,html[data-theme="dark"] .high-contrast h2,html[data-theme="dark"] .high-contrast h3{color:#fff}
+/* v42: MIN WORKS는 모든 기기에서 밝은 화면만 사용합니다. */
+html,html[data-theme]{color-scheme:light!important}
 .segmented button .material-symbols-rounded{font-size:14px;vertical-align:-3px;margin-right:3px}
+
+/* v43: 실사용 화면 정렬과 터치 안정화 */
+body,button,input,select,textarea{font-family:Pretendard,"Noto Sans KR","Malgun Gothic",Arial,sans-serif}
+.material-symbols-rounded{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;line-height:1;vertical-align:middle}
+button{touch-action:manipulation}
+button:disabled{opacity:.55;cursor:wait;pointer-events:none}
+.primary,.secondary,.text-btn,.export-site-btn,.viewer-actions button,.site-record-actions button,.record-edit-button,.record-delete-button{align-items:center;justify-content:center;gap:6px}
+.primary,.secondary,.export-site-btn,.viewer-actions button{min-height:42px}
+.modal-card .full{display:flex;align-items:center;justify-content:center;min-height:48px;font-size:14px}
+.daily-form input,.daily-form select,.daily-form textarea{font-size:14px;line-height:1.45}
+.process-row{align-items:end}
+.process-row label{min-width:0}
+.process-row .process-name{font-size:13px}
+.form-actions .primary{min-width:150px}
+.report-card>*{min-width:0}
+.report-card div>b,.report-card div>p{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.report-pdf-action{font-size:19px!important}
+@media(max-width:700px){
+  body{font-size:15px}
+  main{padding-left:14px!important;padding-right:14px!important}
+  .topbar h1{font-size:22px}
+  .section-title{align-items:flex-start;gap:12px}
+  .section-title .title-actions{width:100%;display:grid;gap:7px}
+  .daily-form{padding:17px}
+  .form-grid,.form-grid.two{grid-template-columns:1fr}
+  .process-row{grid-template-columns:1fr 82px 82px!important;gap:8px!important}
+  .process-row label:last-child{grid-column:1/-1}
+  .daily-form input,.daily-form select,.daily-form textarea{min-height:48px;font-size:16px}
+  .form-actions{position:sticky;bottom:68px;z-index:5;margin-left:-17px;margin-right:-17px;padding:12px 17px;background:#fff;border-top:1px solid var(--line);box-shadow:0 -8px 22px rgba(20,32,22,.06)}
+  .form-actions .primary{width:100%;min-height:52px;font-size:16px}
+  .mobile-nav button,.mobile-nav .daily-highlight{display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+  .mobile-nav .material-symbols-rounded{font-size:21px}
+}
