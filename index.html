@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#101311" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" content="#f4f6f2" />
+  <script>try{const s=JSON.parse(localStorage.getItem('minWorksUserSettings')||'{}');document.documentElement.dataset.theme=s.theme==='dark'?'dark':'light'}catch{document.documentElement.dataset.theme='light'}</script>
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -17,7 +19,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0,0" rel="stylesheet">
-<link rel="stylesheet" href="app-latest.css?v=38" />
+<link rel="stylesheet" href="app-latest.css?v=41" />
 </head>
 <body>
   <div class="app-shell">
@@ -162,7 +164,10 @@
       <section class="view" id="patchView">
         <div class="section-title patch-title"><div><p class="eyebrow">MIN WORKS UPDATE</p><h2>최근 업데이트</h2><small>주요 기능이 적용될 때마다 간단히 알려드립니다.</small></div></div>
         <section class="patch-list panel">
-          <article class="patch-item latest"><time datetime="2026-09-01">2026. 09. 01</time><div><span>v38</span><h3>회사 자료 클라우드 공유 기반</h3><p>현장·일보·이슈·자금자료를 D1에서 공동 저장하고 사진은 R2에 보관하며 회사 클라우드 사용량을 표시합니다.</p></div></article>
+          <article class="patch-item latest"><time datetime="2026-09-01">2026. 09. 01</time><div><span>v41</span><h3>밝은 모드·어두운 모드</h3><p>갤럭시 브라우저의 임의 색상 반전을 막고 설정에서 밝은 화면과 어두운 화면을 직접 선택할 수 있습니다.</p></div></article>
+          <article class="patch-item latest"><time datetime="2026-09-01">2026. 09. 01</time><div><span>v40</span><h3>회사 Google Drive 비공개 연동</h3><p>공사일보 사진을 회사 보관계정 Drive에 저장하고 MIN WORKS 로그인 직원만 서버를 통해 확인하도록 연결했습니다.</p></div></article>
+          <article class="patch-item"><time datetime="2026-09-01">2026. 09. 01</time><div><span>v39</span><h3>실사용 테스트 초기화</h3><p>기본 샘플 현장·일보·이슈·자금·일정을 제거하고 직원들이 입력한 실제 자료만 공유하도록 초기화했습니다.</p></div></article>
+          <article class="patch-item"><time datetime="2026-09-01">2026. 09. 01</time><div><span>v38</span><h3>회사 자료 클라우드 공유 기반</h3><p>현장·일보·이슈·자금자료를 D1에서 공동 저장하고 사진은 회사 Google Drive에 보관하며 회사 클라우드 사용량을 표시합니다.</p></div></article>
           <article class="patch-item"><time datetime="2026-09-01">2026. 09. 01</time><div><span>v37</span><h3>화면 중복 제목 정리</h3><p>공사일보의 반복 머리말을 없애고 사용법·패치노트·저장공간·설정의 본문 제목을 구분했습니다.</p></div></article>
           <article class="patch-item"><time datetime="2026-09-01">2026. 09. 01</time><div><span>v36</span><h3>현장 수치 연동 수정</h3><p>착공 예정 구분을 없애고, 준공 전 모든 현장을 진행 중으로 통합하여 홈과 현장 관리의 수치를 맞췄습니다.</p></div></article>
           <article class="patch-item"><time datetime="2026-09-01">2026. 09. 01</time><div><span>v35</span><h3>금일 총출력인원 표시</h3><p>공정별 금일인원을 자동 합산하여 작성 화면과 등록된 공사일보에 표시합니다.</p></div></article>
@@ -216,7 +221,7 @@
   <div class="progress-modal" id="progressModal"><div class="progress-backdrop"></div><section><header><div><p class="eyebrow">PROGRESS UPDATE</p><h2>공정률 변경</h2><small id="progressSiteName">연세대학교 고를샘</small></div><button id="closeProgressModal">×</button></header><div class="progress-value"><b id="progressValue">72</b><span>%</span></div><input type="range" id="progressRange" min="0" max="100" value="72"><label>변경 사유<textarea id="progressNote" rows="3" placeholder="예: 목공 및 타일 공정 완료"></textarea></label><p><span class="material-symbols-rounded">history</span>변경자와 변경 시간이 자동으로 기록됩니다.</p><button class="primary full" id="saveProgress">공정률 저장</button></section></div>
   <div class="money-form-modal" id="paymentFormModal"><div class="money-modal-backdrop"></div><section><header><div><p class="eyebrow">SITE PAYMENT</p><h2>지출·기성 작성</h2><small>현장소장 작성</small></div><button data-close-money="paymentFormModal">×</button></header><div class="money-form-grid"><label>현장<select id="paymentSite"><option>연세대학교 고를샘</option><option>에잇세컨즈 AK분당점</option><option>알뜰주유소 시설개선</option><option>힐스테이트 아산</option></select></label><label>구분<select id="paymentType"><option>월 기성</option><option>월요일 긴급지출</option></select></label><label>금액<input id="paymentAmount" type="number" placeholder="금액 입력"></label><label>지급 희망일<input id="paymentDate" type="date" value="2026-09-10"></label></div><label>내용<textarea id="paymentMemo" rows="3" placeholder="인건비, 현지업체 결제 등 내용을 입력하세요."></textarea></label><button class="primary full" id="savePayment">작성 완료 · 공무부로 전달</button></section></div>
   <div class="money-form-modal" id="receivableFormModal"><div class="money-modal-backdrop"></div><section><header><div><p class="eyebrow">RECEIVABLE</p><h2>거래처 수금 예정 작성</h2><small>공무부·경리부 작성</small></div><button data-close-money="receivableFormModal">×</button></header><div class="money-form-grid"><label>거래처<input id="receivableClient" placeholder="거래처명"></label><label>현장<select id="receivableSite"><option>연세대학교 고를샘</option><option>에잇세컨즈 AK분당점</option><option>알뜰주유소 시설개선</option><option>힐스테이트 아산</option></select></label><label>청구 금액<input id="receivableAmount" type="number" placeholder="금액 입력"></label><label>입금 예정일<input id="receivableDate" type="date"></label></div><label>비고<textarea id="receivableMemo" rows="3" placeholder="청구 조건이나 입금 관련 내용을 입력하세요."></textarea></label><button class="primary full" id="saveReceivable">수금 예정 등록</button></section></div>
-<script src="app-latest.js?v=38"></script>
+<script src="app-latest.js?v=41"></script>
 </body>
 </html>
 
