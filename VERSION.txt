@@ -1,7 +1,8 @@
-MIN WORKS UI v40
+MIN WORKS UI v41
 작성일: 2026-09-01
 
 이번 버전
+- 갤럭시 브라우저 자동 색상 반전 방지 및 밝은 모드·어두운 모드 선택 추가
 - 직원 공동자료는 Cloudflare D1에서 실시간 공유
 - 공사일보 사진은 회사 Google Drive 보관계정에 비공개 저장
 - 사진 조회는 MIN WORKS 로그인 직원만 Worker 중계를 통해 허용
