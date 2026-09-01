@@ -1539,7 +1539,6 @@ applyExtendedSettings();
 
 /* SOURCE: config.js */
 window.MIN_WORKS_CONFIG = Object.freeze({
-  googleOAuthClientId: '',
   apiBaseUrl: 'https://min-works-api.forjaejun.workers.dev'
 });
 
@@ -1548,9 +1547,6 @@ window.MIN_WORKS_CONFIG = Object.freeze({
 (() => {
   'use strict';
   const config = window.MIN_WORKS_CONFIG || {};
-  let googleToken = '';
-  let googleTokenClient = null;
-
   cleanInterface();
   setupReportDateGroups();
   setupLiveSummary();
@@ -1724,7 +1720,7 @@ window.MIN_WORKS_CONFIG = Object.freeze({
     ['사진을 포함해 PDF로 저장하려면?','일보 오른쪽 다운로드 또는 현장별 통합 PDF 내보내기를 누른 뒤 사진 포함 PDF를 선택합니다.'],
     ['현장 담당자는 어떻게 바뀌나요?','해당 현장에 가장 최근 공사일보를 등록한 직원 이름으로 자동 갱신됩니다.'],
     ['현장 상태는 언제 바뀌나요?','개설한 현장은 진행 중으로 표시되며, 준공일 다음 날부터 완료입니다.'],
-    ['Google 일정이 보이지 않아요.','설정된 Google OAuth로 연결을 완료한 본인에게만 향후 일정이 표시됩니다. 미연결 또는 권한 오류 상태를 먼저 확인하세요.'],
+    ['Google 일정이 보이지 않아요.','회사 구글 계정의 Calendar 연결 상태를 확인하세요. 관리자가 한 번 연결하면 로그인한 모든 직원에게 같은 향후 일정이 표시됩니다.'],
     ['앱은 어떻게 설치하나요?','모바일 상단 MIN WORKS 설치를 누르거나 브라우저 메뉴에서 홈 화면에 추가를 선택합니다.'],
     ['폴드 화면이 깨져 보여요.','상단 기기 보기에서 갤럭시 폴드를 선택하고 접힘·펼침 상태에 맞춰 화면을 다시 불러오세요.'],
     ['뒤로가기는 어떻게 하나요?','휴대폰 또는 브라우저 뒤로가기를 누르면 직전에 보던 앱 화면으로 돌아갑니다. 로고를 누르면 홈으로 이동합니다.'],
@@ -1737,53 +1733,43 @@ window.MIN_WORKS_CONFIG = Object.freeze({
     localStorage.removeItem('minWorksPersonalGoogleCalendarV1');
     const panel = document.querySelector('.home-calendar-panel');
     const connection = document.querySelector('[data-settings-panel="data"] .connection-card');
-    const renderState = (state, events = []) => {
+    let loading = false;
+    const renderState = (state, events = [], calendarName = '회사 Google Calendar') => {
       if (!panel) return;
       if (state === 'connected') {
-        panel.innerHTML = `<div class="panel-head"><div><p class="eyebrow">PERSONAL GOOGLE CALENDAR</p><h2>다가오는 일정</h2></div><button class="google-real-disconnect">연결 해제</button></div><div class="real-calendar-events">${events.length ? events.map(event => `<a href="${event.htmlLink || 'https://calendar.google.com/calendar/u/0/r/agenda'}" target="_blank" rel="noopener"><time>${formatEventDate(event.start)}</time><div><b>${escapeHtml(event.summary || '제목 없는 일정')}</b><small>${escapeHtml(event.location || '개인 Google 캘린더')}</small></div><span class="material-symbols-rounded">open_in_new</span></a>`).join('') : '<p>오늘 이후 등록된 일정이 없습니다.</p>'}</div>`;
-        panel.querySelector('.google-real-disconnect').addEventListener('click', disconnectGoogle);
+        panel.innerHTML = `<div class="panel-head"><div><p class="eyebrow">COMPANY GOOGLE CALENDAR</p><h2>다가오는 회사 일정</h2><small>${escapeHtml(calendarName)} · 직원 공통</small></div><button class="google-calendar-refresh"><span class="material-symbols-rounded">refresh</span>새로고침</button></div><div class="real-calendar-events">${events.length ? events.slice(0,8).map(event => `<article><time>${formatEventDate(event.start,event.allDay)}</time><div><b>${escapeHtml(event.title || '제목 없는 일정')}</b><small>${escapeHtml(event.location || (event.allDay?'종일 일정':'회사 일정'))}</small></div><span class="material-symbols-rounded">event</span></article>`).join('') : '<p>오늘 이후 등록된 회사 일정이 없습니다.</p>'}</div>`;
+        panel.querySelector('.google-calendar-refresh').addEventListener('click', loadCompanyCalendar);
       } else {
-        const configured = Boolean(config.googleOAuthClientId);
-        panel.innerHTML = `<div class="panel-head"><div><p class="eyebrow">PERSONAL GOOGLE CALENDAR</p><h2>다가오는 일정</h2></div><button class="google-real-connect">Google 캘린더 연동하기</button></div><div class="google-home-state"><span class="material-symbols-rounded">${configured?'calendar_add_on':'link_off'}</span><div><b>${configured?'개인 Google 캘린더는 아직 연결되지 않았습니다.':'Google OAuth 설정이 필요합니다.'}</b><p>${configured?'읽기 전용 권한으로 본인의 오늘 이후 일정만 표시합니다.':'가짜 연결 상태는 제거했습니다. 관리자 설정 후 실제 연결할 수 있습니다.'}</p></div></div>`;
-        panel.querySelector('.google-real-connect').addEventListener('click', connectGoogle);
+        panel.innerHTML = `<div class="panel-head"><div><p class="eyebrow">COMPANY GOOGLE CALENDAR</p><h2>다가오는 회사 일정</h2></div><button class="google-calendar-refresh"><span class="material-symbols-rounded">refresh</span>다시 연결</button></div><div class="google-home-state"><span class="material-symbols-rounded">${state==='loading'?'sync':'link_off'}</span><div><b>${state==='loading'?'회사 일정을 불러오는 중입니다.':'회사 Google Calendar 연결을 확인해주세요.'}</b><p>${state==='loading'?'잠시만 기다려주세요.':'관리자가 회사 계정에서 한 번만 연결하면 모든 직원에게 같은 일정이 표시됩니다.'}</p></div></div>`;
+        panel.querySelector('.google-calendar-refresh').addEventListener('click', loadCompanyCalendar);
       }
       if (connection) {
-        connection.querySelector('small').textContent = state === 'connected' ? '개인 Calendar 읽기 전용 연결' : 'Google OAuth 미연결';
+        connection.querySelector('b').textContent = '회사 Google Calendar';
+        connection.querySelector('small').textContent = state === 'connected' ? `${calendarName} · 직원 공통 읽기 전용` : '회사 계정 연결 확인 필요';
         connection.querySelector('em').textContent = state === 'connected' ? '연결됨' : '미연결';
         connection.querySelector('em').classList.toggle('waiting', state !== 'connected');
       }
     };
-    async function connectGoogle() {
-      if (!config.googleOAuthClientId) { notify('Google OAuth 클라이언트 ID를 먼저 설정해야 합니다.'); return; }
+    async function loadCompanyCalendar() {
+      if (loading) return;
+      loading = true;
+      renderState('loading');
       try {
-        await loadGoogleIdentity();
-        googleTokenClient ||= google.accounts.oauth2.initTokenClient({ client_id:config.googleOAuthClientId, scope:'https://www.googleapis.com/auth/calendar.readonly', callback:async response => {
-          if (response.error || !response.access_token) { renderState('disconnected'); notify('Google 캘린더 연결에 실패했습니다.'); return; }
-          googleToken = response.access_token;
-          const events = await fetchGoogleEvents(googleToken);
-          renderState('connected', events);
-        }});
-        googleTokenClient.requestAccessToken({ prompt:'consent' });
-      } catch { renderState('disconnected'); notify('Google 연결 모듈을 불러오지 못했습니다.'); }
+        const token = localStorage.getItem('minWorksSessionV1') || '';
+        if (!token) throw new Error('login');
+        const response = await fetch(`${config.apiBaseUrl}/calendar/events`, { headers:{ Authorization:`Bearer ${token}` } });
+        const data = await response.json().catch(()=>({}));
+        if (!response.ok || !data.ok) throw new Error(data.error || 'calendar');
+        renderState('connected', Array.isArray(data.events)?data.events:[], data.calendarName || '회사 Google Calendar');
+      } catch (error) {
+        renderState('disconnected');
+        if (error.message !== 'login') notify(error.message === 'calendar' ? '회사 일정을 불러오지 못했습니다.' : error.message);
+      } finally { loading = false; }
     }
-    function disconnectGoogle() {
-      if (googleToken && window.google?.accounts?.oauth2) google.accounts.oauth2.revoke(googleToken, () => {});
-      googleToken = ''; renderState('disconnected');
-    }
-    renderState('disconnected');
+    document.addEventListener('minworks:user-ready', loadCompanyCalendar, { once:true });
+    if (localStorage.getItem('minWorksSessionV1')) loadCompanyCalendar(); else renderState('loading');
   }
-
-  function loadGoogleIdentity() {
-    if (window.google?.accounts?.oauth2) return Promise.resolve();
-    return new Promise((resolve,reject) => { const script=document.createElement('script'); script.src='https://accounts.google.com/gsi/client'; script.async=true; script.onload=resolve; script.onerror=reject; document.head.appendChild(script); });
-  }
-  async function fetchGoogleEvents(token) {
-    const params = new URLSearchParams({ timeMin:new Date().toISOString(), singleEvents:'true', orderBy:'startTime', maxResults:'8', timeZone:'Asia/Seoul' });
-    const response = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?${params}`, { headers:{ Authorization:`Bearer ${token}` } });
-    if (!response.ok) throw new Error('calendar');
-    return (await response.json()).items || [];
-  }
-  function formatEventDate(start) { const raw=start?.dateTime || start?.date; if (!raw) return '일정'; return new Intl.DateTimeFormat('ko-KR',{month:'short',day:'numeric',hour:start.dateTime?'2-digit':undefined,minute:start.dateTime?'2-digit':undefined,timeZone:'Asia/Seoul'}).format(new Date(raw)); }
+  function formatEventDate(start,allDay) { if (!start) return '일정'; const date=new Date(allDay?`${start}T00:00:00+09:00`:start); return new Intl.DateTimeFormat('ko-KR',{month:'short',day:'numeric',hour:allDay?undefined:'2-digit',minute:allDay?undefined:'2-digit',timeZone:'Asia/Seoul'}).format(date); }
   function escapeHtml(value) { const node=document.createElement('span'); node.textContent=value || ''; return node.innerHTML; }
 
   function setupLiveWelcome() {
