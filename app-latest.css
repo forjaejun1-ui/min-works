@@ -593,6 +593,7 @@ html,html[data-theme]{color-scheme:light!important}
 .segmented button .material-symbols-rounded{font-size:14px;vertical-align:-3px;margin-right:3px}
 
 /* v43: 실사용 화면 정렬과 터치 안정화 */
+.hide-money .workflow-money b,.hide-money .site-budget-summary strong,.hide-money .site-budget-summary em,.hide-money .mw-finance-summary b,.hide-money .mw-payment-values>div:nth-child(2) b,.hide-money .mw-payment-values>div:nth-child(3) b,.hide-money .mw-receivable-row>b:nth-of-type(1),.hide-money .mw-receivable-row>b:nth-of-type(2),.hide-money .mw-receivable-row>b:nth-of-type(4){font-size:0}.hide-money .workflow-money b:after,.hide-money .site-budget-summary strong:after,.hide-money .site-budget-summary em:after,.hide-money .mw-finance-summary b:after,.hide-money .mw-payment-values>div:nth-child(2) b:after,.hide-money .mw-payment-values>div:nth-child(3) b:after,.hide-money .mw-receivable-row>b:nth-of-type(1):after,.hide-money .mw-receivable-row>b:nth-of-type(2):after,.hide-money .mw-receivable-row>b:nth-of-type(4):after{content:'금액 숨김';font-size:10px;color:#888}
 body,button,input,select,textarea{font-family:Pretendard,"Noto Sans KR","Malgun Gothic",Arial,sans-serif}
 .material-symbols-rounded{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;line-height:1;vertical-align:middle}
 button{touch-action:manipulation}

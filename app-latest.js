@@ -147,14 +147,18 @@ const progressGalleryInput=document.getElementById('progressGalleryInput');
 function openPhotoPicker(input){const connection=navigator.connection||navigator.mozConnection||navigator.webkitConnection;if(userSettings?.wifiOnly&&connection?.type&&connection.type!=='wifi'){notify('Wi‑Fi에서만 사진 업로드하도록 설정되어 있습니다.');return}input.click()}
 document.getElementById('tbmGalleryBtn').addEventListener('click',()=>openPhotoPicker(tbmGalleryInput));
 document.getElementById('progressPhotoAdd').addEventListener('click',()=>openPhotoPicker(progressGalleryInput));
-function addPhotoPreviews(input,containerId,countId,type){
+async function preparePhotoFile(file){
+  const mode=userSettings?.photoQuality||'고화질';if(mode==='원본')return file;
+  try{const bitmap=await createImageBitmap(file,{imageOrientation:'from-image'}),limit=mode==='용량 절약'?1600:2400,scale=Math.min(1,limit/Math.max(bitmap.width,bitmap.height)),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));canvas.getContext('2d').drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close?.();const quality=mode==='용량 절약'?.72:.86,blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',quality));return blob?new File([blob],file.name.replace(/\.[^.]+$/,'.jpg'),{type:'image/jpeg',lastModified:Date.now()}):file}catch{return file}
+}
+async function addPhotoPreviews(input,containerId,countId,type){
   const container=document.getElementById(containerId);
-  [...input.files].forEach(file=>{
+  for(const original of [...input.files]){const file=await preparePhotoFile(original);
     const card=document.createElement('div'),photoUrl=URL.createObjectURL(file);card.className='uploaded-photo';card.style.backgroundImage=`url(${photoUrl})`;card.dataset.photoSrc=photoUrl;card.dataset.photoType=type;card.dataset.photoSize=String(file.size||0);card.photoFile=file;
     card.innerHTML=`<button type="button">×</button><small>${type} · ${userSettings?.photoQuality||'고화질'} · 방금 전</small>`;
-    card.querySelector('button').addEventListener('click',()=>{card.remove();updatePhotoCount(containerId,countId)});
+    card.querySelector('button').addEventListener('click',()=>{if(card.dataset.photoSrc?.startsWith('blob:'))URL.revokeObjectURL(card.dataset.photoSrc);card.remove();updatePhotoCount(containerId,countId)});
     container.appendChild(card);
-  });
+  }
   updatePhotoCount(containerId,countId);input.value='';notify(type+'을 추가했습니다.');
 }
 function updatePhotoCount(containerId,countId){const count=document.querySelectorAll(`#${containerId} .uploaded-photo, #${containerId} .photo.sample`).length;document.getElementById(countId).textContent=count+'장'}
@@ -392,7 +396,7 @@ document.getElementById('newCalendarEvent').addEventListener('click',()=>notify(
 
 // 사용자 설정: 기기별 자동 저장 및 즉시 반영
 const settingsKey='minWorksUserSettings';
-const settingDefaults={theme:'light',fontSize:'normal',density:'comfortable',accent:'lime',contrast:false,displayMode:'pc',startView:'dashboard',siteCount:'4',weather:true,financeSummary:true,calendarSummary:true,processRows:'5',photoQuality:'고화질',autosave:true,photoWarning:true,openAfterSubmit:false,urgentNotice:true,approvalNotice:true,moneyNotice:true,calendarNotice:true,quietStart:'19:00',quietEnd:'07:00',role:'시공팀장',mySitesFirst:true,hideMoney:false,retention:'1년',wifiOnly:false,selectedSites:['연세대학교','에잇세컨즈','알뜰주유소','힐스테이트']};
+const settingDefaults={theme:'light',fontSize:'normal',density:'comfortable',accent:'lime',contrast:false,displayMode:'pc',startView:'dashboard',siteCount:'4',weather:true,financeSummary:true,calendarSummary:true,processRows:'5',photoQuality:'고화질',autosave:true,openAfterSubmit:false,hideMoney:false,retention:'1년',wifiOnly:false};
 let userSettings={...settingDefaults,...JSON.parse(localStorage.getItem(settingsKey)||'{}')};
 userSettings.theme='light';
 if(userSettings.displayMode==='mobile')userSettings.displayMode='galaxy';
@@ -532,25 +536,20 @@ function applyProcessRowCount(){
   while(rows.children.length>wanted&&rows.children.length>1)rows.lastElementChild.remove();
 }
 function applyExtendedSettings(){
-  const list=document.querySelector('.site-list'),selected=new Set(userSettings.selectedSites||[]),cards=[...list.children];
+  const list=document.querySelector('.site-list'),cards=[...list.children];
   cards.forEach((card,index)=>{if(card.dataset.originalOrder==null)card.dataset.originalOrder=String(index)});
-  cards.sort((a,b)=>userSettings.mySitesFirst?Number(![...selected].some(s=>a.dataset.site.includes(s)))-Number(![...selected].some(s=>b.dataset.site.includes(s))):Number(a.dataset.originalOrder)-Number(b.dataset.originalOrder)).forEach(card=>list.appendChild(card));
+  cards.sort((a,b)=>Number(a.dataset.originalOrder)-Number(b.dataset.originalOrder)).forEach(card=>list.appendChild(card));
   const count=Number(userSettings.siteCount)||4;[...list.querySelectorAll('.site-card')].forEach((card,index)=>{card.hidden=index>=count;card.classList.toggle('is-setting-hidden',index>=count)});
   document.body.classList.toggle('force-mobile',['galaxy','iphone'].includes(userSettings.displayMode));
   document.body.classList.toggle('force-galaxy',userSettings.displayMode==='galaxy');
   document.body.classList.toggle('force-fold',userSettings.displayMode==='fold');
   document.body.classList.toggle('force-iphone',userSettings.displayMode==='iphone');
   document.querySelectorAll('[data-display-mode]').forEach(button=>button.classList.toggle('active',button.dataset.displayMode===userSettings.displayMode));
-  document.body.classList.toggle('notice-urgent-off',!userSettings.urgentNotice);document.body.classList.toggle('notice-approval-off',!userSettings.approvalNotice);document.body.classList.toggle('notice-money-off',!userSettings.moneyNotice);document.body.classList.toggle('notice-calendar-off',!userSettings.calendarNotice);
-  const role=document.querySelector('.sidebar .user small');if(role)role.textContent=userSettings.role;
   const retentionMap={'3개월':'3','6개월':'6','1년':'12','계속':'forever'};const retention=document.getElementById('retentionPeriod');if(retention&&retentionMap[userSettings.retention]){retention.value=retentionMap[userSettings.retention];retention.dispatchEvent(new Event('change'))}
   if(document.getElementById('processRows'))applyProcessRowCount();
-  document.querySelectorAll('.site-checks label').forEach(label=>{const checked=selected.has(label.textContent.trim());label.querySelector('input').checked=checked});
   document.body.dataset.photoQuality=userSettings.photoQuality;document.body.dataset.autosave=userSettings.autosave?'on':'off';document.body.dataset.wifiOnly=userSettings.wifiOnly?'on':'off';
-  document.body.dataset.quietHours=`${userSettings.quietStart}-${userSettings.quietEnd}`;
 }
 document.querySelectorAll('[data-display-mode]').forEach(button=>button.addEventListener('click',()=>{userSettings.displayMode=button.dataset.displayMode;saveUserSettings()}));
-document.querySelectorAll('.site-checks input').forEach(input=>input.addEventListener('change',()=>{userSettings.selectedSites=[...document.querySelectorAll('.site-checks input:checked')].map(item=>item.parentElement.textContent.trim());saveUserSettings()}));
 document.querySelector('[data-select-setting="startView"]').addEventListener('change',event=>showView(event.target.value));
 
 // 공사일보 자동 임시 저장
