@@ -54,7 +54,7 @@
   function mergePayload(remote={},local={}){const union=(first,second)=>[...new Map([...(Array.isArray(first)?first:[]),...(Array.isArray(second)?second:[])].map(item=>[JSON.stringify(item),item])).values()];return{siteCards:mergeHtml(remote.siteCards,local.siteCards,'site'),siteRows:mergeHtml(remote.siteRows,local.siteRows,'site'),reports:mergeHtml(remote.reports,local.reports,'report'),issues:mergeHtml(remote.issues,local.issues,'issue'),payments:union(remote.payments,local.payments),receivables:union(remote.receivables,local.receivables),savedAt:new Date().toISOString()}}
   async function save(){if(saving||!token())return;clearTimeout(timer);saving=true;dirty=false;try{await uploadPendingPhotos();let payload=capture(),baseVersion=version,merged=false;let{response,data}=await request('/company-state',{method:'PUT',json:{baseVersion,payload}});if(response.status===409){const latest=await request('/company-state');if(!latest.response.ok)throw new Error(latest.data.error||'최신 회사 자료를 불러오지 못했습니다.');payload=mergePayload(latest.data.payload,payload);baseVersion=Number(latest.data.version)||0;merged=true;({response,data}=await request('/company-state',{method:'PUT',json:{baseVersion,payload}}));if(response.ok)notify('다른 직원의 변경사항과 합쳐 저장했습니다.')}if(!response.ok)throw new Error(data.error||'회사 자료를 저장하지 못했습니다.');cache(payload,data.version);if(merged){location.reload();return}window.refreshMinWorksStorage?.()}catch(error){dirty=true;notify(error.message)}finally{saving=false}}
   function queue(){if(!started||saving||document.body.classList.contains('auth-pending'))return;dirty=true;clearTimeout(timer);timer=setTimeout(save,900)}
-  function startObservers(){if(started)return;started=true;['.site-list','.site-table','#dailyListScreen','#issuesView','#mwPaymentList','#mwReceivableList'].forEach(selector=>{const node=document.querySelector(selector);if(node)new MutationObserver(queue).observe(node,{childList:true,subtree:true,attributes:true,attributeFilter:['data-progress','data-status','data-comments','data-due']})});document.addEventListener('click',event=>{if(event.target.closest('#savePayment,#saveReceivable,#mwSavePayment,#mwSaveReceivable,#saveIssue,#createSite,#deleteIssue,#toggleIssueStatus,#addIssueComment,[data-site-edit],[data-site-delete],.record-edit-button,.record-delete-button'))setTimeout(queue,100)});setInterval(async()=>{if(saving||dirty||!token())return;try{await pull(true)}catch{}},15000)}
+  function startObservers(){if(started)return;started=true;['.site-list','.site-table','#dailyListScreen','#issuesView','#mwPaymentList','#mwReceivableList'].forEach(selector=>{const node=document.querySelector(selector);if(node)new MutationObserver(queue).observe(node,{childList:true,subtree:true,attributes:true,attributeFilter:['data-progress','data-status','data-comments','data-due','data-checks']})});document.addEventListener('click',event=>{if(event.target.closest('#savePayment,#saveReceivable,#mwSavePayment,#mwSaveReceivable,#saveIssue,#createSite,#deleteIssue,#toggleIssueStatus,#addIssueComment,#checkReport,[data-site-edit],[data-site-delete],.record-edit-button,.record-delete-button'))setTimeout(queue,100)});setInterval(async()=>{if(saving||dirty||!token())return;try{await pull(true)}catch{}},15000)}
   async function init(){if(!token())return;try{const remote=await pull(false);if(remote.version===0&&version>0){localStorage.removeItem(CACHE_KEY);window.MIN_WORKS_CLOUD_VERSION=0;version=0;location.reload();return}if(remote.version>version&&remote.payload){cache(remote.payload,remote.version);location.reload();return}startObservers();if(remote.version===0)queue();window.refreshMinWorksStorage?.()}catch(error){notify(error.message)}}
   document.addEventListener('minworks:user-ready',()=>setTimeout(init,200));
 })();
@@ -62,7 +62,16 @@
 /* SOURCE: app.js */
 const views = document.querySelectorAll('.view');
 const navButtons = document.querySelectorAll('[data-view]');
-const titles = {dashboard:'좋은 아침입니다, 재준님',sites:'현장 관리',daily:'공사일보',finance:'자금 집행',issues:'이슈 관리',calendar:'회사 일정',settings:'사용자 설정',help:'앱 사용법',patch:'패치노트',storage:'저장공간 정리'};
+const titles = {dashboard:'좋은 아침입니다',sites:'현장 관리',daily:'공사일보',finance:'자금 집행',issues:'이슈 관리',calendar:'회사 일정',settings:'사용자 설정',help:'앱 사용법',patch:'패치노트',storage:'저장공간 정리'};
+function currentSiteNames(){return [...new Set([...document.querySelectorAll('.site-table-row')].map(row=>row.dataset.siteRow?.trim()).filter(Boolean))]}
+function syncOperationalSiteOptions(){
+  const names=currentSiteNames(),selectors=['#dailyForm>div:first-child select','#issueSite','#paymentSite','#receivableSite','#mwPaymentSite','#mwReceivableSite'];
+  selectors.forEach(selector=>{const select=document.querySelector(selector);if(!select)return;const previous=select.value;select.replaceChildren(...names.map(name=>new Option(name,name)));if(names.includes(previous))select.value=previous;if(!names.length){const option=new Option('등록된 현장이 없습니다.','');option.disabled=true;option.selected=true;select.add(option)}});
+  const current=document.getElementById('currentSiteName');if(current)current.textContent=names[0]||'등록된 현장 없음';
+}
+window.syncOperationalSiteOptions=syncOperationalSiteOptions;
+syncOperationalSiteOptions();
+const operationalSiteTable=document.querySelector('.site-table');if(operationalSiteTable)new MutationObserver(syncOperationalSiteOptions).observe(operationalSiteTable,{childList:true,subtree:true,attributes:true,attributeFilter:['data-site-row']});
 function showView(name){views.forEach(v=>v.classList.toggle('active',v.id===name+'View'));navButtons.forEach(b=>b.classList.toggle('active',b.dataset.view===name));document.getElementById('pageTitle').textContent=titles[name];window.scrollTo({top:0,behavior:'smooth'});}
 
 // 서울 시간 기준 인사말 (날씨 값은 Google Weather API 연결 지점)
@@ -71,7 +80,7 @@ function updateGreeting(){
   let greeting='좋은 아침입니다',message='오늘도 안전하게 현장 시작하세요.';
   if(hour>=12&&hour<18){greeting='좋은 오후입니다';message='진행 중인 현장과 오후 일정을 확인해보세요.'}
   else if(hour>=18||hour<5){greeting='오늘도 수고하셨습니다';message='공사일보와 남은 이슈를 확인해보세요.'}
-  titles.dashboard=`${greeting}, 재준님`;if(document.getElementById('dashboardView').classList.contains('active'))document.getElementById('pageTitle').textContent=titles.dashboard;
+  const userName=window.MIN_WORKS_USER?.name?.replace(/\s/g,'');titles.dashboard=userName?`${greeting}, ${userName}님`:greeting;if(document.getElementById('dashboardView').classList.contains('active'))document.getElementById('pageTitle').textContent=titles.dashboard;
   document.getElementById('greetingMessage').textContent=message;
 }
 updateGreeting();
@@ -134,7 +143,7 @@ document.getElementById('dailyForm').addEventListener('submit',e=>{
   const photoCount=document.querySelectorAll('#tbmPreview .uploaded-photo, #progressPreview .uploaded-photo').length;
   const processSummary=processData.map(item=>`${item.name} ${item.today}명`).join(' · ');
   const card=document.createElement('button');card.className='report-card';card.dataset.author=currentUser;card.dataset.site=site;
-  card.innerHTML=`<span class="report-file-icon"><span class="material-symbols-rounded">description</span></span><div><small>${site}</small><b>${Number(date.slice(5,7))}월 ${Number(date.slice(8,10))}일 공사일보</b><p>${processSummary||`공정 ${processes.length}개`} · 총출력 ${people}명 · 사진 ${photoCount}장</p></div><div class="report-author"><span>작성자</span><b>${currentUser} 부장</b><em class="owner-mark">내 일보</em></div><span class="report-status">작성 완료</span>`;
+  card.innerHTML=`<span class="report-file-icon"><span class="material-symbols-rounded">description</span></span><div><small>${site}</small><b>${Number(date.slice(5,7))}월 ${Number(date.slice(8,10))}일 공사일보</b><p>${processSummary||`공정 ${processes.length}개`} · 총출력 ${people}명 · 사진 ${photoCount}장</p></div><div class="report-author"><span>작성자</span><b>${currentUserTitle()}</b><em class="owner-mark">내 일보</em></div><span class="report-status">작성 완료</span>`;
   card.dataset.totalPeople=String(people);
   card.reportPhotos=[...document.querySelectorAll('#tbmPreview .uploaded-photo, #progressPreview .uploaded-photo')].map(photo=>({src:photo.dataset.photoSrc,type:photo.dataset.photoType||'현장사진',size:Number(photo.dataset.photoSize)||0,file:photo.photoFile||null})).filter(photo=>photo.src);
   card.reportProcesses=processData;
@@ -145,8 +154,15 @@ document.getElementById('photoBtn').addEventListener('click',()=>notify('카메�
 const tbmGalleryInput=document.getElementById('tbmGalleryInput');
 const progressGalleryInput=document.getElementById('progressGalleryInput');
 function openPhotoPicker(input){const connection=navigator.connection||navigator.mozConnection||navigator.webkitConnection;if(userSettings?.wifiOnly&&connection?.type&&connection.type!=='wifi'){notify('Wi‑Fi에서만 사진 업로드하도록 설정되어 있습니다.');return}input.click()}
-document.getElementById('tbmGalleryBtn').addEventListener('click',()=>openPhotoPicker(tbmGalleryInput));
-document.getElementById('progressPhotoAdd').addEventListener('click',()=>openPhotoPicker(progressGalleryInput));
+const photoSourceSheet=document.createElement('div');photoSourceSheet.className='photo-source-sheet';photoSourceSheet.innerHTML='<div class="photo-source-backdrop"></div><section><header><div><b>사진 추가</b><small>추가할 방법을 선택하세요.</small></div><button type="button" aria-label="닫기">×</button></header><button type="button" data-photo-source="camera"><span class="material-symbols-rounded">photo_camera</span><div><b>카메라로 촬영</b><small>지금 바로 사진을 찍습니다.</small></div></button><button type="button" data-photo-source="gallery"><span class="material-symbols-rounded">photo_library</span><div><b>갤러리에서 선택</b><small>휴대폰에 저장된 사진을 고릅니다.</small></div></button></section>';document.body.appendChild(photoSourceSheet);
+let activePhotoInput=null,activePhotoMeta=null;
+function closePhotoSourceSheet(){photoSourceSheet.classList.remove('show')}
+function choosePhotoSource(input,containerId,countId,type){activePhotoInput=input;activePhotoMeta={containerId,countId,type};photoSourceSheet.classList.add('show')}
+photoSourceSheet.querySelector('header button').addEventListener('click',closePhotoSourceSheet);photoSourceSheet.querySelector('.photo-source-backdrop').addEventListener('click',closePhotoSourceSheet);
+photoSourceSheet.querySelector('[data-photo-source="gallery"]').addEventListener('click',()=>{closePhotoSourceSheet();if(activePhotoInput)openPhotoPicker(activePhotoInput)});
+photoSourceSheet.querySelector('[data-photo-source="camera"]').addEventListener('click',()=>{closePhotoSourceSheet();if(!activePhotoMeta)return;const camera=document.createElement('input');camera.type='file';camera.accept='image/*';camera.capture='environment';camera.addEventListener('change',async()=>{await addPhotoPreviews(camera,activePhotoMeta.containerId,activePhotoMeta.countId,activePhotoMeta.type);camera.remove()},{once:true});openPhotoPicker(camera)});
+document.getElementById('tbmGalleryBtn').addEventListener('click',()=>choosePhotoSource(tbmGalleryInput,'tbmPreview','tbmPhotoCount','TBM 사진'));
+document.getElementById('progressPhotoAdd').addEventListener('click',()=>choosePhotoSource(progressGalleryInput,'progressPreview','progressPhotoCount','진행사진'));
 async function preparePhotoFile(file){
   const mode=userSettings?.photoQuality||'고화질';if(mode==='원본')return file;
   try{const bitmap=await createImageBitmap(file,{imageOrientation:'from-image'}),limit=mode==='용량 절약'?1600:2400,scale=Math.min(1,limit/Math.max(bitmap.width,bitmap.height)),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));canvas.getContext('2d').drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close?.();const quality=mode==='용량 절약'?.72:.86,blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',quality));return blob?new File([blob],file.name.replace(/\.[^.]+$/,'.jpg'),{type:'image/jpeg',lastModified:Date.now()}):file}catch{return file}
@@ -183,7 +199,7 @@ document.getElementById('createSite').addEventListener('click',()=>{
   const row=document.createElement('div');row.className='table-row site-table-row';row.dataset.siteRow=name;row.dataset.siteId=siteId;row.dataset.startDate=startDate;row.dataset.endDate=endDate;row.innerHTML=`<span><b>${name}</b><small>${type} · ${startDate} ~ ${endDate}</small></span><span class="site-manager">일보 미등록</span><button class="progress-edit" data-progress="0"><div class="inline-progress"><i style="width:0%"></i></div><b>0%</b><span class="material-symbols-rounded">edit</span></button><button class="recent-report-link" data-report-site="${name}">일보 없음</button><span><em class="status ok">신규</em></span>`;
   document.querySelector('.site-table').appendChild(row);attachRecentReportLink(row.querySelector('.recent-report-link'));window.refreshProjectStatuses?.();
   ['issueSite','paymentSite','receivableSite'].forEach(id=>{const option=document.createElement('option');option.textContent=name;document.getElementById(id)?.appendChild(option)});
-  const dailySite=document.querySelector('#dailyForm select');if(dailySite){const option=document.createElement('option');option.textContent=name;dailySite.appendChild(option)}
+  syncOperationalSiteOptions();
   let budgets=document.getElementById('siteBudgetSummary');if(!budgets){budgets=document.createElement('section');budgets.id='siteBudgetSummary';budgets.className='site-budget-summary';budgets.innerHTML='<div class="panel-head"><div><p class="eyebrow">SITE BUDGET</p><h2>현장 계약금액</h2></div></div>';document.querySelector('.finance-tabs').before(budgets)}
   const budget=document.createElement('article');budget.innerHTML=`<div><b>${name}</b><small>${type}</small></div><span>공사금액 <strong>${won(amount)}</strong></span><span>추가 예상 <strong>${won(extra)}</strong></span><em>총 예상 ${won(amount+extra)}</em>`;budgets.appendChild(budget);
   ['newSiteName','newSiteStart','newSiteEnd','newSiteAmount','newSiteExtraAmount'].forEach(id=>document.getElementById(id).value='');applyExtendedSettings();notify('새 현장과 공사금액을 등록했습니다.');setTimeout(()=>{creatingSite=false;createButton.disabled=false},800);
@@ -225,7 +241,7 @@ document.getElementById('addProcess').addEventListener('click',()=>{
 });
 
 // 완료된 공사일보: 작성자만 수정, 그 외 사용자는 열람 전용
-let currentUser='김재준';
+let currentUser='';
 window.setMinWorksUser=function(user){
   if(!user)return;
   if(user.role==='employee'&&user.name){
@@ -235,39 +251,41 @@ window.setMinWorksUser=function(user){
     const greeting=hour>=18||hour<5?'오늘도 수고하셨습니다':hour>=12?'좋은 오후입니다':'좋은 아침입니다';
     titles.dashboard=`${greeting}, ${nameOnly}님`;
     if(document.getElementById('dashboardView').classList.contains('active'))document.getElementById('pageTitle').textContent=titles.dashboard;
+    const editorAuthor=document.querySelector('#dailyEditor .editor-head small');if(editorAuthor)editorAuthor.textContent=`작성자 · ${user.department||''} ${user.name} ${user.rank||''}`.replace(/\s+/g,' ').trim();
   }else if(user.role==='admin'){
+    currentUser='관리자';
     titles.dashboard='관리자님, 안녕하세요';
     if(document.getElementById('dashboardView').classList.contains('active'))document.getElementById('pageTitle').textContent=titles.dashboard;
   }
 };
+function currentUserTitle(){const user=window.MIN_WORKS_USER;if(!user)return currentUser||'작성자';return user.role==='admin'?'관리자':[user.department,user.name,user.rank].filter(Boolean).join(' ')}
 const legacyViewerPhotos=document.querySelector('#reportViewer .viewer-photos');
 legacyViewerPhotos.className='viewer-photo-gallery';
 legacyViewerPhotos.setAttribute('aria-label','공사일보 현장사진');
 legacyViewerPhotos.innerHTML='<div class="viewer-photo-head"><div><span class="material-symbols-rounded">photo_library</span><div><b>현장사진</b><small id="viewerPhotoSummary">사진을 옆으로 넘겨 확인하세요.</small></div></div><em id="viewerPhotoCounter">0 / 0</em></div><div class="viewer-photo-stage"><button type="button" class="viewer-photo-arrow prev" id="viewerPhotoPrev" aria-label="이전 사진"><span class="material-symbols-rounded">chevron_left</span></button><div class="viewer-photo-track" id="viewerPhotoTrack"></div><button type="button" class="viewer-photo-arrow next" id="viewerPhotoNext" aria-label="다음 사진"><span class="material-symbols-rounded">chevron_right</span></button></div><div class="viewer-photo-dots" id="viewerPhotoDots"></div>';
 const reportViewer=document.getElementById('reportViewer');
-const checkRecords={
-  '연세대학교 고를샘':[{name:'최진영 대표',time:'오전 9:18'},{name:'박민수 과장',time:'오전 9:24'}],
-  '에잇세컨즈 AK분당점':[{name:'강신윤 대표',time:'오전 10:05'}],
-  '알뜰주유소 시설개선':[],
-  '힐스테이트 아산 커뮤니티':[{name:'김재준 부장',time:'어제 오후 6:20'}]
-};
 let activeReportSite='';
 let activeReportCard=null;
+function reportChecks(card){try{const value=JSON.parse(card?.dataset.checks||'[]');return Array.isArray(value)?value:[]}catch{return[]}}
+function checkActor(){const user=window.MIN_WORKS_USER;if(!user)return null;return{actorId:user.id||`${user.role}:${user.name||'관리자'}`,name:user.role==='admin'?'관리자':user.name,department:user.department||'',rank:user.rank||'',checkedAt:new Date().toISOString()}}
+function checkName(record){return [record.department,record.name,record.rank].filter(Boolean).join(' ')}
+function checkTime(value){if(!value)return '시간 미기록';return new Intl.DateTimeFormat('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'Asia/Seoul'}).format(new Date(value))}
+function safeText(value){const node=document.createElement('span');node.textContent=String(value||'');return node.innerHTML}
 function renderCardCheckSummaries(){
   document.querySelectorAll('.report-card').forEach(card=>{
-    const records=checkRecords[card.dataset.site]||[];
+    const records=reportChecks(card);
     let summary=card.querySelector('.card-check-summary');
     if(!summary){summary=document.createElement('div');summary.className='card-check-summary';card.appendChild(summary)}
     summary.classList.toggle('none',records.length===0);
-    summary.innerHTML=records.length?`<span class="material-symbols-rounded">visibility</span><b>확인 ${records.length}명</b><span>${records.map(r=>r.name).join(' · ')}</span><em>확인자 보기</em>`:`<span class="material-symbols-rounded">visibility_off</span><b>확인 0명</b><span>아직 확인한 사람이 없습니다.</span>`;
+    summary.innerHTML=records.length?`<span class="material-symbols-rounded">visibility</span><b>확인 ${records.length}명</b><span>${records.map(record=>safeText(checkName(record))).join(' · ')}</span><em>확인자 보기</em>`:`<span class="material-symbols-rounded">visibility_off</span><b>확인 0명</b><span>아직 확인한 사람이 없습니다.</span>`;
   });
 }
 function renderCheckHistory(){
-  const records=checkRecords[activeReportSite]||[];
+  const records=reportChecks(activeReportCard),actor=checkActor();
   document.getElementById('checkCount').textContent=records.length+'명 확인';
-  document.getElementById('checkPeople').innerHTML=records.length?records.map(r=>`<div class="check-person"><i>${r.name[0]}</i><span>${r.name}</span><small>${r.time}</small></div>`).join(''):'<span class="empty-check">아직 확인한 사람이 없습니다.</span>';
-  const checked=records.some(r=>r.name.startsWith(currentUser));
-  const button=document.getElementById('checkReport');button.disabled=checked;button.classList.toggle('checked',checked);button.innerHTML=checked?'<span class="material-symbols-rounded">done_all</span>확인 완료':'<span class="material-symbols-rounded">done</span>확인했습니다';
+  document.getElementById('checkPeople').innerHTML=records.length?records.map(r=>`<div class="check-person"><i>${safeText((r.name||'?')[0])}</i><span>${safeText(checkName(r))}</span><small>${safeText(checkTime(r.checkedAt))}</small></div>`).join(''):'<span class="empty-check">아직 확인한 사람이 없습니다.</span>';
+  const checked=actor&&records.some(r=>r.actorId===actor.actorId);
+  const button=document.getElementById('checkReport');button.disabled=!actor||checked;button.classList.toggle('checked',checked);button.innerHTML=checked?'<span class="material-symbols-rounded">done_all</span>확인 완료':'<span class="material-symbols-rounded">done</span>확인했습니다';
 }
 function attachReportCard(card){card.addEventListener('click',()=>{
   activeReportCard=card;
@@ -327,8 +345,8 @@ reportDeleteButton.addEventListener('click',()=>{
   saveDeletedRecord('reports',recordId(card,'reports'));removeReportCard(card);reportViewer.classList.remove('show');activeReportCard=null;refreshAfterRecordDelete();notify('공사일보를 삭제했습니다.');
 });
 document.getElementById('checkReport').addEventListener('click',()=>{
-  const records=checkRecords[activeReportSite]||(checkRecords[activeReportSite]=[]);
-  if(!records.some(r=>r.name.startsWith(currentUser)))records.push({name:currentUser+' 부장',time:'방금 전'});
+  if(!activeReportCard)return;const actor=checkActor();if(!actor)return notify('로그인 정보를 확인하지 못했습니다.');const records=reportChecks(activeReportCard);
+  if(!records.some(r=>r.actorId===actor.actorId)){records.push(actor);activeReportCard.dataset.checks=JSON.stringify(records)}
   renderCheckHistory();notify('확인 기록이 남았습니다.');
   renderCardCheckSummaries();
 });
@@ -468,7 +486,7 @@ const issueFilterButtons=[...document.querySelectorAll('.issue-summary button')]
 function refreshIssueSummary(){const cards=[...document.querySelectorAll('.issue-detail-card')],counts=[cards.length,cards.filter(c=>c.dataset.urgency==='urgent').length,cards.filter(c=>c.dataset.status!=='complete').length,cards.filter(c=>c.dataset.status==='complete').length];issueFilterButtons.forEach((button,index)=>button.textContent=['전체 ','긴급 ','진행 중 ','완료 '][index]+counts[index]);}
 document.querySelectorAll('.issue-detail-card').forEach(card=>{card.dataset.urgency=card.classList.contains('urgent')?'urgent':'normal';card.dataset.status='active';card.dataset.comments=card.querySelector('.issue-meta span:last-child')?.textContent.match(/\d+/)?.[0]||'0';card.dataset.due=card.querySelector('.issue-meta span:nth-child(2)')?.textContent.trim()||'기한 미정';});
 issueFilterButtons.forEach(button=>button.addEventListener('click',()=>{issueFilterButtons.forEach(x=>x.classList.toggle('active',x===button));document.querySelectorAll('.issue-detail-card').forEach(card=>{const f=button.dataset.issueFilter;card.style.display=f==='all'||f===card.dataset.urgency||(f==='active'&&card.dataset.status==='active')||(f==='complete'&&card.dataset.status==='complete')?'block':'none';});}));
-const issueDetailActions=document.createElement('div');issueDetailActions.className='issue-detail-actions';issueDetailActions.innerHTML='<div class="issue-status-row"><span id="peekDue">기한 미정</span><div><button id="deleteIssue" class="record-delete-button"><span class="material-symbols-rounded">delete</span>이슈 삭제</button><button id="toggleIssueStatus">완료 처리</button></div></div><section class="issue-comments"><b>댓글 <em id="peekCommentCount">0</em></b><div id="peekCommentList"><p><strong>김재준 부장</strong> 발주처 확인 후 공유하겠습니다.</p></div><label><input id="issueCommentInput" placeholder="댓글을 입력하세요"><button id="addIssueComment">등록</button></label></section>';issuePeek.querySelector('section').appendChild(issueDetailActions);let activeIssueCard=null;
+const issueDetailActions=document.createElement('div');issueDetailActions.className='issue-detail-actions';issueDetailActions.innerHTML='<div class="issue-status-row"><span id="peekDue">기한 미정</span><div><button id="deleteIssue" class="record-delete-button"><span class="material-symbols-rounded">delete</span>이슈 삭제</button><button id="toggleIssueStatus">완료 처리</button></div></div><section class="issue-comments"><b>댓글 <em id="peekCommentCount">0</em></b><div id="peekCommentList"><span class="empty-check">등록된 댓글이 없습니다.</span></div><label><input id="issueCommentInput" placeholder="댓글을 입력하세요"><button id="addIssueComment">등록</button></label></section>';issuePeek.querySelector('section').appendChild(issueDetailActions);let activeIssueCard=null;
 document.getElementById('closeIssueForm').addEventListener('click',()=>issueFormModal.classList.remove('show'));
 issueFormModal.querySelector('.issue-modal-backdrop').addEventListener('click',()=>issueFormModal.classList.remove('show'));
 document.getElementById('saveIssue').addEventListener('click',()=>{
@@ -498,7 +516,7 @@ document.getElementById('deleteIssue').addEventListener('click',()=>{
   if(!remaining){const alert=[...document.querySelectorAll('[data-issue-site]')].find(item=>item.dataset.issueSite===site);if(alert)alert.closest('span').innerHTML='<em class="status ok">이슈 없음</em>'}
   refreshAfterRecordDelete();notify('현장 이슈를 삭제했습니다.');
 });
-document.getElementById('addIssueComment').addEventListener('click',()=>{const input=document.getElementById('issueCommentInput'),text=input.value.trim();if(!text||!activeIssueCard)return;const comment=document.createElement('p');comment.innerHTML=`<strong>김재준 부장</strong> ${text}`;document.getElementById('peekCommentList').appendChild(comment);activeIssueCard.dataset.comments=String(Number(activeIssueCard.dataset.comments||0)+1);activeIssueCard.querySelector('.issue-meta span:last-child').innerHTML=`<i class="material-symbols-rounded">chat</i>댓글 ${activeIssueCard.dataset.comments}`;document.getElementById('peekCommentCount').textContent=activeIssueCard.dataset.comments;input.value='';notify('댓글을 등록했습니다.');});refreshIssueSummary();
+document.getElementById('addIssueComment').addEventListener('click',()=>{const input=document.getElementById('issueCommentInput'),text=input.value.trim();if(!text||!activeIssueCard)return;const list=document.getElementById('peekCommentList');list.querySelector('.empty-check')?.remove();const comment=document.createElement('p'),author=document.createElement('strong');author.textContent=currentUserTitle();comment.append(author,document.createTextNode(' '+text));list.appendChild(comment);activeIssueCard.dataset.comments=String(Number(activeIssueCard.dataset.comments||0)+1);activeIssueCard.querySelector('.issue-meta span:last-child').innerHTML=`<i class="material-symbols-rounded">chat</i>댓글 ${activeIssueCard.dataset.comments}`;document.getElementById('peekCommentCount').textContent=activeIssueCard.dataset.comments;input.value='';notify('댓글을 등록했습니다.');});refreshIssueSummary();
 
 // 삭제한 샘플은 새로고침해도 다시 나타나지 않습니다.
 (()=>{const saved=deletedRecords();document.querySelectorAll('.report-card').forEach(card=>{if(saved.reports.includes(recordId(card,'reports')))removeReportCard(card)});document.querySelectorAll('.issue-detail-card').forEach(card=>{if(saved.issues.includes(recordId(card,'issues')))card.remove()});refreshAfterRecordDelete()})();
@@ -1331,18 +1349,20 @@ applyExtendedSettings();
   }
 
   function setupReportDownloads() {
+    if(document.querySelector('.report-download-modal'))return;
     const modal = document.createElement('div');
     modal.className = 'report-download-modal';
     modal.innerHTML = `<div class="report-download-backdrop"></div><section><button class="report-download-close" aria-label="닫기">×</button><p class="eyebrow">REPORT DOWNLOAD</p><h2>공사일보 저장</h2><p class="report-download-subtitle">기기에 맞는 저장 방식을 선택하세요.</p><label class="report-site-select" hidden>현장 선택<select></select></label><div class="report-download-summary"><span><b id="pdfReportCount">1</b><small>일보</small></span><span><b id="pdfPhotoCount">0</b><small>사진</small></span><span><b id="pdfPageCount">1</b><small>예상 페이지</small></span></div><div class="report-download-options"><button class="jpg-download-option" data-jpg-download><span class="material-symbols-rounded">image</span><div><b>JPG 이미지 저장</b><small>휴대폰 갤러리에 바로 저장 · 사진 포함</small></div><em>모바일 추천</em></button><button data-pdf-photos="include"><span class="material-symbols-rounded">photo_library</span><div><b>사진 포함 PDF</b><small>일보 아래에 등록 사진을 함께 배치</small></div></button><button data-pdf-photos="exclude"><span class="material-symbols-rounded">description</span><div><b>사진 제외 PDF</b><small>작업 내용과 확인 기록만 저장</small></div></button></div><p class="report-download-note"><span class="material-symbols-rounded">info</span>휴대폰은 JPG 저장, PC와 현장 전체 자료는 PDF 저장을 권장합니다.</p></section>`;
     document.body.appendChild(modal);
     let selectedCards = [];
     let bulkMode = false;
+    let exporting = false;
     const siteSelect = modal.querySelector('select');
     const close = () => modal.classList.remove('show');
     modal.querySelector('.report-download-close').addEventListener('click', close);
     modal.querySelector('.report-download-backdrop').addEventListener('click', close);
 
-    const reportCards = () => [...document.querySelectorAll('.report-card')];
+    const reportCards = () => [...new Map([...document.querySelectorAll('.report-card')].map(card=>[recordId(card,'reports'),card])).values()];
     const getPhotos = card => typeof window.reportPhotos === 'function' ? window.reportPhotos(card) : (Array.isArray(card.reportPhotos) ? card.reportPhotos : []);
     const statedPhotoCount = card => Number(card.querySelector('p')?.textContent.match(/사진\s*(\d+)장/)?.[1] || getPhotos(card).length);
     const refreshSummary = () => {
@@ -1363,9 +1383,11 @@ applyExtendedSettings();
         siteSelect.replaceChildren(...sites.map(site => { const option = document.createElement('option'); option.value = site; option.textContent = site; return option; }));
         selectedCards = sites.length ? reportCards().filter(item => item.dataset.site === sites[0]) : [];
         modal.querySelector('h2').textContent = '현장 전체 공사일보 저장';
+        modal.querySelector('.report-download-subtitle').textContent='선택한 현장의 공사일보를 한 개의 PDF로 묶습니다.';
       } else {
         selectedCards = [card];
-        modal.querySelector('h2').textContent = '공사일보 저장';
+        modal.querySelector('h2').textContent = '현재 공사일보 1개 저장';
+        modal.querySelector('.report-download-subtitle').textContent='지금 열어본 공사일보 한 개만 저장합니다.';
       }
       refreshSummary();
       modal.classList.add('show');
@@ -1404,14 +1426,12 @@ applyExtendedSettings();
     document.querySelector('#reportViewer .viewer-actions')?.prepend(viewerButton);
 
     modal.querySelectorAll('[data-pdf-photos]').forEach(button => button.addEventListener('click', async () => {
-      if (!selectedCards.length) { notify('저장할 공사일보가 없습니다.'); return; }
-      await printReports(selectedCards, button.dataset.pdfPhotos === 'include');
-      close();
+      if(exporting)return;if (!selectedCards.length) { notify('저장할 공사일보가 없습니다.'); return; }exporting=true;modal.querySelectorAll('.report-download-options button').forEach(item=>item.disabled=true);
+      try{await printReports(selectedCards, button.dataset.pdfPhotos === 'include');close()}finally{exporting=false;modal.querySelectorAll('.report-download-options button').forEach(item=>item.disabled=false)}
     }));
     modal.querySelector('[data-jpg-download]').addEventListener('click', async () => {
-      if (!selectedCards.length) { notify('저장할 공사일보가 없습니다.'); return; }
-      await downloadReportsJpg(selectedCards);
-      close();
+      if(exporting)return;if (!selectedCards.length) { notify('저장할 공사일보가 없습니다.'); return; }exporting=true;modal.querySelectorAll('.report-download-options button').forEach(item=>item.disabled=true);
+      try{await downloadReportsJpg(selectedCards);close()}finally{exporting=false;modal.querySelectorAll('.report-download-options button').forEach(item=>item.disabled=false)}
     });
 
     async function downloadReportsJpg(cards) {
@@ -1435,9 +1455,16 @@ applyExtendedSettings();
       document.dispatchEvent(new CustomEvent('minworks:exported',{detail:{site:cards[0]?.dataset.site||'',type:'JPG'}}));
     }
     function drawCanvasText(context,text,x,y,maxWidth,lineHeight){let line='';String(text).split(' ').forEach(word=>{const test=line+word+' ';if(context.measureText(test).width>maxWidth&&line){context.fillText(line,x,y);line=word+' ';y+=lineHeight}else line=test});context.fillText(line,x,y)}
-    async function photoBlob(source){if(!source)throw new Error('사진 주소가 없습니다.');const headers={};if(String(source).includes('min-works-api.forjaejun.workers.dev')){const token=localStorage.getItem('minWorksSessionV1');if(token)headers.Authorization=`Bearer ${token}`}const response=await fetch(source,{headers,cache:'no-store'});if(!response.ok)throw new Error('사진을 불러오지 못했습니다.');return response.blob()}
+    async function photoBlob(source){
+      if(!source)throw new Error('사진 주소가 없습니다.');
+      const url=String(source),signedFile=/\/files\/[^/]+\/[^/?#]+(?:[?#]|$)/.test(url),headers={};
+      if(url.includes('min-works-api.forjaejun.workers.dev')&&!signedFile){const token=localStorage.getItem('minWorksSessionV1');if(token)headers.Authorization=`Bearer ${token}`}
+      let lastError;
+      for(let attempt=0;attempt<3;attempt+=1){try{const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),45000),response=await fetch(url,{headers,cache:'no-store',signal:controller.signal});clearTimeout(timeout);if(!response.ok)throw new Error(`사진 응답 오류 ${response.status}`);const blob=await response.blob();if(!blob.size)throw new Error('빈 사진 파일');return blob}catch(error){lastError=error;if(attempt<2)await new Promise(resolve=>setTimeout(resolve,700*(attempt+1)))}}
+      throw new Error(lastError?.message||'사진을 불러오지 못했습니다.');
+    }
     async function photoDataUrl(source){if(String(source).startsWith('data:'))return source;const blob=await photoBlob(source);return await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(blob)})}
-    async function loadCanvasImage(source){const blob=String(source).startsWith('data:')?await fetch(source).then(response=>response.blob()):await photoBlob(source);if('createImageBitmap'in window){try{return await createImageBitmap(blob,{imageOrientation:'from-image'})}catch{}}const resolved=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(blob)});return new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=reject;image.src=resolved})}
+    async function loadCanvasImage(source){const blob=String(source).startsWith('data:')?await fetch(source).then(response=>response.blob()):await photoBlob(source),resolved=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(blob)});return new Promise((resolve,reject)=>{const image=new Image();image.decoding='async';image.onload=()=>resolve(image);image.onerror=()=>reject(new Error('사진 해석 실패'));image.src=resolved})}
     function drawContainedImage(context,image,x,y,width,height){const ratio=Math.min(width/image.width,height/image.height),drawWidth=image.width*ratio,drawHeight=image.height*ratio;context.drawImage(image,x+(width-drawWidth)/2,y+(height-drawHeight)/2,drawWidth,drawHeight)}
     function safeFileName(value){return String(value||'MIN_WORKS').replace(/[\\/:*?"<>|]/g,'_').trim()}
 
