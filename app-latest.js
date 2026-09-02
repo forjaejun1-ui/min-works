@@ -71,7 +71,7 @@ function syncOperationalSiteOptions(){
 }
 window.syncOperationalSiteOptions=syncOperationalSiteOptions;
 syncOperationalSiteOptions();
-const operationalSiteTable=document.querySelector('.site-table');if(operationalSiteTable)new MutationObserver(syncOperationalSiteOptions).observe(operationalSiteTable,{childList:true});
+const operationalSiteTable=document.querySelector('.site-table');
 function showView(name){views.forEach(v=>v.classList.toggle('active',v.id===name+'View'));navButtons.forEach(b=>b.classList.toggle('active',b.dataset.view===name));document.getElementById('pageTitle').textContent=titles[name];window.scrollTo({top:0,behavior:'smooth'});}
 
 // 서울 시간 기준 인사말 (날씨 값은 Google Weather API 연결 지점)
@@ -1126,7 +1126,7 @@ applyExtendedSettings();
   document.getElementById('storageRefresh')?.addEventListener('click',refreshStorage);document.getElementById('restoreStorageTrash')?.addEventListener('click',restoreTrash);document.getElementById('emptyStorageTrash')?.addEventListener('click',emptyTrash);
   document.querySelectorAll('[data-view="storage"]').forEach(button=>button.addEventListener('click',()=>setTimeout(refreshStorage,0)));
   document.addEventListener('minworks:exported',event=>offerRetention(event.detail?.site,event.detail?.type));
-  new MutationObserver(()=>refreshStorage()).observe(document.getElementById('dailyListScreen'),{childList:true,subtree:true});
+  document.addEventListener('minworks:storage-refresh',refreshStorage);
   window.refreshMinWorksStorage=refreshStorage;
   refreshStorage();
 })();
@@ -1189,9 +1189,7 @@ applyExtendedSettings();
   function restoreSiteState(){const state=siteState();state.deleted.forEach(item=>{if(typeof item==='string'){document.querySelectorAll(`[data-site="${CSS.escape(item)}"],[data-issue-card="${CSS.escape(item)}"],[data-site-row="${CSS.escape(item)}"]`).forEach(node=>node.remove());return}document.querySelector(`[data-site-id="${CSS.escape(item.id)}"]`)?.remove();document.querySelector(`.site-table-row[data-site-id="${CSS.escape(item.id)}"]`)?.remove();if(item.removeLinked)document.querySelectorAll(`.report-card[data-site="${CSS.escape(item.name)}"],[data-issue-card="${CSS.escape(item.name)}"]`).forEach(node=>node.remove())});Object.entries(state.updated).forEach(([old,data])=>{const value=typeof data==='string'?{name:data}:data,row=document.querySelector(`[data-site-row="${CSS.escape(old)}"]`);if(row){row.dataset.siteRow=value.name;row.dataset.startDate=value.start||row.dataset.startDate||'';row.dataset.endDate=value.end||row.dataset.endDate||'';row.querySelector('span:first-child b').textContent=value.name}})}
 
   restoreSiteState();enhanceSiteRows();refreshHomeExtras();
-  new MutationObserver(()=>{enhanceSiteRows();refreshHomeExtras()}).observe(document.querySelector('.site-table'),{childList:true});
-  new MutationObserver(refreshHomeExtras).observe(document.querySelector('#dailyView'),{childList:true,subtree:true});
-  new MutationObserver(refreshHomeExtras).observe(document.querySelector('#issuesView'),{childList:true,subtree:true});
+  window.refreshMinWorksHomeExtras=()=>{enhanceSiteRows();refreshHomeExtras()};
   if(window.MIN_WORKS_USER)window.applyMinWorksAccess(window.MIN_WORKS_USER);
 })();
 
@@ -1654,9 +1652,7 @@ window.MIN_WORKS_CONFIG = Object.freeze({
     window.refreshMinWorksSummary = refresh;
     // 현장 행의 추가/삭제만 감시한다. subtree까지 감시하면 refreshProjectStatuses가
     // 빈 상태 문구를 갱신할 때 다시 refresh가 호출되어 무한 반복할 수 있다.
-    new MutationObserver(refresh).observe(document.querySelector('.site-table'), { childList: true });
-    new MutationObserver(refresh).observe(document.querySelector('#dailyView'), { childList: true, subtree: true });
-    new MutationObserver(refresh).observe(document.querySelector('#issuesView'), { childList: true, subtree: true });
+    document.addEventListener('minworks:summary-refresh',refresh);
     setTimeout(refresh, 0);
   }
 
@@ -1697,9 +1693,7 @@ window.MIN_WORKS_CONFIG = Object.freeze({
       if (card.parentElement !== target) target.prepend(card);
     };
     screen.querySelectorAll('.report-card').forEach(place);
-    new MutationObserver(records => records.forEach(record => record.addedNodes.forEach(node => {
-      if (node.matches?.('.report-card')) place(node);
-    }))).observe(screen, {childList:true,subtree:true});
+    window.placeMinWorksReportByDate=place;
   }
 
   function localDateKey(date) {
@@ -1738,8 +1732,7 @@ window.MIN_WORKS_CONFIG = Object.freeze({
       });
       renderCards();
     };
-    new MutationObserver(rebuild).observe(document.querySelector('.site-table'), { childList:true });
-    new MutationObserver(rebuild).observe(document.querySelector('#todayReports'), { childList:true });
+    window.rebuildMinWorksReportFilters=rebuild;
     rebuild();
   }
 

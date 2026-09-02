@@ -1,6 +1,6 @@
-const CACHE = 'min-works-v51';
+const CACHE = 'min-works-v52';
 const ASSETS = [
-  './', './index.html?v=51', './app-latest.css?v=51', './app-latest.js?v=51', './manifest.webmanifest',
+  './', './index.html?v=52', './app-latest.css?v=52', './app-latest.js?v=52', './manifest.webmanifest',
   './assets/icons/min-works-v4-180.png', './assets/icons/min-works-v4-192.png',
   './assets/icons/min-works-v4-512.png'
 ];
@@ -17,7 +17,7 @@ self.addEventListener('fetch', event => {
     } catch(error) {
       const cached=await caches.match(event.request,{ignoreSearch:isPage});
       if(cached)return cached;
-      if(isPage){const page=await caches.match('./index.html?v=51');if(page)return page}
+      if(isPage){const page=await caches.match('./index.html?v=52');if(page)return page}
       throw error;
     }
   })());
