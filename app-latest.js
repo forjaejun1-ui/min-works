@@ -130,7 +130,7 @@ document.getElementById('dailyForm').addEventListener('submit',e=>{
   if(processes.some(row=>!(Number(row.querySelector('input[type=number]:not(.cumulative-people)')?.value)||0)&&!row.querySelector('input[placeholder="세부 작업내용"]')?.value.trim())){notify('선택한 공정의 인원 또는 작업내용을 입력해주세요.');return}
   submittingReport=true;const submitButton=document.getElementById('reportSubmit');submitButton.disabled=true;submitButton.textContent='등록 중…';
   const people=processes.reduce((sum,r)=>sum+(Number(r.querySelector('input[type=number]').value)||0),0);
-  const processData=processes.map(row=>({name:row.querySelector('.process-name').value,today:Number(row.querySelector('input[type=number]:not(.cumulative-people)').value)||0,cumulative:Number(row.querySelector('.cumulative-people').value)||0}));
+  const processData=processes.map(row=>({name:row.querySelector('.process-name').value,today:Number(row.querySelector('input[type=number]:not(.cumulative-people)').value)||0,cumulative:Number(row.querySelector('.cumulative-people').value)||0,work:row.querySelector('input[placeholder="세부 작업내용"]')?.value.trim()||''}));
   const photoCount=document.querySelectorAll('#tbmPreview .uploaded-photo, #progressPreview .uploaded-photo').length;
   const processSummary=processData.map(item=>`${item.name} ${item.today}명`).join(' · ');
   const card=document.createElement('button');card.className='report-card';card.dataset.author=currentUser;card.dataset.site=site;
@@ -143,11 +143,9 @@ document.getElementById('dailyForm').addEventListener('submit',e=>{
 });
 document.getElementById('photoBtn').addEventListener('click',()=>notify('카메라 기능은 정식 버전에서 연결됩니다.'));
 const tbmGalleryInput=document.getElementById('tbmGalleryInput');
-const tbmCameraInput=document.getElementById('tbmCameraInput');
 const progressGalleryInput=document.getElementById('progressGalleryInput');
 function openPhotoPicker(input){const connection=navigator.connection||navigator.mozConnection||navigator.webkitConnection;if(userSettings?.wifiOnly&&connection?.type&&connection.type!=='wifi'){notify('Wi‑Fi에서만 사진 업로드하도록 설정되어 있습니다.');return}input.click()}
 document.getElementById('tbmGalleryBtn').addEventListener('click',()=>openPhotoPicker(tbmGalleryInput));
-document.getElementById('tbmCameraBtn').addEventListener('click',()=>openPhotoPicker(tbmCameraInput));
 document.getElementById('progressPhotoAdd').addEventListener('click',()=>openPhotoPicker(progressGalleryInput));
 function addPhotoPreviews(input,containerId,countId,type){
   const container=document.getElementById(containerId);
@@ -161,7 +159,6 @@ function addPhotoPreviews(input,containerId,countId,type){
 }
 function updatePhotoCount(containerId,countId){const count=document.querySelectorAll(`#${containerId} .uploaded-photo, #${containerId} .photo.sample`).length;document.getElementById(countId).textContent=count+'장'}
 tbmGalleryInput.addEventListener('change',()=>addPhotoPreviews(tbmGalleryInput,'tbmPreview','tbmPhotoCount','TBM 사진'));
-tbmCameraInput.addEventListener('change',()=>addPhotoPreviews(tbmCameraInput,'tbmPreview','tbmPhotoCount','TBM 사진'));
 progressGalleryInput.addEventListener('change',()=>addPhotoPreviews(progressGalleryInput,'progressPreview','progressPhotoCount','진행사진'));
 const modal=document.getElementById('modal');
 ['newSiteBtn','newSiteBtn2'].forEach(id=>document.getElementById(id).addEventListener('click',()=>modal.classList.add('show')));
@@ -1420,24 +1417,28 @@ applyExtendedSettings();
 
     async function downloadReportsJpg(cards) {
       for (let index=0; index<cards.length; index+=1) {
-        const card=cards[index],photos=getPhotos(card),width=1240,height=620+photos.length*650;
+        const card=cards[index],photos=getPhotos(card),processes=cardProcessEntries(card),width=1240,processHeight=Math.max(1,processes.length)*42,photoStart=555+processHeight,photoRows=Math.ceil(photos.length/2),height=photoStart+photoRows*390+80;
         const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;const context=canvas.getContext('2d');
         context.fillStyle='#fff';context.fillRect(0,0,width,height);context.fillStyle='#7fbc03';context.fillRect(0,0,width,18);
         context.fillStyle='#171717';context.font='800 32px Arial, sans-serif';context.fillText('MIN WORKS',70,85);context.font='800 54px Arial, sans-serif';context.fillText(card.dataset.site||'현장',70,160);
         context.font='700 30px Arial, sans-serif';context.fillStyle='#555';context.fillText(card.querySelector('div>b')?.textContent||'공사일보',70,215);
-        const author=card.querySelector('.report-author b')?.textContent||'작성자 미상',summary=card.querySelector('div>p')?.textContent||'작업 내용';
-        context.fillStyle='#f3f6ef';context.fillRect(70,260,1100,180);context.fillStyle='#777';context.font='600 21px Arial, sans-serif';context.fillText('작성자',100,310);context.fillText('작업 요약',100,370);context.fillStyle='#171717';context.font='700 24px Arial, sans-serif';context.fillText(author,245,310);drawCanvasText(context,summary,245,370,870,32);
-        context.fillStyle='#171717';context.font='800 27px Arial, sans-serif';context.fillText(`현장사진 ${photos.length}장`,70,505);
-        for(let photoIndex=0;photoIndex<photos.length;photoIndex+=1){const x=70,y=545+photoIndex*650;context.fillStyle='#eef0eb';context.fillRect(x,y,1100,590);try{const image=await loadCanvasImage(photos[photoIndex].src);drawContainedImage(context,image,x,y,1100,550)}catch{}context.fillStyle='#555';context.font='600 18px Arial, sans-serif';context.fillText(`${photos[photoIndex].type||'현장사진'} ${photoIndex+1}`,x+12,y+580)}
+        const author=card.querySelector('.report-author b')?.textContent||'작성자 미상';
+        context.fillStyle='#f3f6ef';context.fillRect(70,260,1100,210+processHeight);context.fillStyle='#777';context.font='600 21px Arial, sans-serif';context.fillText('작성자',100,310);context.fillText('금일인원 및 작업내용',100,370);context.fillStyle='#171717';context.font='700 24px Arial, sans-serif';context.fillText(author,355,310);
+        context.font='700 22px Arial, sans-serif';(processes.length?processes:[{name:'등록 공정',today:Number(card.dataset.totalPeople)||0,work:''}]).forEach((item,rowIndex)=>{const line=`${item.name} · ${Number(item.today)||0}명 · ${item.work||'작업내용 미입력'}`;drawCanvasText(context,line,355,370+rowIndex*42,770,30)});
+        context.fillStyle='#171717';context.font='800 27px Arial, sans-serif';context.fillText(`현장사진 ${photos.length}장`,70,photoStart-20);
+        let failedPhotos=0;
+        for(let photoIndex=0;photoIndex<photos.length;photoIndex+=1){const x=70+(photoIndex%2)*555,y=photoStart+Math.floor(photoIndex/2)*390;context.fillStyle='#eef0eb';context.fillRect(x,y,525,330);try{const image=await loadCanvasImage(photos[photoIndex].src);drawContainedImage(context,image,x,y,525,300);image.close?.()}catch{failedPhotos+=1;context.fillStyle='#9aa098';context.font='600 18px Arial, sans-serif';context.fillText('사진을 불러오지 못했습니다.',x+125,y+160)}context.fillStyle='#555';context.font='600 18px Arial, sans-serif';context.fillText(`${photos[photoIndex].type||'현장사진'} ${photoIndex+1}`,x+12,y+322)}
         context.fillStyle='#888';context.font='18px Arial, sans-serif';context.fillText(`MIN WORKS · ${new Date().toLocaleDateString('ko-KR')}`,70,height-35);
         await new Promise(resolve=>canvas.toBlob(blob=>{if(blob){const anchor=document.createElement('a');anchor.href=URL.createObjectURL(blob);anchor.download=`${safeFileName(card.dataset.site)}_${safeFileName(card.querySelector('div>b')?.textContent||'공사일보')}_${index+1}.jpg`;anchor.click();setTimeout(()=>URL.revokeObjectURL(anchor.href),2000)}resolve()},'image/jpeg',.9));
+        if(failedPhotos)notify(`사진 ${failedPhotos}장을 불러오지 못했습니다. 인터넷 연결 후 다시 저장해주세요.`);
       }
       notify(`${cards.length}개 공사일보를 JPG로 저장했습니다.`);
       document.dispatchEvent(new CustomEvent('minworks:exported',{detail:{site:cards[0]?.dataset.site||'',type:'JPG'}}));
     }
     function drawCanvasText(context,text,x,y,maxWidth,lineHeight){let line='';String(text).split(' ').forEach(word=>{const test=line+word+' ';if(context.measureText(test).width>maxWidth&&line){context.fillText(line,x,y);line=word+' ';y+=lineHeight}else line=test});context.fillText(line,x,y)}
-    async function photoDataUrl(source){if(!source)return'';if(String(source).startsWith('data:'))return source;const headers={};if(String(source).includes('min-works-api.forjaejun.workers.dev')){const token=localStorage.getItem('minWorksSessionV1');if(token)headers.Authorization=`Bearer ${token}`}const response=await fetch(source,{headers});if(!response.ok)throw new Error('사진을 불러오지 못했습니다.');const blob=await response.blob();return await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(blob)})}
-    async function loadCanvasImage(source){const resolved=await photoDataUrl(source);return new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=reject;image.src=resolved})}
+    async function photoBlob(source){if(!source)throw new Error('사진 주소가 없습니다.');const headers={};if(String(source).includes('min-works-api.forjaejun.workers.dev')){const token=localStorage.getItem('minWorksSessionV1');if(token)headers.Authorization=`Bearer ${token}`}const response=await fetch(source,{headers,cache:'no-store'});if(!response.ok)throw new Error('사진을 불러오지 못했습니다.');return response.blob()}
+    async function photoDataUrl(source){if(String(source).startsWith('data:'))return source;const blob=await photoBlob(source);return await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(blob)})}
+    async function loadCanvasImage(source){const blob=String(source).startsWith('data:')?await fetch(source).then(response=>response.blob()):await photoBlob(source);if('createImageBitmap'in window){try{return await createImageBitmap(blob,{imageOrientation:'from-image'})}catch{}}const resolved=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(blob)});return new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=reject;image.src=resolved})}
     function drawContainedImage(context,image,x,y,width,height){const ratio=Math.min(width/image.width,height/image.height),drawWidth=image.width*ratio,drawHeight=image.height*ratio;context.drawImage(image,x+(width-drawWidth)/2,y+(height-drawHeight)/2,drawWidth,drawHeight)}
     function safeFileName(value){return String(value||'MIN_WORKS').replace(/[\\/:*?"<>|]/g,'_').trim()}
 
@@ -1450,12 +1451,14 @@ applyExtendedSettings();
         const title = escapeText(card.querySelector('div>b')?.textContent || '공사일보');
         const summary = escapeText(card.querySelector('div>p')?.textContent || '작업 내용');
         const author = escapeText(card.querySelector('.report-author b')?.textContent || '작성자 미상');
+        const processes = cardProcessEntries(card);
+        const processRows = (processes.length?processes:[{name:'등록 공정',today:Number(card.dataset.totalPeople)||0,work:summary}]).map(item=>`<tr><td>${escapeText(item.name)}</td><td>${Number(item.today)||0}명</td><td>${escapeText(item.work||'작업내용 미입력')}</td></tr>`).join('');
         const rawPhotos = includePhotos ? getPhotos(card) : [];
         const photos = (await Promise.all(rawPhotos.map(async photo=>{try{return{...photo,src:await photoDataUrl(photo.src)}}catch{return null}}))).filter(Boolean);
-        return `<article class="pdf-report"><header><p>MIN WORKS</p><h1>${site}</h1><h2>${title}</h2></header><dl><div><dt>작성자</dt><dd>${author}</dd></div><div><dt>작업 요약</dt><dd>${summary}</dd></div><div><dt>확인 기록</dt><dd>앱 등록 기록 기준</dd></div></dl><section><h3>공정별 작업 내용</h3><table><thead><tr><th>공정</th><th>금일인원</th><th>작업내용</th></tr></thead><tbody><tr><td>등록 공정</td><td>-</td><td>${summary}</td></tr></tbody></table></section>${includePhotos ? `<section class="pdf-photos"><h3>현장사진 ${photos.length}장</h3>${photos.length ? `<div>${photos.map((photo,index) => `<figure><img src="${photo.src}" alt="현장사진 ${index+1}"><figcaption>${escapeText(photo.type || '현장사진')} ${index+1}</figcaption></figure>`).join('')}</div>` : '<p>이 일보에 저장된 사진 원본이 없습니다.</p>'}</section>` : ''}</article>`;
+        return `<article class="pdf-report"><header><p>MIN WORKS</p><h1>${site}</h1><h2>${title}</h2></header><dl><div><dt>작성자</dt><dd>${author}</dd></div><div><dt>금일인원 및 작업내용</dt><dd>${processes.length}개 공정</dd></div><div><dt>확인 기록</dt><dd>앱 등록 기록 기준</dd></div></dl><section><h3>금일인원 및 작업내용</h3><table><thead><tr><th>공정</th><th>금일인원</th><th>작업내용</th></tr></thead><tbody>${processRows}</tbody></table></section>${includePhotos ? `<section class="pdf-photos"><h3>현장사진 ${photos.length}장</h3>${photos.length ? `<div>${photos.map((photo,index) => `<figure><img src="${photo.src}" alt="현장사진 ${index+1}"><figcaption>${escapeText(photo.type || '현장사진')} ${index+1}</figcaption></figure>`).join('')}</div>` : '<p>이 일보에 저장된 사진 원본이 없습니다.</p>'}</section>` : ''}</article>`;
       }))).join('');
       popup.document.open();
-      popup.document.write(`<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>MIN WORKS 공사일보</title><style>@page{size:A4 portrait;margin:12mm}*{box-sizing:border-box}html,body{margin:0;padding:0;color:#181818;background:#fff;font-family:"Noto Sans KR","Malgun Gothic",Arial,sans-serif}.pdf-report{width:100%;page-break-after:always}.pdf-report:last-child{page-break-after:auto}header{border-top:5px solid #7fbc03;padding:14px 0 10px}header p{margin:0;color:#689900;font-weight:800;font-size:11px}h1{margin:7px 0 2px;font-size:23px;overflow-wrap:anywhere}h2{margin:0;color:#666;font-size:14px}dl{display:grid;grid-template-columns:1fr 2fr 1fr;margin:12px 0;border:1px solid #ddd}dl div{min-width:0;padding:10px;border-right:1px solid #ddd}dl div:last-child{border:0}dt{color:#777;font-size:10px}dd{margin:4px 0 0;font-size:12px;font-weight:700;overflow-wrap:anywhere}h3{margin:16px 0 8px;font-size:14px}table{width:100%;table-layout:fixed;border-collapse:collapse}th,td{padding:9px;border:1px solid #ddd;font-size:11px;text-align:left;overflow-wrap:anywhere}th{background:#f4f6f1}.pdf-photos>div{display:block}.pdf-photos figure{width:100%;margin:0 0 12mm;page-break-inside:avoid;break-inside:avoid;text-align:center}.pdf-photos img{display:block;width:100%;height:auto;max-height:230mm;margin:0 auto;object-fit:contain;background:#f2f2f2}.pdf-photos figcaption{padding:6px;color:#666;font-size:10px;text-align:center}</style></head><body>${reports}<script>window.addEventListener('load',async()=>{await Promise.all([...document.images].map(img=>img.complete?Promise.resolve():new Promise(resolve=>{img.onload=img.onerror=resolve})));setTimeout(()=>window.print(),250)});<\/script></body></html>`);
+      popup.document.write(`<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>MIN WORKS 공사일보</title><style>@page{size:A4 portrait;margin:12mm}*{box-sizing:border-box}html,body{margin:0;padding:0;color:#181818;background:#fff;font-family:"Noto Sans KR","Malgun Gothic",Arial,sans-serif}.pdf-report{width:100%;page-break-after:always}.pdf-report:last-child{page-break-after:auto}header{border-top:5px solid #7fbc03;padding:14px 0 10px}header p{margin:0;color:#689900;font-weight:800;font-size:11px}h1{margin:7px 0 2px;font-size:23px;overflow-wrap:anywhere}h2{margin:0;color:#666;font-size:14px}dl{display:grid;grid-template-columns:1fr 2fr 1fr;margin:12px 0;border:1px solid #ddd}dl div{min-width:0;padding:10px;border-right:1px solid #ddd}dl div:last-child{border:0}dt{color:#777;font-size:10px}dd{margin:4px 0 0;font-size:12px;font-weight:700;overflow-wrap:anywhere}h3{margin:16px 0 8px;font-size:14px}table{width:100%;table-layout:fixed;border-collapse:collapse}th,td{padding:9px;border:1px solid #ddd;font-size:11px;text-align:left;overflow-wrap:anywhere}th{background:#f4f6f1}.pdf-photos>div{display:grid;grid-template-columns:1fr 1fr;gap:8mm}.pdf-photos figure{min-width:0;margin:0;page-break-inside:avoid;break-inside:avoid;text-align:center}.pdf-photos img{display:block;width:100%;height:92mm;margin:0 auto;object-fit:contain;background:#f2f2f2}.pdf-photos figcaption{padding:6px;color:#666;font-size:10px;text-align:center}</style></head><body>${reports}<script>window.addEventListener('load',async()=>{await Promise.all([...document.images].map(img=>img.complete?Promise.resolve():new Promise(resolve=>{img.onload=img.onerror=resolve})));setTimeout(()=>window.print(),250)});<\/script></body></html>`);
       popup.document.close();
       document.dispatchEvent(new CustomEvent('minworks:exported',{detail:{site:cards[0]?.dataset.site||'',type:'PDF'}}));
     }
@@ -1593,6 +1596,23 @@ window.MIN_WORKS_CONFIG = Object.freeze({
         .filter(site => activeNames.has(site)));
       const issues = [...document.querySelectorAll('.issue-detail-card')].filter(card => card.dataset.status !== 'complete');
       const urgent = issues.filter(card => card.querySelector('.issue-label:not(.normal)')).length;
+      const briefingList = document.querySelector('.briefing-list');
+      const briefingBadge = briefingList?.closest('.today-panel')?.querySelector('.panel-head .count-badge');
+      if (briefingList) {
+        briefingList.replaceChildren();
+        activeRows.forEach(row => {
+          const site = row.dataset.siteRow;
+          const todayReport = [...document.querySelectorAll(`.report-card[data-site="${CSS.escape(site)}"]`)].find(card => reportDateKey(card) === todayKey);
+          const progress = Number(row.querySelector('.progress-edit')?.dataset.progress || 0);
+          const button = document.createElement('button');
+          button.className = 'briefing-item';
+          button.innerHTML = `<span class="briefing-state ${todayReport?'live':'delay'}"></span><div><b>${escapeHtml(site)}</b><p>${escapeHtml(todayReport?.querySelector('div>p')?.textContent || '오늘 공사일보 미등록')}</p></div><em class="briefing-tag ${todayReport?'reported':'pending'}">${todayReport?'보고 완료':'보고 대기'}</em><strong>${progress}%</strong>`;
+          button.addEventListener('click', () => { navigate('sites','active'); document.querySelectorAll('.site-table-row').forEach(item => item.classList.toggle('focused-site',item===row)); row.scrollIntoView({behavior:'smooth',block:'center'}); });
+          briefingList.appendChild(button);
+        });
+        if (!activeRows.length) briefingList.innerHTML = '<div class="home-extra-empty"><b>현재 진행 중인 현장이 없습니다.</b></div>';
+      }
+      if (briefingBadge) briefingBadge.textContent = activeRows.length;
       const liveCards = [...document.querySelectorAll('.summary-grid .summary-card')];
       if (liveCards[0]) { liveCards[0].querySelector('strong').textContent = activeRows.length; const copy=liveCards[0].querySelector('.active-site-copy'); if(copy)copy.textContent=`${activeRows.length}개 현장 운영 중`; liveCards[0].dataset.target = 'sites'; }
       if (liveCards[1]) { liveCards[1].querySelector('strong').innerHTML = `${todaySites.size}<small>/ ${activeRows.length}</small>`; liveCards[1].querySelector('em').textContent = `${todaySites.size}개 현장 보고 완료`; liveCards[1].dataset.target = 'daily'; }
