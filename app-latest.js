@@ -71,7 +71,7 @@ function syncOperationalSiteOptions(){
 }
 window.syncOperationalSiteOptions=syncOperationalSiteOptions;
 syncOperationalSiteOptions();
-const operationalSiteTable=document.querySelector('.site-table');if(operationalSiteTable)new MutationObserver(syncOperationalSiteOptions).observe(operationalSiteTable,{childList:true,subtree:true,attributes:true,attributeFilter:['data-site-row']});
+const operationalSiteTable=document.querySelector('.site-table');if(operationalSiteTable)new MutationObserver(syncOperationalSiteOptions).observe(operationalSiteTable,{childList:true});
 function showView(name){views.forEach(v=>v.classList.toggle('active',v.id===name+'View'));navButtons.forEach(b=>b.classList.toggle('active',b.dataset.view===name));document.getElementById('pageTitle').textContent=titles[name];window.scrollTo({top:0,behavior:'smooth'});}
 
 // 서울 시간 기준 인사말 (날씨 값은 Google Weather API 연결 지점)
@@ -2049,7 +2049,7 @@ window.MIN_WORKS_CONFIG = Object.freeze({
   let currentUser = null;
   let codeTimer = null;
 
-  document.addEventListener('DOMContentLoaded', initSecurity);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initSecurity,{once:true});else initSecurity();
 
   async function initSecurity() {
     document.body.classList.add('auth-pending');
@@ -2069,6 +2069,7 @@ window.MIN_WORKS_CONFIG = Object.freeze({
   }
 
   function createGate() {
+    if(document.getElementById('authGate'))return;
     const gate = document.createElement('div');
     gate.id = 'authGate';
     gate.className = 'auth-gate';
