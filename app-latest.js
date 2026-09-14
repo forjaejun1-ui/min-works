@@ -15,7 +15,7 @@
 (() => {
   try {
     const cached=JSON.parse(localStorage.getItem('minWorksCloudSnapshotV1')||'null');
-    const state=cached?.payload;if(!state)return;
+    const state=cached?.payload;if(!state)return;if(state.constructionReports&&!window.MIN_WORKS_TEST){for(const [key,value] of Object.entries(state.constructionReports)){if(['minworks-imports-v1','minworks-evaluations-v1','minworks-vendors-v1'].includes(key))localStorage.setItem(key,JSON.stringify(value))}}
     const parseNodes=html=>{const host=document.createElement('div');host.innerHTML=html||'';return [...host.children]};
     if(state.siteCards!=null){const host=document.querySelector('.site-list');if(host)host.replaceChildren(...parseNodes(state.siteCards))}
     if(state.siteRows!=null){const table=document.querySelector('.site-table');if(table){document.querySelectorAll('.site-table-row').forEach(node=>node.remove());parseNodes(state.siteRows).forEach(node=>table.appendChild(node))}}
@@ -32,6 +32,7 @@
 
 /* v40 shared company data and private Google Drive photo synchronization */
 (() => {
+  if(window.MIN_WORKS_TEST)return;
   'use strict';
   const API='https://min-works-api.forjaejun.workers.dev',TOKEN_KEY='minWorksSessionV1',CACHE_KEY='minWorksCloudSnapshotV1';
   let version=Number(window.MIN_WORKS_CLOUD_VERSION)||0,timer=null,started=false,saving=false,dirty=false;
@@ -45,24 +46,24 @@
     siteRows:[...document.querySelectorAll('.site-table-row')].map(cleanOuter).join(''),
     reports:[...document.querySelectorAll('.report-card')].map(cleanOuter).join(''),
     issues:[...document.querySelectorAll('.issue-detail-card')].map(cleanOuter).join(''),
-    payments:readArray('minWorksPlannedPaymentsV2'),receivables:readArray('minWorksReceivablesV2'),savedAt:new Date().toISOString()
+    constructionReports:Object.fromEntries(['minworks-imports-v1','minworks-evaluations-v1','minworks-vendors-v1'].map(key=>{try{return[key,JSON.parse(localStorage.getItem(key)||(key.includes('evaluations')?'{}':'[]'))]}catch{return[key,key.includes('evaluations')?{}:[]]}})),payments:readArray('minWorksPlannedPaymentsV2'),receivables:readArray('minWorksReceivablesV2'),savedAt:new Date().toISOString()
   }}
   function cache(payload,nextVersion){localStorage.setItem(CACHE_KEY,JSON.stringify({version:nextVersion,payload}));window.MIN_WORKS_CLOUD_VERSION=nextVersion;version=nextVersion}
-  function isEditing(){return !!document.querySelector('.modal.show,.daily-editor:not([hidden]),.report-viewer.show,.issue-peek.show,.export-modal.show,.report-download-modal.show')}
+  function isEditing(){if(window.MIN_WORKS_REPORT_DIRTY)return true;return !!document.querySelector('.modal.show,.daily-editor:not([hidden]),.report-viewer.show,.issue-peek.show,.export-modal.show,.report-download-modal.show')}
   async function pull(reload=true){const{response,data}=await request('/company-state');if(!response.ok)throw new Error(data.error||'회사 자료를 불러오지 못했습니다.');if(data.version>version&&data.payload){if(reload&&isEditing())return data;cache(data.payload,data.version);if(reload)location.reload()}return data}
   function mergeHtml(remoteHtml,localHtml,type){const host=document.createElement('div'),items=new Map(),key=node=>type==='site'?node.dataset.siteId||node.dataset.site||node.dataset.siteRow:type==='report'?`${node.dataset.site||''}|${node.dataset.createdAt||node.outerHTML}`:node.dataset.issueId||`${node.dataset.issueCard||''}|${node.querySelector('h3')?.textContent||node.outerHTML}`;host.innerHTML=remoteHtml||'';[...host.children].forEach(node=>items.set(key(node),node.outerHTML));host.innerHTML=localHtml||'';[...host.children].forEach(node=>items.set(key(node),node.outerHTML));return[...items.values()].join('')}
-  function mergePayload(remote={},local={}){const union=(first,second)=>[...new Map([...(Array.isArray(first)?first:[]),...(Array.isArray(second)?second:[])].map(item=>[JSON.stringify(item),item])).values()];return{siteCards:mergeHtml(remote.siteCards,local.siteCards,'site'),siteRows:mergeHtml(remote.siteRows,local.siteRows,'site'),reports:mergeHtml(remote.reports,local.reports,'report'),issues:mergeHtml(remote.issues,local.issues,'issue'),payments:union(remote.payments,local.payments),receivables:union(remote.receivables,local.receivables),savedAt:new Date().toISOString()}}
-  async function save(){if(saving||!token())return;clearTimeout(timer);saving=true;dirty=false;try{await uploadPendingPhotos();let payload=capture(),baseVersion=version,merged=false;let{response,data}=await request('/company-state',{method:'PUT',json:{baseVersion,payload}});if(response.status===409){const latest=await request('/company-state');if(!latest.response.ok)throw new Error(latest.data.error||'최신 회사 자료를 불러오지 못했습니다.');payload=mergePayload(latest.data.payload,payload);baseVersion=Number(latest.data.version)||0;merged=true;({response,data}=await request('/company-state',{method:'PUT',json:{baseVersion,payload}}));if(response.ok)notify('다른 직원의 변경사항과 합쳐 저장했습니다.')}if(!response.ok)throw new Error(data.error||'회사 자료를 저장하지 못했습니다.');cache(payload,data.version);if(merged){location.reload();return}window.refreshMinWorksStorage?.()}catch(error){dirty=true;notify(error.message)}finally{saving=false}}
-  function queue(){if(!started||saving||document.body.classList.contains('auth-pending'))return;dirty=true;clearTimeout(timer);timer=setTimeout(save,900)}
+  function mergePayload(remote={},local={}){if(remote.constructionReports&&local.constructionReports&&JSON.stringify(remote.constructionReports)!==JSON.stringify(local.constructionReports))throw new Error('보고서 저장 충돌: 다른 창의 수정이 있어 자동 덮어쓰기를 중단했습니다. 현재 자료를 보존한 뒤 다시 확인해 주세요.');const union=(first,second)=>[...new Map([...(Array.isArray(first)?first:[]),...(Array.isArray(second)?second:[])].map(item=>[JSON.stringify(item),item])).values()];return{constructionReports:remote.constructionReports||local.constructionReports,siteCards:mergeHtml(remote.siteCards,local.siteCards,'site'),siteRows:mergeHtml(remote.siteRows,local.siteRows,'site'),reports:mergeHtml(remote.reports,local.reports,'report'),issues:mergeHtml(remote.issues,local.issues,'issue'),payments:union(remote.payments,local.payments),receivables:union(remote.receivables,local.receivables),savedAt:new Date().toISOString()}}
+  async function save(){if(saving||!token())return;clearTimeout(timer);saving=true;dirty=false;try{await uploadPendingPhotos();let payload=capture(),baseVersion=version,merged=false;let{response,data}=await request('/company-state',{method:'PUT',json:{baseVersion,payload}});if(response.status===409){const latest=await request('/company-state');if(!latest.response.ok)throw new Error(latest.data.error||'최신 회사 자료를 불러오지 못했습니다.');payload=mergePayload(latest.data.payload,payload);baseVersion=Number(latest.data.version)||0;merged=true;({response,data}=await request('/company-state',{method:'PUT',json:{baseVersion,payload}}));if(response.ok)notify('다른 직원의 변경사항과 합쳐 저장했습니다.')}if(!response.ok)throw new Error(data.error||'회사 자료를 저장하지 못했습니다.');cache(payload,data.version);if(merged){location.reload();return}window.refreshMinWorksStorage?.()}catch(error){notify(error.message)}finally{saving=false;if(dirty)timer=setTimeout(save,3000)}}
+  function queue(){if(!started||document.body.classList.contains('auth-pending'))return;dirty=true;if(saving)return;clearTimeout(timer);timer=setTimeout(save,900)}
   function startObservers(){if(started)return;started=true;['.site-list','.site-table','#dailyListScreen','#issuesView','#mwPaymentList','#mwReceivableList'].forEach(selector=>{const node=document.querySelector(selector);if(node)new MutationObserver(queue).observe(node,{childList:true,subtree:true,attributes:true,attributeFilter:['data-progress','data-status','data-comments','data-due','data-checks']})});document.addEventListener('click',event=>{if(event.target.closest('#savePayment,#saveReceivable,#mwSavePayment,#mwSaveReceivable,#saveIssue,#createSite,#deleteIssue,#toggleIssueStatus,#addIssueComment,#checkReport,[data-site-edit],[data-site-delete],.record-edit-button,.record-delete-button'))setTimeout(queue,100)});setInterval(async()=>{if(saving||dirty||!token())return;try{await pull(true)}catch{}},15000)}
   async function init(){if(!token())return;try{const remote=await pull(false);if(remote.version===0&&version>0){localStorage.removeItem(CACHE_KEY);window.MIN_WORKS_CLOUD_VERSION=0;version=0;location.reload();return}if(remote.version>version&&remote.payload){cache(remote.payload,remote.version);location.reload();return}startObservers();if(remote.version===0)queue();window.refreshMinWorksStorage?.()}catch(error){notify(error.message)}}
-  document.addEventListener('minworks:user-ready',()=>setTimeout(init,200));
+  document.addEventListener('minworks:user-ready',()=>setTimeout(init,200));window.addEventListener('minworks:reports-changed',queue);
 })();
 
 /* SOURCE: app.js */
 const views = document.querySelectorAll('.view');
 const navButtons = document.querySelectorAll('[data-view]');
-const titles = {dashboard:'좋은 아침입니다',sites:'현장 관리',daily:'공사일보',finance:'자금 집행',issues:'이슈 관리',calendar:'회사 일정',settings:'사용자 설정',help:'앱 사용법',patch:'패치노트',storage:'저장공간 정리'};
+const titles = {dashboard:'좋은 아침입니다',sites:'현장관리',daily:'공사일보',risk:'위험성평가',documents:'현장서류',finance:'공사보고·분석',issues:'이슈 관리',calendar:'회사 일정',settings:'사용자 설정',help:'앱 사용법',patch:'패치노트',storage:'저장공간 정리'};
 function currentSiteNames(){return [...new Set([...document.querySelectorAll('.site-table-row')].map(row=>row.dataset.siteRow?.trim()).filter(Boolean))]}
 function syncOperationalSiteOptions(){
   const names=currentSiteNames(),selectors=['#dailyForm>div:first-child select','#issueSite','#paymentSite','#receivableSite','#mwPaymentSite','#mwReceivableSite'];
@@ -72,7 +73,7 @@ function syncOperationalSiteOptions(){
 window.syncOperationalSiteOptions=syncOperationalSiteOptions;
 syncOperationalSiteOptions();
 const operationalSiteTable=document.querySelector('.site-table');
-function showView(name){views.forEach(v=>v.classList.toggle('active',v.id===name+'View'));navButtons.forEach(b=>b.classList.toggle('active',b.dataset.view===name));document.getElementById('pageTitle').textContent=titles[name];window.scrollTo({top:0,behavior:'smooth'});}
+function showView(name){if(window.MIN_WORKS_REPORT_DIRTY&&document.getElementById('financeView')?.classList.contains('active')&&name!=='finance'){if(!confirm('작성 중인 공사보고서 내용이 있습니다. 화면을 이동할까요?'))return;}views.forEach(v=>v.classList.toggle('active',v.id===name+'View'));navButtons.forEach(b=>b.classList.toggle('active',b.dataset.view===name));document.getElementById('pageTitle').textContent=titles[name];window.scrollTo({top:0,behavior:'smooth'});}
 
 // 서울 시간 기준 인사말 (날씨 값은 Google Weather API 연결 지점)
 function updateGreeting(){
@@ -426,6 +427,7 @@ function applyUserSettings(){
   document.documentElement.style.setProperty('--green',accentColors[userSettings.accent]||accentColors.lime);
   document.body.classList.toggle('font-small',userSettings.fontSize==='small');document.body.classList.toggle('font-large',userSettings.fontSize==='large');document.body.classList.toggle('density-compact',userSettings.density==='compact');document.body.classList.toggle('high-contrast',!!userSettings.contrast);document.body.classList.toggle('hide-weather',!userSettings.weather);document.body.classList.toggle('hide-finance-summary',!userSettings.financeSummary);document.body.classList.toggle('hide-calendar-summary',!userSettings.calendarSummary);document.body.classList.toggle('hide-money',!!userSettings.hideMoney);
   applyExtendedSettings();
+  window.dispatchEvent(new Event('minworks:settings-changed'));
 }
 function syncSettingsUI(){document.querySelectorAll('[data-setting]').forEach(g=>g.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.value===String(userSettings[g.dataset.setting]))));document.querySelectorAll('[data-toggle-setting]').forEach(i=>i.checked=!!userSettings[i.dataset.toggleSetting]);document.querySelectorAll('[data-select-setting]').forEach(i=>i.value=userSettings[i.dataset.selectSetting]??i.value);document.querySelectorAll('[data-input-setting]').forEach(i=>i.value=userSettings[i.dataset.inputSetting]??i.value);}
 document.querySelectorAll('[data-settings-group]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-settings-group]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('[data-settings-panel]').forEach(x=>x.classList.toggle('active',x.dataset.settingsPanel===b.dataset.settingsGroup));}));
@@ -1084,7 +1086,7 @@ applyExtendedSettings();
   function read(key,fallback){try{return JSON.parse(localStorage.getItem(key)||JSON.stringify(fallback))}catch{return fallback}}
   function siteStats(){const map=new Map();cards().forEach(card=>{const site=card.dataset.site||'현장 미지정',current=map.get(site)||{site,reports:0,photos:0,photoBytes:0,documentBytes:0};current.reports+=1;current.documentBytes+=bytes(card.textContent)+bytes(JSON.stringify(card.reportProcesses||[]));cardPhotos(card).forEach(photo=>{current.photos+=1;current.photoBytes+=Number(photo.size)||0});map.set(site,current)});return [...map.values()]}
   function localDataBytes(){let total=0;for(let index=0;index<localStorage.length;index+=1){const key=localStorage.key(index);total+=bytes(key)+bytes(localStorage.getItem(key))}return total}
-  async function cloudStats(){const token=localStorage.getItem('minWorksSessionV1');if(!token)return null;try{const response=await fetch('https://min-works-api.forjaejun.workers.dev/storage-stats',{headers:{Authorization:`Bearer ${token}`}});return response.ok?response.json():null}catch{return null}}
+  async function cloudStats(){if(window.MIN_WORKS_TEST)return null;const token=localStorage.getItem('minWorksSessionV1');if(!token)return null;try{const response=await fetch('https://min-works-api.forjaejun.workers.dev/storage-stats',{headers:{Authorization:`Bearer ${token}`}});return response.ok?response.json():null}catch{return null}}
   async function refreshStorage(){
     const stats=siteStats(),photoBytes=stats.reduce((sum,item)=>sum+item.photoBytes,0),documentBytes=localDataBytes()+stats.reduce((sum,item)=>sum+item.documentBytes,0);
     const cloud=await cloudStats();const shownPhotoBytes=Number(cloud?.photoBytes)||photoBytes,shownDocumentBytes=Number(cloud?.documentBytes)||documentBytes;
@@ -1144,15 +1146,15 @@ applyExtendedSettings();
     if(!financeAllowed(user)&&document.getElementById('financeView')?.classList.contains('active'))window.showView?.('dashboard');
     const eyebrow=document.querySelector('.greeting-wrap .eyebrow');if(eyebrow)eyebrow.textContent='MIN WORKS';
     const profile=user?.role==='admin'?'관리자':`${user?.department||''} ${user?.name||''} ${user?.rank||''}`.trim();
-    const live=document.querySelector('.live-user-welcome');if(live)live.textContent=`${profile} 님, MIN WORKS에 오신 것을 환영합니다.`;
+    const live=document.querySelector('.live-user-welcome');if(live)live.textContent=`${profile}님, MIN WORKS에 오신 것을 환영합니다.`;
   };
 
   document.querySelector('.greeting-wrap .eyebrow')?.replaceChildren(document.createTextNode('MIN WORKS'));
-  const financeNav=document.querySelector('.nav-item[data-view="finance"]');if(financeNav)financeNav.lastChild.textContent=' 자금 집행';
-  document.querySelectorAll('[data-go="finance"] b').forEach(node=>node.textContent='자금 집행');
-  document.querySelectorAll('[data-menu-view="finance"] b').forEach(node=>node.textContent='자금 집행');
-  document.querySelectorAll('option[value="finance"]').forEach(node=>node.textContent='자금 집행');
-  const mobileFinance=document.querySelector('.mobile-nav [data-view="finance"]');if(mobileFinance)mobileFinance.lastChild.textContent='자금집행';
+  const financeNav=document.querySelector('.nav-item[data-view="finance"]');if(financeNav)financeNav.lastChild.textContent=' 공사보고·분석';
+  document.querySelectorAll('[data-go="finance"] b').forEach(node=>node.textContent='공사보고·분석');
+  document.querySelectorAll('[data-menu-view="finance"] b').forEach(node=>node.textContent='공사보고·분석');
+  document.querySelectorAll('option[value="finance"]').forEach(node=>node.textContent='공사보고·분석');
+  const mobileFinance=document.querySelector('.mobile-nav [data-view="finance"]');if(mobileFinance)mobileFinance.lastChild.textContent='공사보고·분석';
   const dailyBottom=document.querySelector('.mobile-nav .fab[data-view="daily"]');if(dailyBottom){dailyBottom.classList.remove('fab');dailyBottom.classList.add('daily-highlight');dailyBottom.append(document.createTextNode('공사일보'))}
 
   const reportEdit=document.createElement('button');reportEdit.type='button';reportEdit.className='record-edit-button';reportEdit.innerHTML='<span class="material-symbols-rounded">edit</span>일보 수정';document.querySelector('#reportViewer .viewer-actions')?.prepend(reportEdit);
@@ -1311,7 +1313,7 @@ applyExtendedSettings();
     }
     const sheet = document.createElement('div');
     sheet.className = 'mobile-all-menu';
-    sheet.innerHTML = `<div class="mobile-menu-backdrop"></div><section><header><div><p class="eyebrow">ALL MENU</p><h2>전체 메뉴</h2></div><button class="mobile-menu-close" aria-label="닫기">×</button></header><div class="mobile-menu-grid"><button data-menu-view="dashboard"><span class="material-symbols-rounded">home</span><b>홈</b></button><button data-menu-view="sites"><span class="material-symbols-rounded">construction</span><b>현장</b></button><button data-menu-view="daily"><span class="material-symbols-rounded">description</span><b>공사일보</b></button><button data-menu-view="finance"><span class="material-symbols-rounded">payments</span><b>자금 집행</b></button><button data-menu-view="issues"><span class="material-symbols-rounded">report_problem</span><b>이슈</b></button><button data-menu-view="settings"><span class="material-symbols-rounded">settings</span><b>설정</b></button><button data-menu-view="help"><span class="material-symbols-rounded">help</span><b>사용법</b></button><button data-menu-view="patch"><span class="material-symbols-rounded">new_releases</span><b>패치노트</b></button><button data-menu-view="storage"><span class="material-symbols-rounded">storage</span><b>저장공간</b></button></div></section>`;
+    sheet.innerHTML = `<div class="mobile-menu-backdrop"></div><section><header><div><p class="eyebrow">ALL MENU</p><h2>전체 메뉴</h2></div><button class="mobile-menu-close" aria-label="닫기">×</button></header><div class="mobile-menu-grid"><button data-menu-view="dashboard"><span class="material-symbols-rounded">home</span><b>홈</b></button><button data-menu-view="sites"><span class="material-symbols-rounded">construction</span><b>현장관리</b></button><button data-menu-view="daily"><span class="material-symbols-rounded">description</span><b>공사일보</b></button><button data-menu-view="risk"><span class="material-symbols-rounded">health_and_safety</span><b>위험성평가</b></button><button data-menu-view="documents"><span class="material-symbols-rounded">folder_open</span><b>현장서류</b></button><button data-menu-view="settings"><span class="material-symbols-rounded">settings</span><b>설정</b></button><button data-menu-view="help"><span class="material-symbols-rounded">help</span><b>사용법</b></button><button data-menu-view="patch"><span class="material-symbols-rounded">new_releases</span><b>패치노트</b></button><button data-menu-view="storage"><span class="material-symbols-rounded">storage</span><b>저장공간</b></button></div></section>`;
     document.body.appendChild(sheet);
     sheet.querySelector('.mobile-menu-close').addEventListener('click', closeMenu);
     sheet.querySelector('.mobile-menu-backdrop').addEventListener('click', closeMenu);
@@ -1548,10 +1550,10 @@ applyExtendedSettings();
     installButton.querySelector('small').textContent = '홈 화면에서 실행하세요';
   });
 
-  if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+  if (!window.MIN_WORKS_TEST && 'serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
 
   const hashView = location.hash.replace('#', '');
-  if (['dashboard', 'sites', 'daily', 'finance', 'issues', 'settings', 'help', 'patch', 'storage'].includes(hashView)) window.showView?.(hashView);
+  if (['dashboard', 'sites', 'daily', 'risk', 'documents', 'finance', 'issues', 'settings', 'help', 'patch', 'storage'].includes(hashView)) window.showView?.(hashView);
 })();
 
 
@@ -1744,10 +1746,10 @@ window.MIN_WORKS_CONFIG = Object.freeze({
       ['home','홈','진행 현장·오늘 보고·미처리 이슈를 확인합니다. 요약 카드를 누르면 해당 업무로 이동합니다.'],
       ['construction','현장','개설한 현장은 진행 중으로 표시되며, 준공일이 지나면 완료로 자동 분류됩니다.'],
       ['description','공사일보','현장과 날짜, 공정·인원, 사진·특이사항을 입력합니다. 개별 또는 현장별 통합 PDF로 저장할 수 있습니다.'],
-      ['payments','자금 집행','월별 예정 지출과 거래처 수금 예정 내역을 확인합니다.'],
+      ['payments','공사보고·분석','공사보고서와 공종별 분석, 소장 평가를 확인합니다.'],
       ['report_problem','이슈','현장 문제를 긴급도와 담당자 기준으로 등록하고 미처리 항목을 확인합니다.'],
       ['settings','설정','글자 크기, 화면 밀도, 강조색과 알림 방식을 내 기기에 맞게 저장합니다.'],
-      ['apps','전체메뉴','모바일 하단 전체메뉴에서 설정과 사용법을 포함한 모든 기능을 열 수 있습니다.']
+      ['apps','전체 메뉴','모바일 하단 전체 메뉴에서 설정과 사용법을 포함한 모든 기능을 열 수 있습니다.']
     ].map((item,index) => `<article class="help-card static"><span class="material-symbols-rounded">${item[0]}</span><div><small>${String(index+1).padStart(2,'0')}</small><h3>${item[1]}</h3><p>${item[2]}</p></div></article>`).join('');
     const details = document.querySelector('.help-details');
     if (details) details.innerHTML = `<div class="panel-head"><div><p class="eyebrow">FAQ</p><h2>자주 묻는 사용법</h2></div></div>${faqItems().map((item,index) => `<details ${index===0?'open':''}><summary><span>${index+1}</span>${item[0]}<i class="material-symbols-rounded">expand_more</i></summary><div><p>${item[1]}</p></div></details>`).join('')}`;
@@ -1768,7 +1770,7 @@ window.MIN_WORKS_CONFIG = Object.freeze({
     ['퇴사자는 어떻게 처리하나요?','관리자 계정의 직원 관리에서 해당 직원의 접속을 중지하거나 계정을 삭제합니다.']
   ]; }
 
-  function setupRealGoogleCalendar() {
+  function setupRealGoogleCalendar() {if(window.MIN_WORKS_TEST){const panel=document.querySelector('.home-calendar-panel');if(panel)panel.innerHTML='<div class=panel-head><h2>회사 일정</h2></div><p>테스트 중에는 직원 공유와 회사 일정 연결을 사용하지 않습니다.</p>';return;}
     localStorage.removeItem('minWorksPersonalGoogleCalendarV1');
     const panel = document.querySelector('.home-calendar-panel');
     const connection = document.querySelector('[data-settings-panel="data"] .connection-card');
@@ -1819,7 +1821,7 @@ window.MIN_WORKS_CONFIG = Object.freeze({
     window.setMinWorksUser = user => {
       original?.(user);
       const name = user?.role === 'admin' ? '관리자' : user?.name;
-      live.textContent = name ? `${name} 님, MIN WORKS에 오신 것을 환영합니다.` : '로그인 정보가 없습니다.';
+      live.textContent = name ? `${name}님, MIN WORKS에 오신 것을 환영합니다.` : '로그인 정보가 없습니다.';
       live.classList.toggle('ready', Boolean(name));
     };
     if (window.MIN_WORKS_USER) window.setMinWorksUser(window.MIN_WORKS_USER);
@@ -1846,7 +1848,7 @@ window.MIN_WORKS_CONFIG = Object.freeze({
     const view = document.getElementById('financeView');
     if (!view) return;
     view.innerHTML = `
-      <div class="section-title mw-finance-title"><div><p class="eyebrow">FUND EXECUTION</p><h2>자금 집행</h2><small>예정 지출과 거래처 수금을 월별로 확인합니다.</small></div></div>
+      <div class="section-title mw-finance-title"><div><p class="eyebrow">FUND EXECUTION</p><h2>공사보고·분석</h2><small>예정 지출과 거래처 수금을 월별로 확인합니다.</small></div></div>
       <div class="mw-month-nav"><button id="mwPrevMonth">‹</button><b id="mwSelectedMonth"></b><button id="mwNextMonth">›</button></div>
       <div class="mw-finance-summary">
         <article class="monthly"><span>월기성 예정</span><b id="mwMonthlyTotal">₩0</b><small id="mwMonthlyCount">0건</small></article>
@@ -2034,6 +2036,7 @@ window.MIN_WORKS_CONFIG = Object.freeze({
 
 /* SOURCE: security.js */
 (() => {
+  if(window.MIN_WORKS_TEST)return;
   'use strict';
 
   const API = window.MIN_WORKS_CONFIG?.apiBaseUrl || 'https://min-works-api.forjaejun.workers.dev';

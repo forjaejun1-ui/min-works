@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="light" />
-  <meta name="theme-color" content="#f4f6f2" />
+  <meta name="theme-color" content="#f5f6f8" />
   <script>document.documentElement.dataset.theme='light';document.documentElement.style.colorScheme='light';</script>
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -12,16 +12,25 @@
   <meta name="apple-mobile-web-app-title" content="MIN WORKS" />
   <meta name="description" content="MIN WORKS 현장·공사일보 통합 관리 앱" />
   <title>MIN WORKS</title>
-  <link rel="manifest" href="manifest.webmanifest?v=25" />
+  <link rel="manifest" href="manifest.webmanifest?v=54" />
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/min-works-v4-192.png" />
   <link rel="apple-touch-icon" href="assets/icons/min-works-v4-180.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Michroma&family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0,0" rel="stylesheet">
-<link rel="stylesheet" href="app-latest.css?v=52" />
+<link rel="stylesheet" href="app-latest.css?v=53" />
+<link rel="stylesheet" href="ui-foundation.css?v=54" />
+<link rel="stylesheet" href="ui-modern.css?v=54" />
+<link rel="stylesheet" href="ui-linear.css?v=54" />
 </head>
-<body>
+<body class="ui-v54">
+  <div class="mw-splash" id="mwSplash" role="status" aria-label="MIN WORKS 불러오는 중">
+    <div class="mw-splash-brand">
+      <div class="mw-splash-word" aria-label="MIN COMMUNICATION">MIN COMMUNICATION</div>
+      <span class="mw-splash-line" aria-hidden="true"></span>
+    </div>
+  </div>
   <div class="app-shell">
     <aside class="sidebar">
       <div class="brand"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAG8AAABBCAYAAADfY/omAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMTQ1IDc5LjE2MzQ5OSwgMjAxOC8wOC8xMy0xNjo0MDoyMiAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTkgKFdpbmRvd3MpIiB4bXBNTTpJbnN0YW5jZUlEPSJ4bXAuaWlkOkVCRDNDMUNDNDk4RjExRUI5NkZGQzc5OTcxOTlFREQxIiB4bXBNTTpEb2N1bWVudElEPSJ4bXAuZGlkOkVCRDNDMUNENDk4RjExRUI5NkZGQzc5OTcxOTlFREQxIj4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOmluc3RhbmNlSUQ9InhtcC5paWQ6RUJEM0MxQ0E0OThGMTFFQjk2RkZDNzk5NzE5OUVERDEiIHN0UmVmOmRvY3VtZW50SUQ9InhtcC5kaWQ6RUJEM0MxQ0I0OThGMTFFQjk2RkZDNzk5NzE5OUVERDEiLz4gPC9yZGY6RGVzY3JpcHRpb24+IDwvcmRmOlJERj4gPC94OnhtcG1ldGE+IDw/eHBhY2tldCBlbmQ9InIiPz5R/PKvAAAJJ0lEQVR42uxd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" alt="MIN communication"><span>MIN WORKS</span></div>
@@ -29,13 +38,13 @@
         <button class="nav-item active" data-view="dashboard"><span>⌂</span> 홈</button>
         <button class="nav-item" data-view="sites"><span class="material-symbols-rounded">construction</span> 현장</button>
         <button class="nav-item" data-view="daily"><span class="material-symbols-rounded">description</span> 공사일보</button>
-        <button class="nav-item" data-view="finance"><span class="material-symbols-rounded">payments</span> 자금 집행</button>
+        <button class="nav-item" data-view="finance"><span class="material-symbols-rounded">payments</span> 공사보고·분석</button>
         <button class="nav-item" data-view="issues"><span>!</span> 이슈</button>
         <button class="nav-item" data-view="settings"><span class="material-symbols-rounded">settings</span> 설정</button>
         <button class="nav-item help-nav" data-view="help"><span class="material-symbols-rounded">help</span> 사용법</button>
         <button class="nav-item patch-nav" data-view="patch"><span class="material-symbols-rounded">new_releases</span> 패치노트</button>
       </nav>
-      <section class="storage-mini" aria-label="저장공간"><div><span>회사 클라우드 저장공간</span><b id="storageMiniValue">계산 중</b></div><div class="storage-mini-bar"><i id="storageMiniBar"></i></div><small id="storageMiniBreakdown">사진 · 문서 확인 중</small><button data-view="storage">정리하기</button></section>
+      <section class="storage-mini" aria-label="저장공간"><label class="opening-toggle" title="체크하면 앱을 열 때 오프닝이 재생됩니다."><span>오프닝 보기</span><input id="openingToggle" type="checkbox" checked><i aria-hidden="true"></i></label><div class="storage-mini-head"><span>회사 클라우드 저장공간</span><b id="storageMiniValue">계산 중</b></div><div class="storage-mini-bar"><i id="storageMiniBar"></i></div><small id="storageMiniBreakdown">사진 · 문서 확인 중</small><button data-view="storage">정리하기</button></section>
       <div class="sidebar-profile">
         <div class="avatar">김</div>
         <div><strong>김재준 부장</strong><small>시공팀장</small></div>
@@ -88,7 +97,7 @@
           <div class="quick-grid">
             <button class="quick primary-quick" id="writeDaily"><span>＋</span><div><b>공사일보 작성</b><small>오늘 작업 바로 기록</small></div></button>
             <button class="quick" id="photoBtn"><span>▧</span><div><b>현장 사진</b><small>사진 촬영 및 분류</small></div></button>
-            <button class="quick" data-go="finance"><span class="material-symbols-rounded">payments</span><div><b>자금 집행</b><small>월기성·긴급기성·수금</small></div></button>
+            <button class="quick" data-go="finance"><span class="material-symbols-rounded">payments</span><div><b>공사보고·분석</b><small>공사보고서·공종 분석·소장 평가</small></div></button>
             <button class="quick" data-go="issues"><span>!</span><div><b>이슈 보고</b><small>문제·변경사항 기록</small></div></button>
           </div>
         </section>
@@ -145,7 +154,7 @@
           <button class="help-card" data-go="dashboard"><span class="material-symbols-rounded">home</span><div><small>01</small><h3>홈</h3><p>진행 현장, 오늘 브리핑, 회사 일정을 한눈에 확인합니다.</p></div><em>열기</em></button>
           <button class="help-card" data-go="sites"><span class="material-symbols-rounded">construction</span><div><small>02</small><h3>현장</h3><p>담당자, 공정률, 계약금액과 최근 공사일보를 확인합니다.</p></div><em>열기</em></button>
           <button class="help-card" data-go="daily"><span class="material-symbols-rounded">description</span><div><small>03</small><h3>공사일보</h3><p>작업 내용과 인원, 특이사항, 현장 사진을 등록하고 공유합니다.</p></div><em>열기</em></button>
-          <button class="help-card" data-go="finance"><span class="material-symbols-rounded">payments</span><div><small>04</small><h3>자금 집행</h3><p>월별 예정 지출과 거래처 수금 예정 내역을 작성하고 확인합니다.</p></div><em>열기</em></button>
+          <button class="help-card" data-go="finance"><span class="material-symbols-rounded">payments</span><div><small>04</small><h3>공사보고·분석</h3><p>공사보고서를 등록하고 공종별 분석과 소장 평가를 확인합니다.</p></div><em>열기</em></button>
           <button class="help-card" data-go="issues"><span class="material-symbols-rounded">report_problem</span><div><small>05</small><h3>이슈</h3><p>현장 문제를 등록하고 담당자, 긴급도, 처리 상태를 관리합니다.</p></div><em>열기</em></button>
           <button class="help-card" data-go="calendar"><span class="material-symbols-rounded">calendar_month</span><div><small>06</small><h3>일정</h3><p>회사 공동 일정을 등록하며 지난 일정은 자동으로 숨겨집니다.</p></div><em>열기</em></button>
           <button class="help-card" data-go="settings"><span class="material-symbols-rounded">settings</span><div><small>07</small><h3>설정</h3><p>글자 크기, 강조색, 홈 표시 수와 알림 방식을 바꿉니다.</p></div><em>열기</em></button>
@@ -164,7 +173,9 @@
       <section class="view" id="patchView">
         <div class="section-title patch-title"><div><p class="eyebrow">MIN WORKS UPDATE</p><h2>최근 업데이트</h2><small>주요 기능이 적용될 때마다 간단히 알려드립니다.</small></div></div>
         <section class="patch-list panel">
-          <article class="patch-item latest"><time datetime="2026-09-02">2026. 09. 02</time><div><span>v50</span><h3>PC·모바일 전체 안정화</h3><p>사진 촬영·갤러리 선택, PDF 중복 방지, 실제 로그인 확인자 공유, 글꼴·버튼·색상과 기기별 화면을 일괄 개선했습니다.</p></div></article>
+          <article class="patch-item latest"><time datetime="2026-09-14">2026. 09. 14</time><div><span>v54</span><h3>새 라이트 디자인과 오프닝 적용</h3><p>Linear·Vercel·Apple 방향의 밝은 화면, 새 왼쪽 메뉴, 위험성평가·현장서류 준비 화면과 MIN COMMUNICATION 퓨처 와이드 오프닝을 적용했습니다.</p></div></article>
+          <article class="patch-item"><time datetime="2026-09-08">2026. 09. 08</time><div><span>v53</span><h3>공사보고·분석 통합</h3><p>자금 집행 메뉴를 공사보고·분석으로 변경하고 공사보고서 등록·조회, 공종별 차트, 수금내역과 소장 평가 화면을 연결했습니다. 휴대폰에서는 조회 전용으로 표시합니다.</p></div></article>
+          <article class="patch-item"><time datetime="2026-09-02">2026. 09. 02</time><div><span>v50</span><h3>PC·모바일 전체 안정화</h3><p>사진 촬영·갤러리 선택, PDF 중복 방지, 실제 로그인 확인자 공유, 글꼴·버튼·색상과 기기별 화면을 일괄 개선했습니다.</p></div></article>
           <article class="patch-item"><time datetime="2026-09-02">2026. 09. 02</time><div><span>v49</span><h3>휴대폰 공사일보 사진 저장 안정화</h3><p>서명된 회사 사진을 휴대폰에서 직접 불러오고, Google Drive 응답이 느릴 때 자동 재시도하도록 개선했습니다.</p></div></article>
           <article class="patch-item"><time datetime="2026-09-02">2026. 09. 02</time><div><span>v48</span><h3>공사일보 현장 목록 자동 연동</h3><p>공사일보·이슈·자금의 현장 선택 목록을 현재 개설된 현장과 자동으로 맞추고 삭제된 이전 현장명을 제거했습니다.</p></div></article>
           <article class="patch-item"><time datetime="2026-09-02">2026. 09. 02</time><div><span>v47</span><h3>설정 화면 정리 및 실제 적용</h3><p>불필요한 권한·알림 항목을 정리하고 금액 숨김, 사진 품질, 화면·홈·보관 설정이 실제 기능에 적용되도록 개선했습니다.</p></div></article>
@@ -228,7 +239,8 @@
   <div class="progress-modal" id="progressModal"><div class="progress-backdrop"></div><section><header><div><p class="eyebrow">PROGRESS UPDATE</p><h2>공정률 변경</h2><small id="progressSiteName">연세대학교 고를샘</small></div><button id="closeProgressModal">×</button></header><div class="progress-value"><b id="progressValue">72</b><span>%</span></div><input type="range" id="progressRange" min="0" max="100" value="72"><label>변경 사유<textarea id="progressNote" rows="3" placeholder="예: 목공 및 타일 공정 완료"></textarea></label><p><span class="material-symbols-rounded">history</span>변경자와 변경 시간이 자동으로 기록됩니다.</p><button class="primary full" id="saveProgress">공정률 저장</button></section></div>
   <div class="money-form-modal" id="paymentFormModal"><div class="money-modal-backdrop"></div><section><header><div><p class="eyebrow">SITE PAYMENT</p><h2>지출·기성 작성</h2><small>현장소장 작성</small></div><button data-close-money="paymentFormModal">×</button></header><div class="money-form-grid"><label>현장<select id="paymentSite"><option>연세대학교 고를샘</option><option>에잇세컨즈 AK분당점</option><option>알뜰주유소 시설개선</option><option>힐스테이트 아산</option></select></label><label>구분<select id="paymentType"><option>월 기성</option><option>월요일 긴급지출</option></select></label><label>금액<input id="paymentAmount" type="number" placeholder="금액 입력"></label><label>지급 희망일<input id="paymentDate" type="date" value="2026-09-10"></label></div><label>내용<textarea id="paymentMemo" rows="3" placeholder="인건비, 현지업체 결제 등 내용을 입력하세요."></textarea></label><button class="primary full" id="savePayment">작성 완료 · 공무부로 전달</button></section></div>
   <div class="money-form-modal" id="receivableFormModal"><div class="money-modal-backdrop"></div><section><header><div><p class="eyebrow">RECEIVABLE</p><h2>거래처 수금 예정 작성</h2><small>공무부·경리부 작성</small></div><button data-close-money="receivableFormModal">×</button></header><div class="money-form-grid"><label>거래처<input id="receivableClient" placeholder="거래처명"></label><label>현장<select id="receivableSite"><option>연세대학교 고를샘</option><option>에잇세컨즈 AK분당점</option><option>알뜰주유소 시설개선</option><option>힐스테이트 아산</option></select></label><label>청구 금액<input id="receivableAmount" type="number" placeholder="금액 입력"></label><label>입금 예정일<input id="receivableDate" type="date"></label></div><label>비고<textarea id="receivableMemo" rows="3" placeholder="청구 조건이나 입금 관련 내용을 입력하세요."></textarea></label><button class="primary full" id="saveReceivable">수금 예정 등록</button></section></div>
-<script src="app-latest.js?v=52"></script>
+<script src="navigation-refresh.js?v=54"></script>
+<script src="app-latest.js?v=54"></script>
+<script src="ui-experience.js?v=54"></script>
 </body>
 </html>
-

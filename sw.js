@@ -1,6 +1,7 @@
-const CACHE = 'min-works-v52';
+const CACHE = 'min-works-v54';
 const ASSETS = [
-  './', './index.html?v=52', './app-latest.css?v=52', './app-latest.js?v=52', './manifest.webmanifest',
+  './', './index.html?v=54', './app-latest.css?v=53', './ui-foundation.css?v=54', './ui-modern.css?v=54', './ui-linear.css?v=54',
+  './navigation-refresh.js?v=54', './app-latest.js?v=54', './ui-experience.js?v=54', './manifest.webmanifest?v=54',
   './assets/icons/min-works-v4-180.png', './assets/icons/min-works-v4-192.png',
   './assets/icons/min-works-v4-512.png'
 ];
@@ -17,7 +18,7 @@ self.addEventListener('fetch', event => {
     } catch(error) {
       const cached=await caches.match(event.request,{ignoreSearch:isPage});
       if(cached)return cached;
-      if(isPage){const page=await caches.match('./index.html?v=52');if(page)return page}
+      if(isPage){const page=await caches.match('./index.html?v=54');if(page)return page}
       throw error;
     }
   })());
