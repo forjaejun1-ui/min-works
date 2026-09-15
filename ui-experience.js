@@ -1,6 +1,7 @@
-/* MIN WORKS v54: opening, concise headers, and unread-only NEW badges */
+/* test61 experience sample: splash, concise headers, and unread-only NEW badges */
 (() => {
   'use strict';
+
 
   const splash = document.getElementById('mwSplash');
   const openingPreferenceKey = 'minWorksOpeningEnabledV1';
@@ -44,17 +45,17 @@
   const syncCurrentView = () => {
     const active = document.querySelector('.view.active');
     if (!active?.id) return;
-    document.body.dataset.testView = active.id.replace(/View$/, '');
+    document.body.dataset.uiView = active.id.replace(/View$/, '');
     const ownTitle = active.querySelector('.section-title h2, .sample-page-head h2, .help-hero h2');
-    document.body.classList.toggle('test-view-has-title', Boolean(ownTitle?.textContent.trim()));
+    document.body.classList.toggle('ui-view-has-title', Boolean(ownTitle?.textContent.trim()));
   };
   document.querySelectorAll('.view').forEach(view => {
     new MutationObserver(syncCurrentView).observe(view, { attributes: true, attributeFilter: ['class'] });
   });
   syncCurrentView();
 
-  const unreadKey = 'minWorksUnreadV54';
-  const latestPatch = 'v54';
+  const unreadKey = 'minWorksUnreadV1';
+  const latestPatch = 'v55';
   const readUnread = () => {
     try { return JSON.parse(localStorage.getItem(unreadKey) || '{}'); }
     catch { return {}; }
@@ -80,7 +81,7 @@
     if (view === 'patch') localStorage.setItem('minWorksSeenPatchV1', latestPatch);
     saveUnread();
   };
-  window.MIN_WORKS_UNREAD = Object.freeze({ mark: markUnread, clear: clearUnread });
+  window.MIN_WORKS_TEST_UNREAD = Object.freeze({ mark: markUnread, clear: clearUnread });
   window.addEventListener('minworks:new-content', event => markUnread(event.detail?.view, event.detail?.count));
 
   if (localStorage.getItem('minWorksSeenPatchV1') !== latestPatch) markUnread('patch');

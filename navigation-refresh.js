@@ -1,4 +1,4 @@
-/* MIN WORKS navigation refresh — v54 */
+/* MIN WORKS navigation v55 */
 (() => {
   'use strict';
 
@@ -14,11 +14,11 @@
     <p class="nav-section-label">WORKSPACE</p>
     <button class="nav-item active" data-view="dashboard"><span class="nav-icon material-symbols-rounded">home</span><b>홈</b></button>
     <button class="nav-item" data-view="sites"><span class="nav-icon material-symbols-rounded">apartment</span><b>현장관리</b></button>
-    <button class="nav-item" data-view="daily"><span class="nav-icon material-symbols-rounded">edit_note</span><b>공사일보</b><em class="nav-new" data-unread-badge="daily" hidden>NEW</em></button>
-    <button class="nav-item" data-view="risk"><span class="nav-icon material-symbols-rounded">health_and_safety</span><b>위험성평가</b><em class="nav-new" data-unread-badge="risk" hidden>NEW</em></button>
+    <button class="nav-item" data-view="daily"><span class="nav-icon material-symbols-rounded">edit_note</span><b>공사일보</b></button>
+    <button class="nav-item" data-view="risk"><span class="nav-icon material-symbols-rounded">health_and_safety</span><b>위험성평가</b></button>
     <div class="nav-cluster" data-document-menu>
       <button class="nav-item nav-parent" data-view="documents" aria-expanded="false">
-        <span class="nav-icon material-symbols-rounded">folder_open</span><b>현장서류</b><em class="nav-new" data-unread-badge="documents" hidden>NEW</em><i class="material-symbols-rounded">expand_more</i>
+        <span class="nav-icon material-symbols-rounded">folder_open</span><b>현장서류</b><i class="material-symbols-rounded">expand_more</i>
       </button>
       <div class="nav-submenu">
         <button class="nav-subgroup" type="button" data-doc-folder="permits" aria-expanded="true"><span class="material-symbols-rounded">description</span><b>각종허가서</b><em>6</em><i class="material-symbols-rounded">expand_more</i></button>
@@ -34,10 +34,11 @@
         <button class="nav-subgroup" type="button" data-doc-folder="newhire"><span class="material-symbols-rounded">person_add</span><b>신규채용자서류</b><i class="material-symbols-rounded">chevron_right</i></button>
       </div>
     </div>
+    <button class="nav-item" data-view="issues"><span class="nav-icon material-symbols-rounded">report_problem</span><b>이슈 관리</b></button>
     <div class="nav-divider"></div>
     <button class="nav-item nav-utility" data-view="settings"><span class="nav-icon material-symbols-rounded">settings</span><b>설정</b></button>
     <button class="nav-item nav-utility" data-view="help"><span class="nav-icon material-symbols-rounded">help</span><b>사용법</b></button>
-    <button class="nav-item nav-utility" data-view="patch"><span class="nav-icon material-symbols-rounded">new_releases</span><b>패치노트</b><em class="nav-new" data-unread-badge="patch" hidden>NEW</em></button>
+    <button class="nav-item nav-utility" data-view="patch"><span class="nav-icon material-symbols-rounded">new_releases</span><b>패치노트</b></button>
   `;
 
   financeView.insertAdjacentHTML('beforebegin', `
@@ -52,7 +53,7 @@
         <article><span class="material-symbols-rounded">groups</span><div><small>참여 인원</small><b>18명</b><em>서명 완료 16명</em></div></article>
       </div>
       <section class="sample-panel">
-        <header><div><small>오늘 · 연세대학교 고를샘</small><h3>천장 경량철골 및 고소작업</h3></div><span class="sample-status progress">조치 중</span></header>
+        <header><div><small>오늘 · 연세대학교 고를샘</small><h3>천장 경량철골 및 고소작업</h3></div><span class="sample-status risk-in-progress">조치 중</span></header>
         <div class="risk-row"><span class="risk-level high">높음</span><div><b>고소작업 중 추락 위험</b><small>작업발판 점검 · 안전대 체결 · 하부 통제구역 설정</small></div><em>담당 김재준</em></div>
         <div class="risk-row"><span class="risk-level medium">보통</span><div><b>자재 인양 중 낙하 위험</b><small>인양로프 점검 · 신호수 배치</small></div><em>조치 완료</em></div>
       </section>
@@ -61,7 +62,7 @@
     <section class="view" id="documentsView">
       <div class="sample-page-head">
         <div><p class="eyebrow">SITE DOCUMENTS</p><h2>현장서류</h2><p>현장에서 자주 쓰는 서류를 종류별로 빠르게 작성합니다.</p></div>
-        <span class="sample-badge"><span class="material-symbols-rounded">construction</span>준비 중</span>
+        <span class="sample-badge"><span class="material-symbols-rounded">science</span>샘플 화면</span>
       </div>
       <div class="document-category-grid">
         <button class="active" type="button" data-doc-folder="permits"><span class="material-symbols-rounded">fact_check</span><div><b>각종허가서</b><small>작업허가서 6종</small></div><i class="material-symbols-rounded">arrow_forward</i></button>
@@ -162,12 +163,12 @@
   document.querySelectorAll('.sample-action,.sample-small-button').forEach(button => button.addEventListener('click', () => {
     const toast = document.getElementById('toast');
     if (!toast) return;
-    toast.textContent = '작성 기능은 다음 업데이트에서 연결됩니다.';
+    toast.textContent = '현재는 메뉴와 화면 구성을 확인하는 샘플입니다.';
     toast.classList.add('show');
     setTimeout(() => toast.classList.remove('show'), 2200);
   }));
 
   const mobileNav = document.querySelector('.mobile-nav');
-  if (mobileNav) mobileNav.innerHTML = '<button class="active" data-view="dashboard"><span class="material-symbols-rounded">home</span>홈</button><button data-view="sites"><span class="material-symbols-rounded">apartment</span>현장</button><button class="fab" data-view="daily" aria-label="공사일보"><span class="material-symbols-rounded">edit_note</span><em class="mobile-new" data-unread-badge="daily" hidden>NEW</em></button><button data-view="risk"><span class="material-symbols-rounded">health_and_safety</span>위험평가<em class="mobile-new" data-unread-badge="risk" hidden>NEW</em></button><button data-view="documents"><span class="material-symbols-rounded">folder_open</span>현장서류<em class="mobile-new" data-unread-badge="documents" hidden>NEW</em></button>';
+  if (mobileNav) mobileNav.innerHTML = '<button class="active" data-view="dashboard"><span class="material-symbols-rounded">home</span>홈</button><button data-view="sites"><span class="material-symbols-rounded">apartment</span>현장</button><button class="fab" data-view="daily" aria-label="공사일보"><span class="material-symbols-rounded">edit_note</span></button><button data-view="risk"><span class="material-symbols-rounded">health_and_safety</span>위험성평가</button><button data-view="documents"><span class="material-symbols-rounded">folder_open</span>현장서류</button>';
   window.MIN_WORKS_SIDEBAR_READY = true;
 })();

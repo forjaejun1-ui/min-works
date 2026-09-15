@@ -1,3 +1,6 @@
+MIN WORKS v55
+2026-09-15
+Approved test69b changes promoted with production authentication and company persistence.
 MIN WORKS UI v54
 작성일: 2026-09-14
 

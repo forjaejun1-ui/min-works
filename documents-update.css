@@ -1,0 +1,29 @@
+body.ui-v54 .nav-cluster{position:relative}
+body.ui-v54 .nav-cluster>.nav-parent{padding-right:86px;gap:7px}
+body.ui-v54 .nav-cluster>.nav-parent>i{position:absolute;right:8px}
+body.ui-v54 .nav-cluster>.nav-parent>.nav-new{display:none}
+body.ui-v54 .tbm-quick{position:absolute;top:8px;right:27px;min-height:30px;padding:5px 7px;border:1px solid #dce8c9;border-radius:7px;background:#f1f7e5;color:#507600;font-family:inherit;font-weight:600;font-size:11px;white-space:nowrap;cursor:pointer}
+body.ui-v54 .mobile-nav{grid-template-columns:repeat(5,minmax(0,1fr))!important}
+body.ui-v54 .mobile-nav>button{min-width:0;flex:1 1 0;min-height:52px;padding:7px 2px!important;gap:4px}
+body.ui-v54 .mobile-nav>button>b{font-size:11px;font-weight:600;white-space:nowrap}
+body.ui-v54 .tbm-panel[hidden]{display:none!important}
+body.ui-v54 .tbm-panel{margin-top:18px}
+.tbm-fields{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px}
+.tbm-fields label{display:grid;gap:8px;font-size:13px;font-weight:600;min-width:0}
+.tbm-fields input,.tbm-fields textarea{width:100%;min-width:0;border:1px solid #dde1e5;border-radius:8px;padding:11px;font:inherit;background:#fff;color:#181b20}
+.tbm-fields textarea{min-height:82px;resize:vertical}
+.tbm-fields .wide{grid-column:1/-1}
+.tbm-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:20px 0}
+#tbmSaveState,.tbm-panel>p{font-size:12px;color:#697261}
+.tbm-record{display:block;width:100%;padding:14px;margin-top:8px;text-align:left;border:1px solid #e1e5db;border-radius:8px;background:#fafbf8;color:#242724;cursor:pointer;overflow-wrap:anywhere;font:inherit}
+.mw-install-help{border:1px solid #dfe5d7;border-radius:14px;background:#fff;margin:20px 0;padding:18px}
+.mw-install-help>summary{display:flex;align-items:center;gap:12px;cursor:pointer;flex-wrap:wrap}
+.mw-install-help>summary>span:last-child{font-size:12px;color:#697261;margin-left:auto}
+.install-help-body{line-height:1.8;font-size:14px;overflow-wrap:anywhere}
+.install-help-body details{border-top:1px solid #e5e8e1;padding:15px 0}
+.install-help-body summary{font-weight:700;cursor:pointer}
+.install-help-body li{margin:9px 0}.install-help-body a{color:#507600;text-decoration:underline}
+body.ui-v54.mw-compact .tbm-fields{grid-template-columns:minmax(0,1fr)}
+body.ui-v54.mw-compact .tbm-fields input,body.ui-v54.mw-compact .tbm-fields textarea{font-size:16px}
+body.ui-v54.mw-compact .tbm-panel>header{gap:10px;flex-wrap:wrap}
+body.ui-v54.mw-compact #dashboardView .summary-grid{width:auto!important;margin-left:0!important;margin-right:0!important;padding-left:0!important;padding-right:0!important}

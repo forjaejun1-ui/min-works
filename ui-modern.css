@@ -369,8 +369,8 @@ body.ui-v54{
 .ui-v54 .mobile-nav button{position:relative}
 .ui-v54 .mobile-new{position:absolute;top:2px;left:calc(50% + 8px);min-width:27px;height:15px;padding:0 5px;font-size:7px}
 
-body.ui-v54.test-view-has-title .greeting-wrap{display:none}
-body.ui-v54.test-view-has-title .topbar{justify-content:flex-end;min-height:42px;margin-bottom:8px}
+body.ui-v54.ui-view-has-title .greeting-wrap{display:none}
+body.ui-v54.ui-view-has-title .topbar{justify-content:flex-end;min-height:42px;margin-bottom:8px}
 .ui-v54 .live-user-welcome{display:none!important}
 .ui-v54 .section-title{margin-top:2px}
 
@@ -383,6 +383,6 @@ body.ui-v54.test-view-has-title .topbar{justify-content:flex-end;min-height:42px
 @media(max-width:700px){
   .mw-splash-word{font-size:clamp(14px,4.35vw,20px);letter-spacing:.045em}
   .mw-splash-line{margin-top:17px}
-  body.ui-v54.test-view-has-title .topbar{min-height:38px;margin-bottom:4px}
+  body.ui-v54.ui-view-has-title .topbar{min-height:38px;margin-bottom:4px}
   .ui-v54 .section-title{padding-top:2px}
 }
