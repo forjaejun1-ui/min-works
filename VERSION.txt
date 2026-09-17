@@ -1,3 +1,11 @@
+MIN WORKS v57
+2026-09-17
+Test73 safety documents and authorized daily report reader.
+
+MIN WORKS v56
+2026-09-17
+Native safety documents, compact forms and company save.
+
 MIN WORKS v55
 2026-09-15
 Approved test69b changes promoted with production authentication and company persistence.

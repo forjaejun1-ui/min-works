@@ -1,14 +1,14 @@
-const CACHE = 'min-works-v55';
+const CACHE = 'min-works-v57';
 const ASSETS = [
-  './', './index.html?v=55', './app-latest.css?v=53', './ui-foundation.css?v=55', './ui-modern.css?v=55', './ui-linear.css?v=55',
-  './report-update.js?v=55','./report-update.css?v=55','./documents-update.js?v=55','./documents-update.css?v=55','./navigation-refresh.js?v=55', './app-latest.js?v=55', './ui-experience.js?v=55', './manifest.webmanifest?v=55',
-  './assets/icons/min-works-v4-180.png', './assets/icons/min-works-v4-192.png',
+  './', './index.html?v=57', './app-latest.css?v=53', './ui-foundation.css?v=57', './ui-modern.css?v=57', './ui-linear.css?v=57',
+  './report-update.js?v=57','./report-update.css?v=57','./documents-update.js?v=57','./documents-update.css?v=57','./navigation-refresh.js?v=57', './app-latest.js?v=57', './ui-experience.js?v=57', './manifest.webmanifest?v=57',
+  './reader.html', './reader.js?v=1', './reader.css?v=1', './reader.webmanifest', './reader-admin.js?v=57', './safety-engine.js?v=57', './safety-enhancements.js?v=57', './safety-native.js?v=57', './safety-forms.css?v=57', './safety-native.css?v=57', './assets/icons/min-works-v4-180.png', './assets/icons/min-works-v4-192.png',
   './assets/icons/min-works-v4-512.png'
 ];
 self.addEventListener('install', event => event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting())));
 self.addEventListener('activate', event => event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim())));
 self.addEventListener('fetch', event => {
-  if (event.request.method !== 'GET') return;
+  if (event.request.method !== 'GET'||new URL(event.request.url).origin!==self.location.origin) return;
   const isPage = event.request.mode === 'navigate';
   event.respondWith((async()=>{
     try {
@@ -18,7 +18,7 @@ self.addEventListener('fetch', event => {
     } catch(error) {
       const cached=await caches.match(event.request,{ignoreSearch:isPage});
       if(cached)return cached;
-      if(isPage){const page=await caches.match('./index.html?v=55');if(page)return page}
+      if(isPage){const page=await caches.match(new URL(event.request.url).pathname.endsWith('/reader.html')?'./reader.html':'./index.html?v=57');if(page)return page}
       throw error;
     }
   })());
