@@ -1,6 +1,6 @@
-/* Test-only form integration. Original files are stored byte-for-byte in IndexedDB. */
+/* Safety form integration. Original files are stored byte-for-byte in IndexedDB. */
 (()=>{
- const profile=()=>[window.MIN_WORKS_USER,...(window.MIN_WORKS_EMPLOYEES||[])].filter(p=>p?.name).map(p=>[p.name,p.rank].filter(Boolean).join(' '));
+ const profile=()=>[window.MIN_WORKS_USER?.role==='admin'?{name:'관리자'}:window.MIN_WORKS_USER,...(window.MIN_WORKS_EMPLOYEES||[])].filter(p=>p?.name).map(p=>[p.name,p.rank].filter(Boolean).join(' '));
  const sites=()=>[...document.querySelectorAll('[data-site-row]')].map(row=>{const card=[...document.querySelectorAll('.site-card')].find(c=>c.dataset.siteId===row.dataset.siteId||c.dataset.site===row.dataset.siteRow);return {name:row.dataset.siteRow,id:row.dataset.siteId,amount:card?.dataset.amount||'',start:row.dataset.startDate||'',end:row.dataset.endDate||'',client:row.dataset.client||card?.dataset.client||'',progress:row.querySelector('[data-progress]')?.dataset.progress||0}});
  window.enhanceSafety73=(root,{saveDraft})=>{
  const q=k=>root.querySelector(`[data-key="${k}"]`);
