@@ -2282,9 +2282,10 @@ window.MIN_WORKS_CONFIG = Object.freeze({
     const name = document.createElement('b');
     const detail = document.createElement('small');
     name.textContent = `${employee.department||'부서 미지정'} ${employee.name} ${employee.rank}`;
-    detail.textContent = `민웍스 ${employee.main_enabled?'승인':'미승인'} · 민웍스+ ${employee.reader_enabled?'승인':'미승인'} · 신청: ${employee.requested_app==='plus'?'민웍스+':'민웍스'} · 등록 ${formatDate(employee.created_at)}`;
+    detail.textContent = `민웍스 : ${employee.main_enabled?'승인':'미승인'} · MIN+ : ${employee.reader_enabled?'승인':'미승인'}`;
+    detail.style.cssText='display:block;line-height:1.6;margin-top:5px;white-space:normal';
     info.append(name, detail);
-    const devices=document.createElement('small');devices.className='employee-device-list';devices.textContent=employee.devices?.length?employee.devices.map(d=>d.type+' · 최근 접속 '+new Date(d.lastSeen*1000).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})).join(' / '):'접속 기기: 업데이트 후 다음 접속부터 표시';info.append(devices);
+    const devices=document.createElement('small');devices.className='employee-device-list';devices.textContent='기기 : '+(employee.devices?.length?employee.devices.map(d=>d.type).join(' · '):'확인 대기');devices.title=(employee.devices||[]).map(d=>d.type+' 최근 접속 '+new Date(d.lastSeen*1000).toLocaleString('ko-KR')).join(' / ');devices.style.cssText='display:block;line-height:1.6;margin-top:2px';info.append(devices);
     const actions = document.createElement('div');
     actions.className = 'employee-actions';
     const edit = document.createElement('button');
