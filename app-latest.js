@@ -2087,8 +2087,8 @@ window.MIN_WORKS_CONFIG = Object.freeze({
 
     content.innerHTML = `
       <h1>회사 계정으로 시작</h1>
-      <p class="auth-copy">직원은 전달받은 5분 접속코드로 최초 등록하세요. 등록한 휴대폰에서는 자동으로 로그인됩니다.</p>
-      <div class="auth-tabs"><button class="active" data-auth-tab="employee">직원 최초 등록</button><button data-auth-tab="admin">관리자 로그인</button></div>
+      <p class="auth-copy">직원 등록과 승인은 한 번이면 됩니다. 이미 등록했다면 PC·모바일에서 기존 직원 기기 연결을 선택하세요.</p>
+      <div class="auth-tabs"><button class="active" data-auth-tab="employee">직원 최초 등록</button><button data-auth-tab="connect">기존 직원 기기 연결</button><button data-auth-tab="admin">관리자 로그인</button></div>
       <form class="auth-form" id="employeeRegisterForm">
         <label>6자리 접속코드<input name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required placeholder="000000"></label>
         <label>이름(실명)<input name="name" autocomplete="name" minlength="2" maxlength="30" required placeholder="홍길동"></label>
@@ -2096,7 +2096,7 @@ window.MIN_WORKS_CONFIG = Object.freeze({
         <label>직급<select name="rank" required><option value="">선택</option><option>대표이사</option><option>상무이사</option><option>실장</option><option>부장</option><option>차장</option><option>과장</option><option>대리</option><option>주임</option><option>사원</option></select></label>
         <button class="auth-submit">이 기기 등록 신청</button>
       </form>
-      <form class="auth-form" id="adminLoginForm" hidden>
+      <form class="auth-form" id="employeeConnectForm" hidden><p class="auth-copy">관리자가 직원관리에서 발급한 본인의 8자리 기기 연결코드를 입력하세요. 기존 이름과 승인 권한을 그대로 사용합니다.</p><label>8자리 기기 연결코드<input name="code" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" autocomplete="one-time-code" placeholder="8자리 코드" required></label><button class="auth-submit">기존 계정으로 연결</button></form><form class="auth-form" id="adminLoginForm" hidden>
         <label>관리자 이메일<input name="email" type="email" autocomplete="username" required></label>
         <label>비밀번호<input name="password" type="password" autocomplete="current-password" required></label>
         <button class="auth-submit">관리자로 로그인</button>
@@ -2105,6 +2105,7 @@ window.MIN_WORKS_CONFIG = Object.freeze({
       <p class="auth-note">접속코드는 5분 후 자동 만료됩니다. 이미 등록한 직원은 새 코드가 없어도 계속 사용할 수 있습니다.</p>`;
     content.querySelectorAll('[data-auth-tab]').forEach(button => button.addEventListener('click', switchAuthTab));
     document.getElementById('employeeRegisterForm').addEventListener('submit', registerEmployee);
+    document.getElementById('employeeConnectForm').addEventListener('submit',connectEmployeeDevice);
     document.getElementById('adminLoginForm').addEventListener('submit', loginAdmin);
   }
 
@@ -2113,6 +2114,7 @@ window.MIN_WORKS_CONFIG = Object.freeze({
     document.querySelectorAll('[data-auth-tab]').forEach(button => button.classList.toggle('active', button.dataset.authTab === tab));
     document.getElementById('employeeRegisterForm').hidden = tab !== 'employee';
     document.getElementById('adminLoginForm').hidden = tab !== 'admin';
+    document.getElementById('employeeConnectForm').hidden = tab !== 'connect';
     setMessage('');
   }
 
@@ -2121,6 +2123,7 @@ window.MIN_WORKS_CONFIG = Object.freeze({
     await submitAuth(event.currentTarget, '/admin/setup');
   }
 
+  async function connectEmployeeDevice(event){event.preventDefault();const button=event.currentTarget.querySelector('button');setBusy(button,true);setMessage('');try{const result=await api('/employee/connect-device',{method:'POST',body:Object.fromEntries(new FormData(event.currentTarget)),auth:false});if(!result.ok)throw Error(result.error||'기기를 연결하지 못했습니다.');saveToken(result.token);location.reload()}catch(error){setMessage(error.message)}finally{setBusy(button,false)}}
   async function registerEmployee(event) {
     event.preventDefault();
     const button=event.currentTarget.querySelector('button');setBusy(button,true);setMessage('');
@@ -2281,6 +2284,7 @@ window.MIN_WORKS_CONFIG = Object.freeze({
     name.textContent = `${employee.department||'부서 미지정'} ${employee.name} ${employee.rank}`;
     detail.textContent = `민웍스 ${employee.main_enabled?'승인':'미승인'} · 민웍스+ ${employee.reader_enabled?'승인':'미승인'} · 신청: ${employee.requested_app==='plus'?'민웍스+':'민웍스'} · 등록 ${formatDate(employee.created_at)}`;
     info.append(name, detail);
+    const devices=document.createElement('small');devices.className='employee-device-list';devices.textContent=employee.devices?.length?employee.devices.map(d=>d.type+' · 최근 접속 '+new Date(d.lastSeen*1000).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})).join(' / '):'접속 기기: 업데이트 후 다음 접속부터 표시';info.append(devices);
     const actions = document.createElement('div');
     actions.className = 'employee-actions';
     const edit = document.createElement('button');
@@ -2312,7 +2316,7 @@ window.MIN_WORKS_CONFIG = Object.freeze({
     try {const result=await api('/admin/employees/'+encodeURIComponent(employee.id)+'/app-access',{method:'PUT',body:{app,enabled}});if(!result.ok)throw Error(result.error);await loadEmployees();}catch(error){alert(error.message||'권한을 변경하지 못했습니다.');}
   }
   async function createEmployeeDeviceCode(employee) {
-    try {const result=await api('/admin/employees/'+encodeURIComponent(employee.id)+'/device-code',{method:'POST'});if(!result.ok)throw Error(result.error);alert(employee.name+' '+employee.rank+' 전용 기기 연결코드\n\n'+result.code+'\n\n5분 동안 1회만 사용할 수 있습니다. 이 직원 본인에게만 전달하세요. 민웍스+ → 이미 등록한 직원에서 입력하면 같은 직원으로 연결됩니다.');}catch(error){alert(error.message||'연결코드를 만들지 못했습니다.');}
+    try {const result=await api('/admin/employees/'+encodeURIComponent(employee.id)+'/device-code',{method:'POST'});if(!result.ok)throw Error(result.error);alert(employee.name+' '+employee.rank+' 전용 기기 연결코드\n\n'+result.code+'\n\n5분 동안 1회만 사용할 수 있습니다. 이 직원 본인에게만 전달하세요. 민웍스 또는 민웍스+ → 기존 직원 기기 연결에서 입력하세요. 새로 가입하거나 다시 승인받을 필요가 없습니다.');}catch(error){alert(error.message||'연결코드를 만들지 못했습니다.');}
   }
 
   async function employeeAction(employee, action) {
@@ -2372,7 +2376,7 @@ window.MIN_WORKS_CONFIG = Object.freeze({
 
   function saveToken(token) {
     sessionToken = token;
-    localStorage.setItem(TOKEN_KEY, token);
+    localStorage.setItem(TOKEN_KEY, token);window.dispatchEvent(new Event('minworks:session-saved'));
   }
 
   function clearToken() {

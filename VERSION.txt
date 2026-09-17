@@ -1,3 +1,7 @@
+MIN WORKS v63 / PLUS reader v61
+2026-09-17
+One employee account across PC/mobile, main device connection, device type and recent access in employee management.
+
 MIN WORKS v62 / MIN WORKS PLUS v61
 2026-09-17
 MIN+ approval-only employee control; existing server permission enforcement retained.
