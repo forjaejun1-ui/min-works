@@ -1,3 +1,7 @@
+MIN WORKS v60 / MIN WORKS PLUS v61
+2026-09-17
+Inline process/personnel/work table, full-width progress and photo swipe gallery.
+
 MIN WORKS v60
 2026-09-17
 Phone-first Plus, independent install guide and icons, compact main mobile header, installation in settings.
