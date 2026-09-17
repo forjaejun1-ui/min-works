@@ -1,3 +1,7 @@
+MIN WORKS v58
+2026-09-17
+Mobile single-site daily reader with horizontal swipe and thumb navigation.
+
 MIN WORKS v57
 2026-09-17
 Test73 safety documents and authorized daily report reader.
