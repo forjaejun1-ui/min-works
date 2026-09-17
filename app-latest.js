@@ -2050,6 +2050,7 @@ window.MIN_WORKS_CONFIG = Object.freeze({
       if (sessionToken) {
         const session = await api('/session');
         if (session.ok) return unlock(session.user);
+        if (session.plusEnabled) { location.replace('./reader.html'); return; }
         if (session.pending) return showPendingApproval();
         clearToken();
       }
@@ -2285,7 +2286,7 @@ window.MIN_WORKS_CONFIG = Object.freeze({
     const name = document.createElement('b');
     const detail = document.createElement('small');
     name.textContent = `${employee.department||'부서 미지정'} ${employee.name} ${employee.rank}`;
-    detail.textContent = `${employee.status === 'pending'?'승인 대기':employee.status === 'active' ? '사용 중' : '접속 중지'} · 등록 ${formatDate(employee.created_at)}`;
+    detail.textContent = `민웍스 ${employee.main_enabled?'승인':'미승인'} · 민웍스+ ${employee.reader_enabled?'승인':'미승인'} · 신청: ${employee.requested_app==='plus'?'민웍스+':'민웍스'} · 등록 ${formatDate(employee.created_at)}`;
     info.append(name, detail);
     const actions = document.createElement('div');
     actions.className = 'employee-actions';
@@ -2293,15 +2294,29 @@ window.MIN_WORKS_CONFIG = Object.freeze({
     edit.textContent = '부서·직급 수정';
     edit.addEventListener('click', () => editEmployeeProfile(employee));
     const toggle = document.createElement('button');
-    toggle.textContent = employee.status === 'pending' ? '가입 승인' : employee.status === 'active' ? '접속 중지' : '다시 허용';
-    toggle.addEventListener('click', () => employeeAction(employee, employee.status === 'active' ? 'deactivate' : 'activate'));
+    toggle.textContent = employee.main_enabled ? '민웍스 해제' : '민웍스 승인';
+    toggle.addEventListener('click', () => changeAppAccess(employee, 'main', !employee.main_enabled));
+    const plus = document.createElement('button');
+    plus.textContent = employee.reader_enabled ? '민웍스+ 해제' : '민웍스+ 승인';
+    plus.addEventListener('click', () => changeAppAccess(employee, 'plus', !employee.reader_enabled));
+    const device = document.createElement('button'); device.textContent='기기 연결코드';
+    device.addEventListener('click',()=>createEmployeeDeviceCode(employee));
     const remove = document.createElement('button');
     remove.className = 'danger';
     remove.textContent = '퇴사자 삭제';
     remove.addEventListener('click', () => employeeAction(employee, 'delete'));
-    actions.append(edit, toggle, remove);
+    actions.append(toggle, plus, device, edit, remove);
     row.append(info, actions);
     return row;
+  }
+
+  async function changeAppAccess(employee, app, enabled) {
+    const title=app==='plus'?'민웍스+':'민웍스';
+    if(!confirm(employee.name+' '+employee.rank+'\n\n'+title+' 이용을 '+(enabled?'승인':'해제')+'할까요? 다른 앱의 승인은 유지됩니다.'))return;
+    try {const result=await api('/admin/employees/'+encodeURIComponent(employee.id)+'/app-access',{method:'PUT',body:{app,enabled}});if(!result.ok)throw Error(result.error);await loadEmployees();}catch(error){alert(error.message||'권한을 변경하지 못했습니다.');}
+  }
+  async function createEmployeeDeviceCode(employee) {
+    try {const result=await api('/admin/employees/'+encodeURIComponent(employee.id)+'/device-code',{method:'POST'});if(!result.ok)throw Error(result.error);alert(employee.name+' '+employee.rank+' 전용 기기 연결코드\n\n'+result.code+'\n\n5분 동안 1회만 사용할 수 있습니다. 이 직원 본인에게만 전달하세요. 민웍스+ → 이미 등록한 직원에서 입력하면 같은 직원으로 연결됩니다.');}catch(error){alert(error.message||'연결코드를 만들지 못했습니다.');}
   }
 
   async function employeeAction(employee, action) {
@@ -2396,3 +2411,4 @@ window.MIN_WORKS_CONFIG = Object.freeze({
     return String(value).replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]);
   }
 })();
+
