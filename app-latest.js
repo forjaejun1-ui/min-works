@@ -2290,8 +2290,10 @@ window.MIN_WORKS_CONFIG = Object.freeze({
     toggle.textContent = '민웍스 승인';
     toggle.addEventListener('click', () => changeAppAccess(employee, 'main', !employee.main_enabled));
     const plus = document.createElement('button');
-    plus.textContent = employee.reader_enabled ? 'MINWORKS+ 연결해제' : 'MINWORKS+ 연결승인';
-    plus.addEventListener('click', () => changeAppAccess(employee, 'plus', !employee.reader_enabled));
+    plus.textContent = 'MIN+ 연결승인';
+    plus.disabled = Boolean(employee.reader_enabled);
+    plus.title = employee.reader_enabled ? 'MIN+ 연결승인 완료' : '이 직원의 민웍스 플러스 접속 승인';
+    plus.addEventListener('click', () => changeAppAccess(employee, 'plus', true));
     const device = document.createElement('button'); device.textContent='기기 연결코드';
     device.addEventListener('click',()=>createEmployeeDeviceCode(employee));
     const remove = document.createElement('button');

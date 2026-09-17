@@ -1,3 +1,7 @@
+MIN WORKS v62 / MIN WORKS PLUS v61
+2026-09-17
+MIN+ approval-only employee control; existing server permission enforcement retained.
+
 MIN WORKS v60 / MIN WORKS PLUS v61
 2026-09-17
 Inline process/personnel/work table, full-width progress and photo swipe gallery.
