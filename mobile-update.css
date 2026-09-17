@@ -24,3 +24,19 @@ html body.ui-v54:is(.mw-compact,.force-fold,.force-galaxy,.force-iphone) .greeti
 html body.ui-v54:is(.mw-compact,.force-fold,.force-galaxy,.force-iphone) .live-user-welcome{display:none!important}
 html body.ui-v54:is(.mw-compact,.force-fold,.force-galaxy,.force-iphone) main{padding-top:max(16px,env(safe-area-inset-top))!important}
 }
+/* Mobile opening switch shares the existing opening preference. */
+.mobile-weather-controls{display:contents}.mobile-opening-toggle{display:none}
+html body.ui-v54:is(.mw-compact,.force-fold,.force-galaxy,.force-iphone) .mobile-weather-controls{display:flex!important;align-items:center;gap:6px;grid-area:1/3;min-width:0}
+html body.ui-v54:is(.mw-compact,.force-fold,.force-galaxy,.force-iphone) .mobile-opening-toggle{display:flex!important;align-items:center;justify-content:center;flex-direction:column;gap:2px;flex:0 0 52px;min-width:52px;height:44px;padding:4px;border:1px solid #e0e5da;border-radius:12px;background:#fff;color:#747c6e;font:inherit;cursor:pointer}
+html body.ui-v54 .mobile-opening-toggle span{font-size:10px;font-weight:600}
+html body.ui-v54 .mobile-opening-toggle b{font-size:11px;font-weight:800}
+html body.ui-v54 .mobile-opening-toggle[aria-checked=true]{background:#eff6df!important;color:#517525!important;border-color:#bed28c!important}
+html body.ui-v54 .mobile-opening-toggle:focus-visible{outline:2px solid #719c29;outline-offset:2px}
+@media(min-width:701px){html body.ui-v54:is(.mw-compact,.force-fold,.force-galaxy,.force-iphone) .mobile-weather-controls .weather-pill{max-width:116px!important;padding:6px!important;flex:0 1 auto}html body.ui-v54:is(.mw-compact,.force-fold,.force-galaxy,.force-iphone) .weather-pill small{max-width:62px!important}}
+@media(max-width:700px){
+html body.ui-v54.mw-compact header.topbar{grid-template-columns:44px minmax(0,1fr) auto!important;gap:8px!important}
+html body.ui-v54.mw-compact .mobile-weather-controls{grid-column:2/-1;grid-row:1;justify-self:end}
+html body.ui-v54.mw-compact .greeting-wrap{grid-column:1/-1!important;grid-row:3!important;margin:4px 0 0!important}
+html body.ui-v54.mw-compact .security-user-button{grid-column:1/3!important;grid-row:2!important;justify-self:start}
+html body.ui-v54.mw-compact .mobile-header-shortcuts [data-mobile-action=menu]{grid-column:3!important;grid-row:2!important}
+}

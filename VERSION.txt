@@ -1,1 +1,1 @@
-MIN WORKS v65 - Fold header alignment
+MIN WORKS v66 - Mobile opening switch

@@ -1,8 +1,8 @@
-const CACHE = 'min-works-v65';
-const ASSETS = [
-  './', './device-session.js?v=63', './mobile-update.css?v=65', './plus-icon-180.png', './plus-icon-192.png', './plus-icon-512.png', './index.html?v=57', './app-latest.css?v=53', './ui-foundation.css?v=57', './ui-modern.css?v=57', './ui-linear.css?v=57',
+const CACHE = 'min-works-v66';
+const ASSETS = ['./mobile-controls.js?v=66',
+  './', './device-session.js?v=63', './mobile-update.css?v=66', './plus-icon-180.png', './plus-icon-192.png', './plus-icon-512.png', './index.html?v=57', './app-latest.css?v=53', './ui-foundation.css?v=57', './ui-modern.css?v=57', './ui-linear.css?v=57',
   './report-update.js?v=57','./report-update.css?v=57','./documents-update.js?v=57','./documents-update.css?v=57','./navigation-refresh.js?v=57', './app-latest.js?v=64', './ui-experience.js?v=57', './manifest.webmanifest?v=57',
-  './reader.html', './reader.js?v=61', './reader.css?v=61', './reader.webmanifest?v=61', './plus-auth.js?v=63', './plus-auth.css?v=61', './plus-icon.svg', './reader-admin.js?v=65', './safety-engine.js?v=57', './safety-enhancements.js?v=57.1', './safety-native.js?v=57', './safety-forms.css?v=57', './safety-native.css?v=57', './assets/icons/min-works-v4-180.png', './assets/icons/min-works-v4-192.png',
+  './reader.html', './reader.js?v=61', './reader.css?v=61', './reader.webmanifest?v=61', './plus-auth.js?v=63', './plus-auth.css?v=61', './plus-icon.svg', './reader-admin.js?v=66', './safety-engine.js?v=57', './safety-enhancements.js?v=57.1', './safety-native.js?v=57', './safety-forms.css?v=57', './safety-native.css?v=57', './assets/icons/min-works-v4-180.png', './assets/icons/min-works-v4-192.png',
   './assets/icons/min-works-v4-512.png'
 ];
 self.addEventListener('install', event => event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting())));
