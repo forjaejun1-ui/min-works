@@ -1,10 +1,5 @@
-/* v39 clean production start: remove bundled samples and one-time device sample data. */
+/* Remove bundled placeholder markup only; preserve existing device data. */
 (() => {
-  const CLEAN_KEY='minWorksProductionCleanV39';
-  if(localStorage.getItem(CLEAN_KEY)!=='done'){
-    ['minWorksCloudSnapshotV1','minWorksPlannedPaymentsV2','minWorksReceivablesV2','minWorksCompanyCalendarV1','minworks_storage_trash_v1','minworks_storage_retention_v1','minworks_exported_sites_v1','minWorksSiteStateV28','minWorksDeletedRecordsV1'].forEach(key=>localStorage.removeItem(key));
-    localStorage.setItem(CLEAN_KEY,'done');
-  }
   document.querySelectorAll('.site-list .site-card,.site-table-row,.report-card,.issue-detail-card,.briefing-item,.home-event,#paymentPanel>.finance-row,#receivablePanel>.finance-row').forEach(node=>node.remove());
   document.querySelectorAll('#dailyForm>div:first-child select option,#issueSite option,#paymentSite option,#receivableSite option,.site-option').forEach(node=>node.remove());
   document.querySelectorAll('.daily-filter button:not(:first-child)').forEach(node=>node.remove());
@@ -1265,7 +1260,7 @@ applyExtendedSettings();
   const shortcuts = document.createElement('nav');
   shortcuts.className = 'mobile-header-shortcuts';
   shortcuts.setAttribute('aria-label', '모바일 빠른 이동');
-  shortcuts.innerHTML = `<button type="button" data-mobile-go="dashboard"><span class="material-symbols-rounded">home</span><b>MIN WORKS</b></button><button type="button" data-mobile-go="calendar"><span class="material-symbols-rounded">calendar_month</span><b>일정</b><small>Google 연결</small></button>`;
+  shortcuts.innerHTML = `<button type="button" data-mobile-go="dashboard" aria-label="홈으로 이동"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 10 12 3l9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/></svg></button><button type="button" data-mobile-go="calendar"><span class="material-symbols-rounded">calendar_month</span><b>일정</b><small>Google 연결</small></button>`;
   topbar.prepend(shortcuts);
   shortcuts.querySelectorAll('[data-mobile-go]').forEach(button => button.addEventListener('click', () => {
     const view = button.dataset.mobileGo;
@@ -1287,7 +1282,7 @@ applyExtendedSettings();
   function setupMobileNavigation() {
     const shortcuts = document.querySelector('.mobile-header-shortcuts');
     if (shortcuts) {
-      shortcuts.innerHTML = `<button type="button" data-mobile-action="home"><span class="material-symbols-rounded">home</span><b>MIN WORKS 홈</b></button><button type="button" data-mobile-action="menu"><span class="material-symbols-rounded">apps</span><b>전체 메뉴</b></button>`;
+      shortcuts.innerHTML = `<button type="button" data-mobile-action="home" aria-label="홈으로 이동"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 10 12 3l9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/></svg></button><button type="button" data-mobile-action="menu"><span class="material-symbols-rounded">apps</span><b>전체 메뉴</b></button>`;
       shortcuts.querySelector('[data-mobile-action="home"]').addEventListener('click', () => goView('dashboard'));
       shortcuts.querySelector('[data-mobile-action="menu"]').addEventListener('click', openMenu);
     }
@@ -1502,9 +1497,7 @@ applyExtendedSettings();
   installButton.type = 'button';
   installButton.innerHTML = '<img src="assets/icons/min-works-v4-192.png" alt=""><span><b>MIN WORKS 설치</b><small>휴대폰 앱으로 사용</small></span><i class="material-symbols-rounded">download</i>';
 
-  const shortcuts = document.querySelector('.mobile-header-shortcuts');
-  if (shortcuts) shortcuts.insertAdjacentElement('afterend', installButton);
-  else document.querySelector('.topbar')?.prepend(installButton);
+  document.querySelector('#appInstallSettings')?.append(installButton);
 
   const guide = document.createElement('div');
   guide.className = 'install-guide';
@@ -1758,7 +1751,7 @@ window.MIN_WORKS_CONFIG = Object.freeze({
     ['현장 담당자는 어떻게 바뀌나요?','해당 현장에 가장 최근 공사일보를 등록한 직원 이름으로 자동 갱신됩니다.'],
     ['현장 상태는 언제 바뀌나요?','개설한 현장은 진행 중으로 표시되며, 준공일 다음 날부터 완료입니다.'],
     ['Google 일정이 보이지 않아요.','회사 구글 계정의 Calendar 연결 상태를 확인하세요. 관리자가 한 번 연결하면 로그인한 모든 직원에게 같은 향후 일정이 표시됩니다.'],
-    ['앱은 어떻게 설치하나요?','모바일 상단 MIN WORKS 설치를 누르거나 브라우저 메뉴에서 홈 화면에 추가를 선택합니다.'],
+    ['앱은 어떻게 설치하나요?','설정의 앱 설치에서 MIN WORKS 설치를 누르거나 브라우저 메뉴에서 홈 화면에 추가를 선택합니다.'],
     ['폴드 화면이 깨져 보여요.','상단 기기 보기에서 갤럭시 폴드를 선택하고 접힘·펼침 상태에 맞춰 화면을 다시 불러오세요.'],
     ['뒤로가기는 어떻게 하나요?','휴대폰 또는 브라우저 뒤로가기를 누르면 직전에 보던 앱 화면으로 돌아갑니다. 로고를 누르면 홈으로 이동합니다.'],
     ['다른 직원과 데이터가 다르게 보여요.','서버 동기화 상태를 확인하세요. 서버 미연결 상태의 임시 데이터는 현재 기기에만 저장됩니다.'],
@@ -2294,10 +2287,10 @@ window.MIN_WORKS_CONFIG = Object.freeze({
     edit.textContent = '부서·직급 수정';
     edit.addEventListener('click', () => editEmployeeProfile(employee));
     const toggle = document.createElement('button');
-    toggle.textContent = employee.main_enabled ? '민웍스 해제' : '민웍스 승인';
+    toggle.textContent = '민웍스 승인';
     toggle.addEventListener('click', () => changeAppAccess(employee, 'main', !employee.main_enabled));
     const plus = document.createElement('button');
-    plus.textContent = employee.reader_enabled ? '민웍스+ 해제' : '민웍스+ 승인';
+    plus.textContent = employee.reader_enabled ? 'MINWORKS+ 연결해제' : 'MINWORKS+ 연결승인';
     plus.addEventListener('click', () => changeAppAccess(employee, 'plus', !employee.reader_enabled));
     const device = document.createElement('button'); device.textContent='기기 연결코드';
     device.addEventListener('click',()=>createEmployeeDeviceCode(employee));
@@ -2305,7 +2298,8 @@ window.MIN_WORKS_CONFIG = Object.freeze({
     remove.className = 'danger';
     remove.textContent = '퇴사자 삭제';
     remove.addEventListener('click', () => employeeAction(employee, 'delete'));
-    actions.append(toggle, plus, device, edit, remove);
+    if (!employee.main_enabled) actions.append(toggle);
+    actions.append(plus, device, edit, remove);
     row.append(info, actions);
     return row;
   }

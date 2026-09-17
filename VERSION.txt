@@ -1,6 +1,6 @@
-MIN WORKS v59 / MIN WORKS PLUS v60
+MIN WORKS v60
 2026-09-17
-Plus phone-first layout, live today count, dedicated install guide and app icons. Main mobile changes remain in test.
+Phone-first Plus, independent install guide and icons, compact main mobile header, installation in settings.
 
 MIN WORKS v59
 2026-09-17

@@ -1,8 +1,8 @@
-const CACHE = 'min-works-plus-v60';
+const CACHE = 'min-works-v60';
 const ASSETS = [
-  './', './index.html?v=57', './app-latest.css?v=53', './ui-foundation.css?v=57', './ui-modern.css?v=57', './ui-linear.css?v=57',
-  './report-update.js?v=57','./report-update.css?v=57','./documents-update.js?v=57','./documents-update.css?v=57','./navigation-refresh.js?v=57', './app-latest.js?v=59', './ui-experience.js?v=57', './manifest.webmanifest?v=57',
-  './reader.html', './plus-icon-180.png', './plus-icon-192.png', './plus-icon-512.png', './reader.js?v=60', './reader.css?v=60', './reader.webmanifest?v=60', './plus-auth.js?v=60', './plus-auth.css?v=60', './plus-icon.svg', './reader-admin.js?v=59', './safety-engine.js?v=57', './safety-enhancements.js?v=57.1', './safety-native.js?v=57', './safety-forms.css?v=57', './safety-native.css?v=57', './assets/icons/min-works-v4-180.png', './assets/icons/min-works-v4-192.png',
+  './', './mobile-update.css?v=60', './plus-icon-180.png', './plus-icon-192.png', './plus-icon-512.png', './index.html?v=57', './app-latest.css?v=53', './ui-foundation.css?v=57', './ui-modern.css?v=57', './ui-linear.css?v=57',
+  './report-update.js?v=57','./report-update.css?v=57','./documents-update.js?v=57','./documents-update.css?v=57','./navigation-refresh.js?v=57', './app-latest.js?v=60', './ui-experience.js?v=57', './manifest.webmanifest?v=57',
+  './reader.html', './reader.js?v=60', './reader.css?v=60', './reader.webmanifest?v=60', './plus-auth.js?v=60', './plus-auth.css?v=60', './plus-icon.svg', './reader-admin.js?v=60', './safety-engine.js?v=57', './safety-enhancements.js?v=57.1', './safety-native.js?v=57', './safety-forms.css?v=57', './safety-native.css?v=57', './assets/icons/min-works-v4-180.png', './assets/icons/min-works-v4-192.png',
   './assets/icons/min-works-v4-512.png'
 ];
 self.addEventListener('install', event => event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting())));
