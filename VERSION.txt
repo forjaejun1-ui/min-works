@@ -1,3 +1,7 @@
+MIN WORKS v59 / MIN WORKS PLUS v60
+2026-09-17
+Plus phone-first layout, live today count, dedicated install guide and app icons. Main mobile changes remain in test.
+
 MIN WORKS v59
 2026-09-17
 MIN WORKS Plus standalone install, registration and separate employee app permissions.
