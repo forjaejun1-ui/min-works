@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>TBM 회의록 v2.3 - 오늘 날짜 자동 표시 · 후수정 가능</title>
+<style>
+:root{--line:#111;--head:#e7e7e7;--ui:#f4f6f8;--accent:#3159a6;}
+*{box-sizing:border-box}
+body{margin:0;background:#eef1f4;font-family:"Malgun Gothic","Noto Sans KR",Arial,sans-serif;color:#111}
+.toolbar{max-width:1120px;margin:14px auto;background:#fff;border:1px solid #d7dce2;border-radius:10px;padding:14px 16px;box-shadow:0 2px 10px #0000000d}
+.toolbar h2{margin:0 0 10px;font-size:18px}
+.controls{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.control{border:1px solid #d5d9df;border-radius:7px;padding:9px;background:#fff}
+.control label{display:block;font-size:12px;font-weight:700;margin-bottom:5px}
+.control input{width:100%;height:36px;border:1px solid #bfc5cc;border-radius:5px;padding:0 9px;font-size:14px}
+.datetime{display:flex;gap:6px}
+.datetime input{min-width:0}
+.weather-picks{display:flex;gap:6px;flex-wrap:wrap}
+.weather-btn{width:58px;height:52px;border:1px solid #cfd4db;background:white;border-radius:8px;cursor:pointer;padding:3px;font-size:11px}
+.weather-btn.selected{outline:2px solid var(--accent);background:#eef4ff}
+
+.time-wrap{display:flex;gap:4px;min-width:0;flex:1}.time-wrap input{min-width:0}
+.weather-btn svg{display:block;margin:auto;width:28px;height:28px}
+.process-box{margin-top:12px;border-top:1px solid #ddd;padding-top:12px}
+.process-grid{display:flex;gap:6px;flex-wrap:wrap;max-height:150px;overflow:auto;padding:2px}
+.process-btn{border:1px solid #bcc4cf;background:#fff;border-radius:16px;padding:6px 10px;cursor:pointer;font-size:12px}
+.process-btn.selected{background:#263f76;color:#fff;border-color:#263f76}
+.actions{display:flex;gap:8px;margin-top:12px}
+.actions button{border:0;border-radius:6px;padding:9px 15px;cursor:pointer;font-weight:700}
+.primary{background:#253d70;color:#fff} .secondary{background:#e5e8ec;color:#222}
+.hint{font-size:12px;color:#5c6470;margin-top:7px}
+.sheet{width:1050px;min-height:1485px;margin:15px auto 40px;background:#fff;padding:24px 30px;box-shadow:0 3px 20px #0002}
+.tbm{width:100%;border-collapse:collapse;table-layout:fixed;font-size:14px}
+.tbm td,.tbm th{border:1.3px solid #111;padding:6px;vertical-align:middle}
+.title{height:150px;font-size:35px;font-weight:800;text-align:center}
+.label{font-weight:700;text-align:center;background:#fafafa}
+.info-row{height:56px}
+.date-display{text-align:center;font-size:15px}
+.weather-display{text-align:center;font-weight:700}
+.section-title{background:var(--head);font-size:16px;font-weight:800;height:40px}
+.content-cell{height:500px;vertical-align:top!important;padding:14px 16px!important;line-height:1.55}
+.content-empty{color:#888;text-align:center;margin-top:80px}
+.tbm-item{margin-bottom:15px;padding-bottom:12px;border-bottom:1px dashed #bbb}
+.tbm-item:last-child{border-bottom:none}
+.tbm-item .work-title{font-weight:800;font-size:15px;margin-bottom:5px}
+.tbm-item .line{margin:3px 0}
+.work-extra-input{width:100%;min-height:48px;border:1px solid #c8cdd4;border-radius:5px;padding:7px 8px;font:inherit;resize:vertical;background:#fff}
+.recognized{font-size:11px;color:#3159a6;margin:3px 0 6px}
+@media print{.work-extra-input{border:0;padding:0;min-height:24px;resize:none}}
+.attend-title{background:var(--head);font-weight:800;height:38px}
+.attend-head{background:#f6f6f6;text-align:center;font-weight:700;height:38px}
+.att-row td{height:42px;text-align:center}
+.name-input{width:100%;border:0;outline:none;text-align:center;font:inherit;background:transparent}
+.remark-title{background:var(--head);font-weight:800;height:38px}
+.remark-cell{height:90px;vertical-align:top!important}
+.remark-input{width:100%;height:72px;border:0;outline:none;resize:none;font:inherit}
+.sign-blank{background:#fff}
+@media(max-width:1100px){.sheet{transform-origin:top left;width:1050px;margin-left:10px}.controls{grid-template-columns:1fr 1fr}}
+@media print{
+ body{background:#fff}
+ .toolbar{display:none!important}
+ .sheet{margin:0;box-shadow:none;width:100%;min-height:auto;padding:8mm}
+ @page{size:A4 portrait;margin:6mm}
+ .tbm{font-size:11px}
+ .title{height:37mm;font-size:28px}
+ .content-cell{height:105mm}
+ .att-row td{height:8.5mm}
+ .remark-cell{height:17mm}
+}
+
+/* v1.8 — 위험성평가 최종본과 동일 계열의 MIN WORKS UI
+   실제 TBM 서류(.sheet/.tbm) 구조는 변경하지 않는다. */
+:root{
+  --ui-ink:#151619;
+  --ui-muted:#9ea2a9;
+  --ui-line:#303238;
+  --ui-lime:#8bd20a;
+  --ui-paper:#fff;
+}
+body{background:linear-gradient(135deg,#f8f9fa,#eff1f4)!important}
+.app{
+  min-height:100vh;
+  display:grid;
+  grid-template-columns:320px minmax(0,1fr);
+}
+.workspace{min-width:0;padding-bottom:60px}
+
+/* 상단 저장/출력 */
+.ui-actionbar{
+  position:sticky;
+  top:0;
+  z-index:30;
+  min-height:58px;
+  padding:10px 18px;
+  background:#fff;
+  border-bottom:1px solid #e2e5e9;
+  box-shadow:0 5px 18px rgba(22,25,30,.06);
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.ui-action-brand{
+  display:flex;align-items:center;gap:9px;margin-right:auto;
+  color:var(--ui-ink);font-size:12px;font-weight:900;letter-spacing:.12em;
+}
+.ui-mark{
+  display:grid;place-items:center;width:32px;height:32px;border-radius:9px;
+  background:var(--ui-lime);color:#101308;font-size:16px;font-weight:900;letter-spacing:0;
+}
+.ui-actions{display:flex;gap:8px;align-items:center}
+.ui-action{
+  height:38px;padding:0 15px;border-radius:10px;font-size:11.5px;
+  font-weight:800;cursor:pointer
+}
+.ui-save{border:1px solid var(--ui-ink);background:var(--ui-ink);color:#fff}
+.ui-save:hover{filter:brightness(1.08)}
+.ui-print{border:1px solid #dfe2e6;background:#fff;color:#383b40}
+.ui-print:hover{border-color:#aeb4bc;background:#fafbfc}
+
+/* 왼쪽 설정 */
+.toolbar.ui-settings{
+  position:sticky!important;
+  top:0!important;
+  align-self:start!important;
+  width:auto!important;
+  max-width:none!important;
+  height:100vh!important;
+  margin:0!important;
+  padding:20px 18px!important;
+  overflow:auto!important;
+  border:0!important;
+  border-radius:0!important;
+  background:var(--ui-ink)!important;
+  color:#fff!important;
+  box-shadow:none!important;
+}
+.ui-setting-block{margin:0 0 16px}
+.ui-section-label{
+  display:block;margin:0 0 9px;color:#fff;font-size:13px;
+  line-height:1.3;font-weight:800;
+}
+.ui-field{display:grid;gap:6px;margin-bottom:9px}
+.ui-field>span{font-size:10px;font-weight:800;color:#b7bbc1}
+.toolbar.ui-settings input{
+  width:100%;min-height:40px;border:1px solid #34373c;border-radius:10px;
+  background:#1c1e22;color:#fff;padding:8px 10px;outline:none;font-size:12px;
+}
+.toolbar.ui-settings input:focus{
+  border-color:var(--ui-lime);box-shadow:0 0 0 3px rgba(139,210,10,.14)
+}
+.toolbar.ui-settings input::placeholder{color:#777d85}
+.datetime{display:flex;gap:6px}
+.time-wrap{min-width:0;flex:1}
+
+.weather-picks{
+  display:grid!important;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:6px!important;
+  flex-wrap:nowrap!important;
+}
+.weather-btn{
+  width:100%!important;height:52px!important;border:1px solid #34373c!important;
+  background:#1c1e22!important;color:#d5d8dd!important;border-radius:10px!important;
+  cursor:pointer;padding:3px!important;font-size:10px!important
+}
+.weather-btn:hover{border-color:var(--ui-lime)!important;color:#fff!important}
+.weather-btn.selected{
+  outline:0!important;background:var(--ui-lime)!important;color:#101308!important;
+  border-color:var(--ui-lime)!important;font-weight:800
+}
+.weather-btn svg{display:block;margin:auto;width:25px;height:25px}
+
+.trade-section-label{margin-top:18px}
+.process-categories{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:0 0 10px
+}
+.process-category{
+  min-height:38px;border:1px solid #34373c;border-radius:10px;
+  background:#1c1e22;color:#d5d8dd;font-size:12px;font-weight:800;cursor:pointer
+}
+.process-category:hover{border-color:var(--ui-lime);color:#fff;background:#22252a}
+.process-category.active{
+  border-color:var(--ui-lime);background:var(--ui-lime);color:#101308
+}
+.process-grid{
+  display:grid!important;
+  gap:6px!important;
+  max-height:310px!important;
+  overflow:auto!important;
+  padding:2px!important;
+  margin:0!important;
+}
+.process-row{
+  display:grid;grid-template-columns:20px minmax(0,1fr);align-items:center;gap:8px;
+  min-height:38px;padding:6px 9px;border:1px solid #303238;border-radius:10px;
+  background:#1c1e22;color:#f1f3f5;cursor:pointer
+}
+.process-row:hover{border-color:#5a615f;background:#22252a}
+.process-row.selected{background:#222827;border-color:#536044}
+.process-row input{width:16px!important;height:16px!important;min-height:0!important;padding:0!important;accent-color:var(--ui-lime)}
+.process-name{font-size:11.5px;font-weight:750;line-height:1.25}
+.process-empty{
+  padding:12px;border:1px dashed #3b3e43;border-radius:10px;
+  background:#1c1e22;color:#aeb2b8;text-align:center;font-size:11px
+}
+.ui-status{
+  min-height:18px;margin-top:10px;color:#aeb2b8;font-size:10px;line-height:1.45
+}
+
+/* 문서는 기존 구조 유지. 작업공간에서 중앙 정렬만 함 */
+.workspace>.sheet{margin-left:auto!important;margin-right:auto!important}
+
+/* 작은 화면 */
+@media(max-width:1000px){
+  .app{grid-template-columns:1fr}
+  .toolbar.ui-settings{position:relative!important;height:auto!important;max-height:none!important}
+  .ui-actionbar{position:sticky}
+}
+
+/* A4 세로 출력 최적화 */
+@media print{
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  .toolbar.ui-settings,.ui-actionbar{display:none!important}
+  .app{display:block!important}
+  .workspace{padding:0!important}
+  body{background:#fff!important;margin:0!important}
+  @page{size:A4 portrait;margin:6mm}
+
+  .sheet{
+    width:198mm!important;
+    min-height:0!important;
+    margin:0!important;
+    padding:0!important;
+    box-shadow:none!important;
+  }
+  .tbm{width:100%!important;font-size:10.2px!important}
+  .tbm td,.tbm th{padding:1.8mm!important}
+  .title{height:24mm!important;font-size:25px!important}
+  .info-row{height:9mm!important}
+  .date-display{font-size:10.5px!important}
+  .weather-display{font-size:10.5px!important}
+  .section-title{height:7.5mm!important;font-size:11.5px!important}
+  .content-cell{
+    height:75mm!important;
+    max-height:75mm!important;
+    padding:3mm 4mm!important;
+    line-height:1.32!important;
+    overflow:hidden!important;
+  }
+  .tbm-item{margin-bottom:2.2mm!important;padding-bottom:1.7mm!important}
+  .tbm-item .work-title{font-size:10.8px!important;margin-bottom:1mm!important}
+  .tbm-item .line{margin:.7mm 0!important}
+  .recognized{font-size:8.5px!important;margin:.6mm 0 1mm!important}
+  .work-extra-input{
+    border:0!important;padding:0!important;min-height:5mm!important;
+    max-height:8mm!important;resize:none!important;font-size:9.7px!important
+  }
+  .attend-title{height:7mm!important}
+  .attend-head{height:6.8mm!important}
+  .att-row td{height:6mm!important;padding:1mm!important}
+  .remark-title{height:7mm!important}
+  .remark-cell{height:14mm!important}
+  .remark-input{height:12mm!important}
+}
+
+
+/* v1.9: 서류 직접수정 + 공정별 내용 직접편집 + 합정동 날씨 자동 */
+.weather-auto-note{
+  padding:10px 11px;border:1px solid #303238;border-radius:10px;
+  background:#1c1e22;color:#aeb2b8;font-size:10px;line-height:1.45;
+}
+.doc-direct-input{
+  width:100%;height:100%;min-height:36px;border:0!important;outline:0!important;
+  background:transparent!important;color:#111;font:inherit;padding:2px 4px;
+}
+.direct-datetime{
+  display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,.9fr) auto minmax(0,.9fr);
+  align-items:center;gap:4px;width:100%;
+}
+.direct-datetime input{
+  width:100%;min-width:0;height:34px;border:0;outline:0;background:transparent;
+  text-align:center;font:inherit;color:#111;padding:1px 2px;
+}
+.time-sep{font-weight:700;text-align:center}
+.print-only{display:none}
+.direct-date-cell{padding:3px 5px!important}
+
+.tbm-edit-block{margin:3px 0}
+.tbm-edit-label{font-weight:800;display:block;margin-bottom:2px}
+.tbm-content-edit{
+  width:100%;border:1px solid #c8cdd4;border-radius:5px;
+  padding:6px 7px;font:inherit;line-height:1.4;resize:vertical;
+  background:#fff;color:#111;min-height:38px;
+}
+.tbm-work-edit{min-height:40px}
+.tbm-risk-edit,.tbm-prec-edit{min-height:58px}
+
+@media print{
+  .screen-edit{display:none!important}
+  .print-only{display:block!important}
+  .direct-datetime-print{
+    text-align:center!important;font:inherit!important;color:#111!important;
+    white-space:nowrap!important
+  }
+  .doc-direct-input{
+    border:0!important;box-shadow:none!important;outline:0!important;
+    background:transparent!important;color:#111!important;
+    -webkit-appearance:none!important;appearance:none!important;padding:0!important
+  }
+  input[type="date"],input[type="time"]{
+    -webkit-appearance:none!important;appearance:none!important;background-image:none!important
+  }
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator,
+  input[type="date"]::-webkit-inner-spin-button,
+  input[type="time"]::-webkit-inner-spin-button{
+    display:none!important;-webkit-appearance:none!important
+  }
+  .tbm-content-edit{
+    border:0!important;border-radius:0!important;padding:0!important;
+    resize:none!important;background:transparent!important;color:#111!important;
+    overflow:hidden!important
+  }
+  .tbm-work-edit{min-height:4.5mm!important}
+  .tbm-risk-edit,.tbm-prec-edit{min-height:7mm!important}
+}
+
+
+/* v2.0: 직접 수정 중임을 직관적으로 표시 */
+.sheet .direct-edit-box{
+  transition:background .12s ease, box-shadow .12s ease, outline-color .12s ease;
+  cursor:text;
+}
+.sheet .direct-edit-box:hover{
+  background:#fffdf0!important;
+  box-shadow:inset 0 0 0 1px #d4a600!important;
+  border-radius:3px!important;
+}
+.sheet .direct-edit-box:focus{
+  background:#fff9d9!important;
+  box-shadow:inset 0 0 0 2px #d4a600!important;
+  border-radius:3px!important;
+  outline:none!important;
+}
+
+/* 날짜/시간도 수정할 때 같은 박스 효과 */
+.direct-datetime .direct-edit-box{
+  border:0!important;
+}
+.direct-datetime .direct-edit-box:hover,
+.direct-datetime .direct-edit-box:focus{
+  background:#fff9d9!important;
+}
+
+/* 좌측 검은 영역은 공정 선택 전용 */
+.toolbar.ui-settings{
+  padding-top:24px!important;
+}
+.toolbar.ui-settings .trade-section-label{
+  margin-top:0!important;
+}
+.toolbar.ui-settings .process-grid{
+  max-height:calc(100vh - 150px)!important;
+}
+
+/* 출력에는 수정 박스/포커스 표시 절대 노출 금지 */
+@media print{
+  .sheet .direct-edit-box,
+  .sheet .direct-edit-box:hover,
+  .sheet .direct-edit-box:focus{
+    background:transparent!important;
+    box-shadow:none!important;
+    outline:none!important;
+    border-radius:0!important;
+  }
+}
+
+
+/* v2.1: TBM 장소 고정 선택형 */
+.doc-place-select{
+  width:100%!important;
+  height:36px!important;
+  min-height:36px!important;
+  border:0!important;
+  outline:0!important;
+  background:transparent!important;
+  color:#111!important;
+  font:inherit!important;
+  text-align:center!important;
+  text-align-last:center!important;
+  padding:2px 22px 2px 4px!important;
+  cursor:pointer!important;
+}
+.doc-place-select option{
+  color:#111;
+  background:#fff;
+}
+
+/* PDF 출력 방향을 A4 세로로 강제 */
+@page{
+  size:210mm 297mm!important;
+  margin:6mm!important;
+}
+@media print{
+  html,body{
+    width:210mm!important;
+    min-width:210mm!important;
+    max-width:210mm!important;
+    height:auto!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:visible!important;
+  }
+
+  .app,.workspace{
+    display:block!important;
+    width:198mm!important;
+    min-width:198mm!important;
+    max-width:198mm!important;
+    margin:0!important;
+    padding:0!important;
+  }
+
+  .sheet{
+    width:198mm!important;
+    min-width:198mm!important;
+    max-width:198mm!important;
+    height:auto!important;
+    min-height:0!important;
+    margin:0!important;
+    padding:0!important;
+    transform:none!important;
+    zoom:1!important;
+    box-shadow:none!important;
+    overflow:visible!important;
+    page-break-inside:avoid!important;
+  }
+
+  .tbm{
+    width:198mm!important;
+    min-width:198mm!important;
+    max-width:198mm!important;
+    table-layout:fixed!important;
+  }
+
+  .doc-place-select{
+    -webkit-appearance:none!important;
+    appearance:none!important;
+    background-image:none!important;
+    padding:0!important;
+    text-align:center!important;
+    text-align-last:center!important;
+    color:#111!important;
+  }
+  .doc-place-select::-ms-expand{display:none!important}
+}
+
+
+/* v2.2: 참석자 영역 스마트 페이지 분리
+   - 남은 공간에 전부 들어가면 같은 A4에 이어서 출력
+   - 전부 들어가지 않으면 참석자+비고 블록 전체를 다음 A4로 이동 */
+.tbm-attendance{
+  margin-top:-1.3px; /* 화면에서는 원래 하나의 표처럼 연결 */
+  break-inside:avoid;
+  page-break-inside:avoid;
+}
+
+@media print{
+  .tbm-attendance{
+    width:198mm!important;
+    min-width:198mm!important;
+    max-width:198mm!important;
+    margin-top:-1.3px!important;
+    table-layout:fixed!important;
+
+    /* 핵심: 참석자 블록을 중간에서 자르지 않음 */
+    break-inside:avoid-page!important;
+    page-break-inside:avoid!important;
+  }
+
+  /* 참석자 제목부터 비고까지 한 덩어리로 유지 */
+  .tbm-attendance tr,
+  .tbm-attendance tbody{
+    break-inside:avoid!important;
+    page-break-inside:avoid!important;
+  }
+
+  /* 브라우저가 표의 첫 행만 앞 페이지에 남기는 현상 방지 */
+  .tbm-attendance .attend-title{
+    break-after:avoid!important;
+    page-break-after:avoid!important;
+  }
+}
+
+</style>
+<style>@media screen{.ui-actionbar{display:none!important}.app{max-width:none!important;margin:0!important;padding:8px!important;grid-template-columns:180px minmax(0,1fr)}.workspace{overflow:auto}.sheet{box-shadow:none!important}.ui-settings{position:sticky;top:8px}}@media screen and (max-width:900px){.app{grid-template-columns:1fr}.ui-settings{position:static!important;max-height:210px;overflow:auto}.workspace{width:100%}}</style><style>@media screen{html,body{height:auto!important;min-height:0!important}.app{min-height:0!important;height:auto!important;align-items:start}.toolbar.ui-settings{height:auto!important;min-height:0!important;max-height:none!important}.workspace{padding-bottom:12px!important}.tbm-weather-editor{margin-top:18px;display:grid;gap:6px;color:#fff;font-size:12px}.tbm-weather-editor select,.tbm-weather-editor input{width:100%;min-height:36px;padding:6px;border-radius:6px;border:1px solid #ccc}}</style><style>@media screen{
+.toolbar.ui-settings{padding:12px!important;gap:8px!important;margin-bottom:12px!important}
+.toolbar.ui-settings #processSearch{max-width:300px!important;flex:1 1 240px!important}
+#processSelectionCount{font-size:12px;color:#5e782e;font-weight:700}
+.toolbar.ui-settings .process-categories{display:none!important}
+.toolbar.ui-settings .process-category{height:30px!important;min-height:30px!important;padding:5px 12px!important;font-size:11px!important}
+.toolbar.ui-settings .process-grid{display:block!important;max-height:240px!important;padding-top:6px!important}
+.process-button-row{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px}
+.process-button-row.short-processes button.process-row{flex:0 0 auto!important;width:auto!important;min-width:54px!important;max-width:82px!important}
+.process-button-row.long-processes button.process-row{flex:0 0 auto!important;width:auto!important;min-width:94px!important}
+.process-button-row.selected-processes button.process-row{flex:0 0 auto!important;width:auto!important;min-width:72px!important}
+.toolbar.ui-settings button.process-row{display:flex!important;justify-content:space-between!important;align-items:center!important;cursor:pointer;min-height:31px!important;padding:5px 8px!important;text-align:left;font:inherit}
+.toolbar.ui-settings .process-name{font-size:11px!important;line-height:1.15!important;white-space:nowrap!important}
+.toolbar.ui-settings button.process-row.selected{background:#edf5d9!important;border-color:#a8c76b!important;color:#49691d!important}
+.process-group-label{font-size:10px;font-weight:700;color:#77816b;padding:2px 0 4px}
+.process-empty{display:flex;align-items:center;justify-content:center;min-height:38px;width:100%;box-sizing:border-box;color:#77816b!important;background:#fafbf8!important;border:1px dashed #cbd4c0!important;border-radius:9px;font-size:11px;padding:9px 12px;text-align:center}
+button.process-row:focus-visible{outline:2px solid #769d2c;outline-offset:1px}
+}@media(max-width:600px){.process-button-row.short-processes button.process-row{min-width:50px!important;max-width:72px!important}.process-button-row.long-processes button.process-row{flex:1 1 calc(50% - 4px)!important;max-width:calc(50% - 2px)!important}.toolbar.ui-settings button.process-row{padding:5px 6px!important}.toolbar.ui-settings .process-name{font-size:10px!important}.toolbar.ui-settings .tbm-weather-editor{order:6!important}}
+</style><link rel="stylesheet" href="document-tool-theme.css?v=docs20"></head>
+<body>
+<div class="tbm-hidden-state" hidden>
+  <input type="hidden" id="dateInput">
+  <input type="hidden" id="startTime">
+  <input type="hidden" id="endTime">
+  <input type="hidden" id="siteNameInput">
+  <input type="hidden" id="companyInput">
+  <input type="hidden" id="placeInput">
+  <input type="hidden" id="tempInput">
+</div>
+<div class="app">
+  <aside class="toolbar ui-settings noprint">
+    <div class="ui-section-label trade-section-label">공정 선택</div>
+    <input id="processSearch" type="search" aria-label="공정 자동완성" placeholder="공정명 입력 · 예: 금속" autocomplete="off" oninput="renderProcesses()" onkeydown="handleProcessSearchKey(event)"><span id="processSelectionCount" aria-live="polite"></span><div id="processCategoryTabs" class="process-categories"></div>
+    <div id="processGrid" class="process-grid"></div><div class="tbm-weather-editor"><label>날씨<select id="integratedWeather" aria-label="날씨"><option value="">선택</option><option>맑음</option><option>흐림</option><option>비</option><option>눈</option><option>기타</option></select></label><label>기온 (℃)<input id="integratedTemp" type="number" aria-label="기온"></label></div>
+  </aside>
+
+  <main class="workspace">
+    <header class="ui-actionbar noprint">
+      <div class="ui-action-brand" aria-hidden="true"><span class="ui-mark">M</span><span>MIN WORKS</span></div>
+      <div class="ui-actions">
+        <button class="ui-action ui-save" type="button" onclick="saveTbmNow()">저장</button>
+        <button class="ui-action ui-print" type="button" onclick="window.print()">A4 PDF / 출력</button>
+      </div>
+    </header>
+
+<div class="sheet">
+<table class="tbm">
+<colgroup>
+ <col style="width:9.6%"><col style="width:11.6%"><col style="width:11.8%">
+ <col style="width:9.6%"><col style="width:11.6%"><col style="width:11.8%">
+ <col style="width:9.6%"><col style="width:11.6%"><col style="width:12.8%">
+</colgroup>
+<tr><td class="title" colspan="9">Tool Box Meeting 회의록</td></tr>
+<tr class="info-row">
+ <td class="label" colspan="2">TBM 일시</td>
+ <td class="date-display direct-date-cell" id="dateDisplay" colspan="4">
+   <div class="direct-datetime screen-edit">
+     <input type="date" class="direct-edit-box" id="docDateInput" aria-label="TBM 날짜" title="오늘 날짜가 자동 표시됩니다. 다른 날짜로 변경할 수 있습니다.">
+     <input type="time" class="direct-edit-box" id="docStartTime" aria-label="시작시간">
+     <span class="time-sep">~</span>
+     <input type="time" class="direct-edit-box" id="docEndTime" aria-label="마침시간">
+   </div>
+   <span class="print-only direct-datetime-print" id="datePrintText"></span>
+ </td>
+ <td class="weather-display" id="weatherDisplay" colspan="3">(날 씨 : &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; / 기온 : &nbsp;&nbsp;&nbsp; ℃)</td>
+</tr>
+<tr class="info-row">
+ <td class="label" colspan="2">현 장 명</td><td id="siteNameDisplay" colspan="7"><input class="doc-direct-input direct-edit-box" id="docSiteNameInput" type="text" placeholder="현장명 입력"></td>
+</tr>
+<tr class="info-row">
+ <td class="label" colspan="2">업 체 명</td><td id="companyDisplay" colspan="3"><input class="doc-direct-input direct-edit-box" id="docCompanyInput" type="text" placeholder="업체명 입력"></td>
+ <td class="label" colspan="2">TBM 장소</td>
+<td id="placeDisplay" colspan="2">
+  <select class="doc-direct-input direct-edit-box doc-place-select" id="docPlaceInput" aria-label="TBM 장소">
+    <option value="">장소 선택</option>
+    <option value="현장 내 집합소">현장 내 집합소</option>
+    <option value="현장사무실">현장사무실</option>
+    <option value="본사사무실">본사사무실</option>
+    <option value="현장">현장</option>
+    <option value="안전교육장">안전교육장</option>
+  </select>
+</td>
+</tr>
+<tr class="info-row">
+ <td class="label" colspan="2">작 업 명</td><td id="workDisplay" colspan="7"></td>
+</tr>
+<tr><td class="section-title" colspan="9">■ 작업 내용 및 TBM 전달 내용</td></tr>
+<tr><td class="content-cell" id="contentDisplay" colspan="9"><div class="content-empty">상단에서 작업명을 선택하면 TBM 전달 내용이 자동 작성됩니다.</div></td></tr>
+</table>
+
+<table class="tbm tbm-attendance">
+<colgroup>
+ <col style="width:9.6%"><col style="width:11.6%"><col style="width:11.8%">
+ <col style="width:9.6%"><col style="width:11.6%"><col style="width:11.8%">
+ <col style="width:9.6%"><col style="width:11.6%"><col style="width:12.8%">
+</colgroup>
+<tr><td class="attend-title" colspan="9">■ 참석자 확인&nbsp;&nbsp;&nbsp;※ TBM에 참여하지 않은 작업자를 확인하여 참석 유도</td></tr>
+<tr>
+ <td class="attend-head">연번</td><td class="attend-head">이 름</td><td class="attend-head">서 명</td>
+ <td class="attend-head">연번</td><td class="attend-head">이 름</td><td class="attend-head">서 명</td>
+ <td class="attend-head">연번</td><td class="attend-head">이 름</td><td class="attend-head">서 명</td>
+</tr>
+<tbody id="attendeeRows"></tbody>
+<tr><td class="remark-title" colspan="9">■ 비 고</td></tr>
+<tr><td class="remark-cell" colspan="9"><textarea class="remark-input" id="remarkInput"></textarea></td></tr>
+</table>
+</div>
+
+  </main>
+</div>
+
+<script>
+const PROCESS_DATA={"지장물조사":{"work":"기존 전선·배관·덕트·설비 위치 확인 및 작업구간 마킹","risk":["은폐된 전선·배관 오인으로 인한 감전·누수","천장 내부 확인 중 작업발판 추락","조사 누락으로 후속 천공·철거 시 설비 파손"],"prec":["도면과 현장 탐지결과를 대조하고 의심부 시험확인","천장 점검은 안전한 작업발판 사용, 하부 출입통제","확인된 지장물 위치를 색상 마킹하고 작업반장에게 인계"]},"철거공사":{"work":"천장·벽체·바닥 마감 및 기존 설비 철거, 폐기물 반출","risk":["잔존 전기·배관 미차단 상태에서 철거 중 감전·누수","천장재·설비·철거재 낙하에 의한 맞음","커팅·파쇄 작업 중 비산물·분진·소음 노출"],"prec":["철거 전 전원·급수 차단 및 검전 후 작업","상부부터 소구간 순차철거, 하부 출입통제","집진장비 사용, 보안경·방진마스크·귀마개 착용"]},"가설공사":{"work":"가설칸막이·통로·보양시설 설치 및 유지관리","risk":["미고정 가설벽체·패널 전도","가설통로 단차·적치물로 인한 넘어짐","상부 조립 시 작업발판 추락"],"prec":["프레임 세움 즉시 임시지지 후 본체결","통로 폭 확보, 단차 제거 및 비상동선 상시 유지","작업대 바퀴·난간 점검 후 사용, 탑승상태 이동 금지"]},"설비공사":{"work":"급·배수 배관, 위생기구, 펌프·밸브 설치 및 시험","risk":["배관 절단·가공 시 회전체·날 접촉","천장 배관 설치 중 작업발판 추락·공구 낙하","통수·압력시험 중 접속부 이탈·누수"],"prec":["배관을 바이스에 고정하고 공구 보호장치 확인","상부 작업 시 안정된 작업대 사용 및 하부 통제","시험압력 준수, 가압 중 접속부 정면 접근 금지"]},"전기공사":{"work":"배관·배선·케이블 포설, 분전반·조명·기구 결선","risk":["오통전·무전압 미확인으로 감전","케이블 포설 중 손 끼임·케이블 낙하","천장 배선 작업 중 추락·공구 낙하"],"prec":["전원 차단·잠금표찰 후 검전하고 절연공구 사용","포설지휘자 1인 지정, 굴곡부 손 접근 금지","작업대 수평·잠금 확인, 공구 낙하방지줄 사용"]},"금속공사":{"work":"각관·철판·STS 절단, 용접, 타공 및 프레임 설치","risk":["그라인더·절단석 파손에 의한 비산·절상","용접 불티에 의한 화재·화상","장척 금속재 운반·세움 중 충돌·전도"],"prec":["정격 절단석·보호커버 사용, 자재 클램프 고정","가연물 제거·방화포·소화기·화재감시자 배치","장척물 2인 운반, 전용거치대 사용 및 통행통제"]},"경량공사":{"work":"행거볼트·캐링·M-Bar·스터드 설치 및 석고보드 취부","risk":["슬래브 천공 중 매립 전선·배관 손상","석고보드 상부 취부 중 보드 낙하","이동식비계·작업대 사용 중 추락"],"prec":["천공 전 탐지·마킹하고 깊이 제한 후 작업","보드 2인 취급 또는 보드리프트 사용, 하부 통제","비계 바퀴 잠금·아웃트리거·난간 확인"]},"목공사":{"work":"목재·합판 재단, 천장·벽체 목틀 및 가구 바탕틀 설치","risk":["원형톱·각도절단기 접촉 및 킥백","타카핀 오발·관통","천장 목틀 고정 전 자재 낙하·작업발판 추락"],"prec":["자재 클램프 고정, 톱날 안전커버 유지","타카 총구 방향 통제, 자재 뒷면 손대지 않기","목재 임시고정 후 본체결, 안전한 작업대 사용"]},"도장공사":{"work":"퍼티·샌딩, 수성/유성도장, 에어리스 분사도장","risk":["도료·신너 유증기 흡입 및 피부 노출","에어리스 고압 분사에 의한 주입상해","천장·벽 상부 도장 중 추락"],"prec":["MSDS 확인, 환기 및 적합 보호구 착용","노즐 청소 전 전원정지·압력완전해제","작업대 재배치, 난간·바퀴잠금 확인"]},"타일공사":{"work":"바탕면 정리, 타일 절단·압착, 줄눈 및 코너 마감","risk":["절단 시 파편·분진에 의한 안구·호흡기 손상","대형 벽타일 양생 전 탈락","반복적인 저자세 작업으로 근골격계 부담"],"prec":["습식절단 또는 집진, 보안경·방진마스크 착용","배면도포·임시지지 후 충분히 양생","무릎보호대 사용, 작업교대·휴식 실시"]},"석공사":{"work":"석재·인조대리석 재단, 운반, 접착·앵커 고정","risk":["대형 석재·상판 전도·낙하","석재 절단분진 및 비산물 노출","흡착기·운반 중 손 끼임"],"prec":["정격 흡착기·A형거치대 사용, 2인 이상 취급","습식절단·집진 및 방진보호구 착용","운반경로 확보, 손을 판재 하부에 넣지 않기"]},"유리공사":{"work":"유리 반입·흡착운반·프레임 삽입·하드웨어 설치","risk":["흡착기 이탈로 유리 낙하·파손","유리문 임시고정 미흡으로 전도","파손 유리 취급 중 베임"],"prec":["흡착패드·진공상태 확인 후 2인 이상 운반","본체결 전까지 고임목·임시지지 유지","절단방지장갑 착용, 파손유리는 전용용기 수거"]},"필름공사":{"work":"바탕 정리, 프라이머 도포, 필름 재단·부착·열성형","risk":["커터칼 사용 중 손 베임","열풍기 과열·고온부 접촉으로 화상·화재","프라이머 유증기·피부 노출"],"prec":["칼날 최소 노출, 몸 바깥방향으로 재단","열풍기 한 지점 장시간 가열 금지, 내열거치대 사용","환기 후 소량 도포, 보호장갑 착용"]},"도배공사":{"work":"바탕 퍼티·초배·벽지 재단·풀칠·정배","risk":["풀칠기 롤러 끼임","상단 벽지 시공 중 사다리 추락","도배칼 사용 중 베임"],"prec":["청소 전 전원차단, 작동 중 롤러 접근 금지","가능한 작업대 사용, 사다리 측면 몸내밀기 금지","몸 바깥방향 절단, 폐칼날 전용함 사용"]},"바닥공사":{"work":"데코타일·LVT·장판·마루 재단, 접착 및 마감","risk":["접착제 유증기 흡입","커터·절단기 사용 중 베임","장시간 무릎작업으로 근골격계 부담"],"prec":["환기·MSDS 확인 및 저취 접착제 사용","재단받침판 사용, 손을 절단선 밖에 유지","무릎보호대·작업교대, 자재를 가까이 분할배치"]},"가구공사":{"work":"제작가구·카운터·정수기하우징 반입, 조립·고정","risk":["키큰장·상부장 고정불량으로 전도·탈락","상판·가구 운반 중 협착·근골격계 부담","현장 타공 중 설비·전선 손상"],"prec":["바탕재 확인 후 적정 앵커로 구조고정","2인 이상 또는 대차·흡착기 사용","타공 전 설비 위치 확인 및 전원·급수 차단"]},"사인공사":{"work":"채널·라이팅박스 설치, SMPS·LED 배선 및 점등시험","risk":["사인물 양중 중 낙하·충돌","SMPS 결선 중 감전·오결선","고소작업 중 추락"],"prec":["2점 인양·태그라인 사용, 하부 통제","전원차단·검전 후 AC/DC 단자 구분 결선","작업대 안전장치 확인, 공구 낙하방지"]},"소방공사":{"work":"소방배관·헤드·감지기·비상조명 설치 및 시험","risk":["천장 배관·헤드 설치 중 추락·낙하","배관 절단·나사 작업 중 협착·베임","시험 중 배관 접속부 누수·이탈"],"prec":["안전한 작업발판 사용, 하부 출입통제","배관 고정 후 가공, 회전체 접근 금지","시험압력 준수 및 가압구간 접근 제한"]},"냉난방공사":{"work":"실내기·실외기 설치, 냉매배관·드레인·전원 연결","risk":["고소작업대 상승 중 천장 구조물 끼임","브레이징 불티에 의한 화재","중량 실외기 운반·설치 중 협착"],"prec":["상부 장애물 확인 후 저속 상승, 과상승방지 점검","방화포·소화기·화재감시자 배치","정격 운반구·2인 작업, 본체결 후 인양구 해제"]},"덕트공사":{"work":"덕트 행거 설치, 덕트 양중·조립·플랜지 체결","risk":["덕트 양중 중 낙하","판금 절단면에 의한 베임","고소작업대 상승 중 끼임·추락"],"prec":["균형줄걸이·하부통제, 본체결 후 인양구 해제","절단면 디버링, 절단방지장갑 착용","상부 장애물·과상승방지장치 확인"]},"큐비클공사":{"work":"화장실 큐비클 판넬·브라켓·상부바·문짝 설치","risk":["판넬 세움 중 전도·손 끼임","벽체 천공 중 매립배관·전선 손상","상부바 설치 중 작업발판 추락"],"prec":["2인 세움, 임시클램프·고임목 사용","천공 전 탐지·마킹 및 깊이 제한","안정된 작업대 사용, 바퀴·잠금 확인"]},"중문공사":{"work":"중문 레일·프레임·문짝 설치 및 작동조정","risk":["문짝 설치·조정 중 손가락 협착","유리문·문짝 전도·이탈","상부 레일 설치 중 추락"],"prec":["2인 작업, 고임목·흡착기 사용","본체결 완료 전 임시지지 유지","안전한 작업대 사용, 하부 출입통제"]},"외부판넬공사":{"work":"외부 판넬 양중·설치·고정 및 조인트 실링","risk":["강풍에 판넬 흔들림·낙하","고소작업대 추락·끼임","임시고정 이탈로 판넬 전도"],"prec":["풍속 확인, 태그라인으로 방향제어","안전대 체결·과상승방지 점검","본체결 완료 전 임시지지 해제 금지"]},"비계공사":{"work":"비계 조립·사용·해체 및 작업발판 설치","risk":["벽이음·가새 미설치로 비계 전도·붕괴","작업발판·승강 중 추락","해체 부재 낙하"],"prec":["기준에 맞는 벽이음·가새 설치 후 사용","전폭발판·안전난간·승강로 확보","해체구역 하부통제, 부재 투척 금지"]},"조경공사":{"work":"수목·화초 식재, 예초·전정 및 조경자재 운반","risk":["수목 양중 중 낙하·전도","예초기 비산물에 의한 안구·신체 손상","경사·습윤지 이동 중 미끄러짐"],"prec":["정격 슬링·태그라인 사용, 하부 통제","작업반경 통제, 안면보호구 착용","작업로 정리, 우천 후 미끄럼 상태 확인"]},"준공청소":{"work":"보양재 제거, 바닥·유리·집기 청소 및 잔재 정리","risk":["커터·스크레이퍼 사용 중 베임","젖은 바닥에서 미끄러짐","상부 유리 청소 중 추락"],"prec":["안전커터 사용, 몸 바깥방향 절단","젖은 구간 표지·구획청소·즉시 건조","고소청소는 작업대 사용 및 하부통제"]},"조적·미장·견출공사":{"work":"바탕면 정리, 타일 절단·압착, 줄눈 및 코너 마감","risk":["절단 시 파편·분진에 의한 안구·호흡기 손상","대형 벽타일 양생 전 탈락","반복적인 저자세 작업으로 근골격계 부담"],"prec":["습식절단 또는 집진, 보안경·방진마스크 착용","배면도포·임시지지 후 충분히 양생","무릎보호대 사용, 작업교대·휴식 실시"]},"마루공사":{"work":"데코타일·LVT·장판·마루 재단, 접착 및 마감","risk":["접착제 유증기 흡입","커터·절단기 사용 중 베임","장시간 무릎작업으로 근골격계 부담"],"prec":["환기·MSDS 확인 및 저취 접착제 사용","재단받침판 사용, 손을 절단선 밖에 유지","무릎보호대·작업교대, 자재를 가까이 분할배치"]},"장판공사":{"work":"데코타일·LVT·장판·마루 재단, 접착 및 마감","risk":["접착제 유증기 흡입","커터·절단기 사용 중 베임","장시간 무릎작업으로 근골격계 부담"],"prec":["환기·MSDS 확인 및 저취 접착제 사용","재단받침판 사용, 손을 절단선 밖에 유지","무릎보호대·작업교대, 자재를 가까이 분할배치"]},"인조대리석공사":{"work":"석재·인조대리석 재단, 운반, 접착·앵커 고정","risk":["대형 석재·상판 전도·낙하","석재 절단분진 및 비산물 노출","흡착기·운반 중 손 끼임"],"prec":["정격 흡착기·A형거치대 사용, 2인 이상 취급","습식절단·집진 및 방진보호구 착용","운반경로 확보, 손을 판재 하부에 넣지 않기"]},"금속잡철물공사":{"work":"각관·철판·STS 절단, 용접, 타공 및 프레임 설치","risk":["그라인더·절단석 파손에 의한 비산·절상","용접 불티에 의한 화재·화상","장척 금속재 운반·세움 중 충돌·전도"],"prec":["정격 절단석·보호커버 사용, 자재 클램프 고정","가연물 제거·방화포·소화기·화재감시자 배치","장척물 2인 운반, 전용거치대 사용 및 통행통제"]},"금속창호/커튼월공사":{"work":"각관·철판·STS 절단, 용접, 타공 및 프레임 설치","risk":["그라인더·절단석 파손에 의한 비산·절상","용접 불티에 의한 화재·화상","장척 금속재 운반·세움 중 충돌·전도"],"prec":["정격 절단석·보호커버 사용, 자재 클램프 고정","가연물 제거·방화포·소화기·화재감시자 배치","장척물 2인 운반, 전용거치대 사용 및 통행통제"]},"가설전기공사":{"work":"배관·배선·케이블 포설, 분전반·조명·기구 결선","risk":["오통전·무전압 미확인으로 감전","케이블 포설 중 손 끼임·케이블 낙하","천장 배선 작업 중 추락·공구 낙하"],"prec":["전원 차단·잠금표찰 후 검전하고 절연공구 사용","포설지휘자 1인 지정, 굴곡부 손 접근 금지","작업대 수평·잠금 확인, 공구 낙하방지줄 사용"]},"RPP공사":{"work":"외부 판넬 양중·설치·고정 및 조인트 실링","risk":["강풍에 판넬 흔들림·낙하","고소작업대 추락·끼임","임시고정 이탈로 판넬 전도"],"prec":["풍속 확인, 태그라인으로 방향제어","안전대 체결·과상승방지 점검","본체결 완료 전 임시지지 해제 금지"]},"패널설치공사":{"work":"외부 판넬 양중·설치·고정 및 조인트 실링","risk":["강풍에 판넬 흔들림·낙하","고소작업대 추락·끼임","임시고정 이탈로 판넬 전도"],"prec":["풍속 확인, 태그라인으로 방향제어","안전대 체결·과상승방지 점검","본체결 완료 전 임시지지 해제 금지"]},"몰딩공사":{"work":"목재·합판 재단, 천장·벽체 목틀 및 가구 바탕틀 설치","risk":["원형톱·각도절단기 접촉 및 킥백","타카핀 오발·관통","천장 목틀 고정 전 자재 낙하·작업발판 추락"],"prec":["자재 클램프 고정, 톱날 안전커버 유지","타카 총구 방향 통제, 자재 뒷면 손대지 않기","목재 임시고정 후 본체결, 안전한 작업대 사용"]},"수장공사":{"work":"행거볼트·캐링·M-Bar·스터드 설치 및 석고보드 취부","risk":["슬래브 천공 중 매립 전선·배관 손상","석고보드 상부 취부 중 보드 낙하","이동식비계·작업대 사용 중 추락"],"prec":["천공 전 탐지·마킹하고 깊이 제한 후 작업","보드 2인 취급 또는 보드리프트 사용, 하부 통제","비계 바퀴 잠금·아웃트리거·난간 확인"]}};
+
+const TBM_CATEGORIES=["건축","가설","인테리어골조","수장"];
+const TBM_CATEGORY_MAP={
+  "건축":["지장물조사","굴착공사","되메우기공사","기초타설공사","금속잡철물공사","패널설치공사","금속창호(커튼월)공사","조경공사"],
+  "가설":["가설공사","가설전기공사","비계공사","RPP공사"],
+  "인테리어골조":["철거공사","조적·미장·견출공사","설비공사","방수공사","전기공사","금속공사","경량공사","목공사","에어컨공사","덕트공사"],
+  "수장":["도장공사","타일공사","석재타일공사","인조대리석공사","수장공사","도배공사","마루공사","장판공사","필름공사","큐비클공사","사인공사","몰딩공사","가구공사"]
+};
+const TBM_ALL_PROCESSES=TBM_CATEGORIES.flatMap(c=>TBM_CATEGORY_MAP[c]);
+let activeProcessCategory="";
+
+/* 최종 위험성평가의 공정명과 TBM 기존 데이터명을 연결 */
+PROCESS_DATA["금속창호(커튼월)공사"]=PROCESS_DATA["금속창호/커튼월공사"];
+PROCESS_DATA["에어컨공사"]=PROCESS_DATA["냉난방공사"];
+PROCESS_DATA["석재타일공사"]=PROCESS_DATA["석공사"];
+
+/* 기존 TBM에 없던 공정은 오프라인 기본자료 추가 */
+PROCESS_DATA["굴착공사"]={
+  work:"굴착선 확인, 단계굴착, 굴착면 정리 및 토사 반출",
+  risk:["굴착기 회전반경 내 작업자 진입으로 충돌·협착","굴착면 붕괴로 작업자 매몰","매설 전선·배관 파손으로 감전·누수"],
+  prec:["유도자 지정 및 장비 작업반경 출입통제","굴착면·흙막이·배수상태 확인 후 진입","굴착 전 매설물 탐지·시험굴착 실시"]
+};
+PROCESS_DATA["되메우기공사"]={
+  work:"되메움재 반입, 층별 포설, 함수비 조정 및 다짐",
+  risk:["덤프트럭 후진 중 작업자 충돌","다짐장비 사용 중 손발 협착·진동노출","매설배관 상부 과다다짐으로 배관 파손"],
+  prec:["후진 유도자 배치 및 차량동선 분리","장비 정지 후 방향전환·점검, 보호구 착용","보호토 두께 확보 후 단계별 다짐 실시"]
+};
+PROCESS_DATA["기초타설공사"]={
+  work:"레미콘 유도, 펌프카 타설, 바이브레이터 다짐 및 표면마감",
+  risk:["펌프카 타설호스 요동·이탈로 작업자 가격","습윤부 전동 바이브레이터 사용 중 감전","레미콘·펌프카 이동 중 작업자 충돌"],
+  prec:["호스 연결부·클램프 확인, 끝단 2인 제어","누전차단기·접지 확인 및 손상전선 사용금지","신호수 지정, 장비 이동반경 출입통제"]
+};
+PROCESS_DATA["방수공사"]={
+  work:"바탕정리, 프라이머·방수재 도포, 시트 접착 및 보강",
+  risk:["프라이머·용제 증기 흡입 및 피부노출","토치·열풍기 사용 중 화재·화상","습윤·도막면 이동 중 미끄러짐"],
+  prec:["MSDS 확인, 환기 및 유기용제용 보호구 착용","가연물 제거·소화기 배치·화기감시 실시","작업구간 분리 및 이동통로 건조상태 유지"]
+};
+
+let selectedProcesses=[];
+let selectedWeather="";
+let customWork={};
+let customTbmDetails={};
+const ids=["dateInput","startTime","endTime","siteNameInput","companyInput","placeInput","tempInput","remarkInput"];
+
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function processLabel(name){
+  if(name==="목공사") return "목공";
+  if(name==="금속창호(커튼월)공사" || name==="금속창호/커튼월공사") return "커튼월";
+  return String(name||"").replace(/공사$/,"");
+}
+function documentProcessLabel(name){
+  const shortName=processLabel(name);
+  return String(name||"").endsWith("공사") ? shortName+" 공사" : shortName;
+}
+function loadState(){
+ try{return JSON.parse(localStorage.getItem("SafetyV27:TBMToolV23")||"{}")}catch(e){return {}}
+}
+function saveState(){
+ const st={selectedProcesses,selectedWeather,customWork,customTbmDetails,activeProcessCategory};
+ ids.forEach(id=>st[id]=document.getElementById(id)?.value||"");
+ st.names=Array(30).fill("");
+ document.querySelectorAll(".name-input").forEach(x=>{st.names[Number(x.dataset.n)]=x.value;});
+ localStorage.setItem("SafetyV27:TBMToolV23",JSON.stringify(st));
+ if(window.parent!==window)window.parent.dispatchEvent(new CustomEvent("minworks:tbm-input"));
+}
+
+function syncHiddenFromDocument(){
+  const pairs=[
+    ["docDateInput","dateInput"],
+    ["docStartTime","startTime"],
+    ["docEndTime","endTime"],
+    ["docSiteNameInput","siteNameInput"],
+    ["docCompanyInput","companyInput"],
+    ["docPlaceInput","placeInput"]
+  ];
+  pairs.forEach(([from,to])=>{
+    const a=document.getElementById(from), b=document.getElementById(to);
+    if(a&&b)b.value=a.value||"";
+  });
+}
+function syncDocumentFromHidden(){
+  const pairs=[
+    ["docDateInput","dateInput"],
+    ["docStartTime","startTime"],
+    ["docEndTime","endTime"],
+    ["docSiteNameInput","siteNameInput"],
+    ["docCompanyInput","companyInput"],
+    ["docPlaceInput","placeInput"]
+  ];
+  pairs.forEach(([to,from])=>{
+    const a=document.getElementById(to), b=document.getElementById(from);
+    if(a&&b)a.value=b.value||"";
+  });
+  const place=document.getElementById("docPlaceInput");
+  if(place){
+    const allowedPlaces=["","현장 내 집합소","현장사무실","본사사무실","현장","안전교육장"];
+    if(!allowedPlaces.includes(place.value))place.value="";
+  }
+}
+
+
+function localTodayISO(){
+  const now=new Date();
+  const y=now.getFullYear();
+  const m=String(now.getMonth()+1).padStart(2,"0");
+  const d=String(now.getDate()).padStart(2,"0");
+  return `${y}-${m}-${d}`;
+}
+
+function fmtDate(v){
+ if(!v)return "";
+ const [y,m,d]=v.split("-");
+ return `${y}년 ${Number(m)}월 ${Number(d)}일`;
+}
+function fmtTime(v){return v||""}
+function renderHeader(){
+ syncHiddenFromDocument();
+ const d=document.getElementById("dateInput").value;
+ const s=document.getElementById("startTime").value;
+ const e=document.getElementById("endTime").value;
+ const printText=document.getElementById("datePrintText");
+ if(printText)printText.textContent=d?`${fmtDate(d)}   ${fmtTime(s)} ~ ${fmtTime(e)}`:`20    년    월    일      :      ~      :`;
+ const temp=document.getElementById("tempInput").value;
+ document.getElementById("weatherDisplay").textContent=`(날 씨 : ${selectedWeather||"        "} / 기온 : ${temp?temp+" ℃":"      ℃"} )`;
+ document.getElementById("workDisplay").textContent=selectedProcesses.map(documentProcessLabel).join(" / ");
+}
+
+const LOCAL_WORK_RULES=[
+ {k:["원형톱","각도절단기","톱","절단"],risk:["회전 톱날 접촉 또는 킥백으로 인한 절단·베임","절단 파편·톱밥 비산에 의한 안구·호흡기 손상"],prec:["자재를 작업대에 고정하고 톱날 진행선에 손을 두지 않기","보호커버 정상작동 확인, 보안경·방진마스크 착용"]},
+ {k:["그라인더","절단석","연마"],risk:["절단석·연마석 파손에 의한 파편 비산","불티가 가연물에 착화되어 화재 발생"],prec:["정격 디스크와 보호덮개를 사용하고 균열·마모 여부 확인","가연물 제거·불티방지포·소화기 배치 후 작업"]},
+ {k:["용접","브레이징","토치"],risk:["불티·고온부 접촉에 의한 화상 및 화재","용접흄·가스 흡입에 의한 호흡기 노출"],prec:["화기작업구역 가연물 제거·방화포·소화기·화재감시자 배치","환기 실시, 용접면·장갑 착용 및 종료 후 잔불확인"]},
+ {k:["천공","해머드릴","드릴","앙카","앵커"],risk:["천공 중 매립 전선·배관 손상으로 감전·누수","비트 걸림·파손 및 분진 비산"],prec:["천공 전 도면·탐지기로 매립설비 확인하고 깊이 제한","보조손잡이 체결, 보안경·방진마스크 착용"]},
+ {k:["사다리","말비계"],risk:["사다리·말비계 전도 또는 측면 몸내밀기로 추락"],prec:["수평·미끄럼 상태 확인 후 사용하고 측면 몸내밀기 금지","가능하면 이동식 작업대 사용"]},
+ {k:["이동식비계","비계"],risk:["바퀴 미고정·아웃트리거 미설치로 전도 및 추락","상부 자재·공구 낙하"],prec:["바퀴 잠금·아웃트리거·난간 확인 후 사용","탑승상태 이동 금지, 하부 출입통제 및 공구 낙하방지"]},
+ {k:["고소작업대","렌탈"],risk:["상승 중 천장·배관 등 상부 구조물과 끼임","작업대 전도 또는 난간 밖 추락"],prec:["상부 장애물 확인 후 저속 상승, 과상승방지장치 점검","안전대 체결, 바닥 수평·아웃트리거·난간 확인"]},
+ {k:["전기","결선","분전반","smps","배선"],risk:["오통전·검전 미실시로 감전 또는 아크화상","오결선·단락으로 인한 기기손상·화재"],prec:["전원 차단·잠금표찰 후 무전압 검전하고 절연공구 사용","단자명·극성·접지 확인 후 2인 교차확인하고 순차 전원투입"]},
+ {k:["케이블","포설","풀링"],risk:["케이블 포설 중 손가락이 롤러·트레이 사이에 끼임","상부 포설 케이블·공구 낙하"],prec:["포설지휘자 1인 신호로 통일하고 굴곡부 손 접근 금지","상부 작업구간 하부통제, 포설 완료 후 즉시 임시고정"]},
+ {k:["배관","파이프"],risk:["배관 절단·나사 작업 중 회전체 끼임·베임","장척 배관 운반 중 주변 작업자와 충돌"],prec:["배관을 바이스에 고정하고 완전정지 후 칩 제거","장척 배관은 2인 운반하고 코너 진입 전 신호·통로 확보"]},
+ {k:["압력시험","통수","누수시험"],risk:["가압 중 접속부·호스 이탈로 타격 또는 누수"],prec:["정격압력 이내로 단계 가압하고 접속부 정면 접근 금지","가압구역 출입통제, 이상 시 압력 제거 후 보수"]},
+ {k:["석고","석고보드"],risk:["석고보드 상부 취부 중 낙하·손 끼임","보드 재단 분진 및 커터 사용 중 베임"],prec:["대형 보드는 2인 취급 또는 보드리프트 사용","재단 시 몸 바깥방향 절단, 방진마스크 착용"]},
+ {k:["타카"],risk:["타카핀 오발·관통으로 손·신체 찔림"],prec:["총구를 사람 방향으로 향하지 않고 자재 뒷면에 손 대지 않기","불발·걸림 제거 전 에너지원 분리"]},
+ {k:["페인트","도장","에어리스","스프레이"],risk:["도료·신너 유증기 흡입 및 피부 노출","에어리스 고압분사에 의한 주입상해"],prec:["MSDS 확인, 환기 및 적합 보호구 착용","노즐 청소 전 전원정지·압력완전해제, 손으로 분사 확인 금지"]},
+ {k:["타일","석재"],risk:["타일·석재 절단 파편 및 미세분진 비산","대형 판재·벽타일 양생 전 탈락"],prec:["습식절단 또는 집진기 사용, 보안경·방진마스크 착용","접착 충진상태 확인, 대형재 임시지지 후 충분히 양생"]},
+ {k:["유리"],risk:["흡착기 이탈 또는 임시고정 불량으로 유리 낙하·파손","파손 유리 취급 중 절단·베임"],prec:["흡착패드·진공상태 확인 후 2인 이상 운반","본체결 전 임시지지 유지, 절단방지장갑 착용"]},
+ {k:["필름","인테리어필름"],risk:["커터칼 사용 중 손 베임","열풍기 고온부 접촉·과열로 화상 또는 화재"],prec:["칼날 최소 노출, 몸 바깥방향 재단 및 폐칼날 전용수거","열풍기 한 지점 장시간 가열 금지, 내열거치대 사용"]},
+ {k:["접착제","본드","프라이머","실리콘"],risk:["접착제·프라이머 증기 흡입 및 피부 자극"],prec:["환기 실시, 필요한 양만 개봉하고 사용 후 즉시 밀폐","MSDS 확인 후 보호장갑·보안경 착용"]},
+ {k:["가구","상부장","키큰장"],risk:["가구 고정불량으로 전도·탈락","가구·상판 운반 중 협착·근골격계 부담"],prec:["벽체 바탕 확인 후 적정 앵커로 구조고정","중량물은 2인 이상 또는 대차·흡착기 사용"]},
+ {k:["상판","인조대리석"],risk:["상판 운반 중 손 끼임·파손","타공·절단 중 회전체 접촉 및 분진 비산"],prec:["2인 이상 운반하고 코너·문폭 사전확인","상판 고정 후 타공·절단, 집진·보안경·방진마스크 사용"]},
+ {k:["덕트"],risk:["덕트 양중 중 낙하·맞음","판금 절단면에 의한 베임"],prec:["균형 줄걸이 후 하부통제, 본체결 후 인양구 해제","절단면 디버링 후 절단방지장갑 착용"]},
+ {k:["간판","사인","라이팅박스"],risk:["사인물 양중·설치 중 낙하·충돌","고소 설치 중 추락·공구 낙하"],prec:["2점 인양·태그라인 사용, 본체결 전 인양구 해제 금지","작업대 안전장치 확인 및 하부출입통제·공구 낙하방지"]},
+ {k:["판넬","패널"],risk:["대형 패널이 바람을 받아 흔들리거나 낙하","임시고정 이탈로 패널 전도"],prec:["풍속 확인, 태그라인으로 방향제어하고 하부통제","본체결 완료 전 임시지지 해제 금지"]},
+ {k:["청소","준공청소"],risk:["젖은 바닥에서 미끄러짐","커터·스크레이퍼 사용 중 손 베임"],prec:["구간별 청소·주의표지 후 즉시 건조","안전커터 사용, 몸 바깥방향 절단 및 폐칼날 별도수거"]},
+ {k:["운반","반입","이동"],risk:["자재 운반 중 통로·코너에서 충돌 또는 손 끼임","중량물 취급에 따른 허리·어깨 부담"],prec:["운반경로 사전 확보하고 코너 진입 전 선두 신호","중량·장척물은 2인 이상 또는 대차 등 보조장비 사용"]},
+ {k:["양중","인양"],risk:["인양물 흔들림·줄걸이 이탈로 낙하·충돌"],prec:["인양물 중량·무게중심과 줄걸이 상태 확인 후 시험인양","태그라인 사용, 인양물 하부 출입금지 및 신호수 1인 지정"]}
+];
+function uniq(arr){return [...new Set(arr.map(v=>String(v).trim()).filter(Boolean))];}
+function analyzeTypedWork(processName,typed){
+ const base=PROCESS_DATA[processName];
+ const text=(processName+" "+(typed||"")).toLowerCase();
+ const matched=LOCAL_WORK_RULES.filter(rule=>rule.k.some(k=>text.includes(k.toLowerCase())));
+ let risk=[],prec=[],words=[];
+ matched.forEach(rule=>{
+   risk.push(...rule.risk); prec.push(...rule.prec);
+   words.push(...rule.k.filter(k=>text.includes(k.toLowerCase())));
+ });
+ if(!matched.length){risk=[...base.risk];prec=[...base.prec];}
+ else{risk.push(base.risk[0]);prec.push(base.prec[0]);}
+ return {risk:uniq(risk).slice(0,4),prec:uniq(prec).slice(0,4),matched:uniq(words)};
+}
+
+
+
+function saveTbmNow(){
+  renderHeader();
+  renderContent();
+  saveState();
+  const s=document.getElementById("analysisStatus");
+  if(s){
+    s.textContent="저장되었습니다. 이 내용은 현재 브라우저에만 보관됩니다.";
+    setTimeout(()=>{if(s.textContent.startsWith("저장"))s.textContent=""},2200);
+  }
+}
+
+function refreshRiskAnalysis(){
+ renderContent();
+ const s=document.getElementById("analysisStatus");
+ if(s){
+   s.textContent="작업내용을 다시 분석했습니다. 브라우저 내부에서만 처리되며 인터넷/API를 사용하지 않습니다.";
+   setTimeout(()=>{s.textContent=""},3500);
+ }
+ saveState();
+}
+
+function detailForProcess(p){
+ const base=PROCESS_DATA[p]||{work:"",risk:[],prec:[]};
+ if(!customTbmDetails[p]){
+   customTbmDetails[p]={
+     work:base.work||"",
+     risk:(base.risk||[]).join(" / "),
+     prec:(base.prec||[]).join(" / ")
+   };
+ }
+ return customTbmDetails[p];
+}
+function renderContent(){
+ const el=document.getElementById("contentDisplay");
+ if(!selectedProcesses.length){
+   el.innerHTML='<div class="content-empty">공정을 선택하면 TBM 전달 내용이 표시됩니다.</div>';
+   return;
+ }
+ el.innerHTML=selectedProcesses.map((p,i)=>{
+   const d=detailForProcess(p);
+   return `<div class="tbm-item">
+     <div class="work-title">${i+1}. ${esc(documentProcessLabel(p))}</div>
+     <div class="tbm-edit-block">
+       <span class="tbm-edit-label">작업 내용</span>
+       <textarea class="tbm-content-edit tbm-work-edit direct-edit-box" data-process="${esc(p)}" data-field="work">${esc(d.work)}</textarea>
+     </div>
+     <div class="tbm-edit-block">
+       <span class="tbm-edit-label">주요 위험사항</span>
+       <textarea class="tbm-content-edit tbm-risk-edit direct-edit-box" data-process="${esc(p)}" data-field="risk">${esc(d.risk)}</textarea>
+     </div>
+     <div class="tbm-edit-block">
+       <span class="tbm-edit-label">작업 전 주의·전달사항</span>
+       <textarea class="tbm-content-edit tbm-prec-edit direct-edit-box" data-process="${esc(p)}" data-field="prec">${esc(d.prec)}</textarea>
+     </div>
+   </div>`;
+ }).join("");
+ document.querySelectorAll(".tbm-content-edit").forEach(t=>{
+   t.addEventListener("input",()=>{
+     const p=t.dataset.process, field=t.dataset.field;
+     detailForProcess(p)[field]=t.value;
+     saveState();
+   });
+ });
+}
+function renderProcessCategories(){
+ const tabs=document.getElementById('processCategoryTabs');
+ tabs.innerHTML='';
+}
+function setProcessCategory(cat){activeProcessCategory=cat||'';renderProcesses();}
+function processMatchesQuery(p,query){
+ return p.toLowerCase().includes(query)||processLabel(p).toLowerCase().includes(query);
+}
+function chooseProcessFromSearch(p){
+ if(!p)return;
+ toggleProcess(p);
+ const input=document.getElementById('processSearch');
+ input.value='';
+ renderProcesses();
+ input.focus();
+}
+function handleProcessSearchKey(event){
+ if(event.key!=="Enter")return;
+ const query=event.currentTarget.value.trim().toLowerCase();
+ if(!query)return;
+ const matches=TBM_ALL_PROCESSES.filter(p=>processMatchesQuery(p,query)&&!selectedProcesses.includes(p));
+ const exact=matches.find(p=>processLabel(p).toLowerCase()===query);
+ const target=exact||matches[0];
+ if(target){event.preventDefault();chooseProcessFromSearch(target);}
+}
+function renderProcesses(){
+ renderProcessCategories();
+ const query=document.getElementById('processSearch').value.trim().toLowerCase();
+ const matches=query?TBM_ALL_PROCESSES.filter(p=>processMatchesQuery(p,query)&&!selectedProcesses.includes(p)):[];
+ const g=document.getElementById('processGrid');
+ const button=p=>'<button type="button" class="process-row '+(selectedProcesses.includes(p)?'selected':'')+'" aria-pressed="'+selectedProcesses.includes(p)+'" data-process="'+esc(p)+'"><span class="process-name">'+esc(processLabel(p))+'</span><span aria-hidden="true">'+(selectedProcesses.includes(p)?'✓':'+')+'</span></button>';
+ const shortMatches=matches.filter(p=>processLabel(p).length<=3);
+ const longMatches=matches.filter(p=>processLabel(p).length>=4);
+ g.innerHTML=(selectedProcesses.length?'<div class="process-group-label">선택한 공정</div><div class="process-button-row selected-processes">'+selectedProcesses.map(button).join('')+'</div>':'')+
+   '<div class="process-group-label">'+(query?'자동완성 결과':'공정 자동완성')+'</div>'+
+   (shortMatches.length?'<div class="process-button-row short-processes">'+shortMatches.map(button).join('')+'</div>':'')+
+   (longMatches.length?'<div class="process-button-row long-processes">'+longMatches.map(button).join('')+'</div>':'')+
+   (!query?'<div class="process-empty">공정명을 입력하면 관련 공정이 자동으로 표시됩니다.</div>':!matches.length?'<div class="process-empty">일치하는 공정이 없습니다. 다른 이름으로 입력해보세요.</div>':'');
+ g.querySelectorAll('[data-process]').forEach(b=>b.onclick=()=>chooseProcessFromSearch(b.dataset.process));
+ document.getElementById('processSelectionCount').textContent='선택 '+selectedProcesses.length+'개';
+}
+function toggleProcess(p,checked){
+  const has=selectedProcesses.includes(p);
+  if(checked===true && !has) selectedProcesses.push(p);
+  else if(checked===false && has) selectedProcesses=selectedProcesses.filter(x=>x!==p);
+  else if(checked==null){
+    selectedProcesses=has?selectedProcesses.filter(x=>x!==p):[...selectedProcesses,p];
+  }
+  selectedProcesses=TBM_ALL_PROCESSES.filter(x=>selectedProcesses.includes(x));
+  renderProcesses();
+  renderHeader();
+  renderContent();
+  saveState();
+}
+
+const WEATHER_LOCATION="서울특별시 마포구 합정동";
+const WEATHER_REFRESH_MS=30*60*1000;
+
+function normalizeWeatherLabel(text){
+ const s=String(text||"");
+ if(/눈|snow/i.test(s))return "눈";
+ if(/비|소나기|rain|shower/i.test(s))return "비";
+ if(/흐림|구름|cloud|overcast/i.test(s))return "흐림";
+ if(/바람|wind/i.test(s))return "바람";
+ if(/맑음|화창|sunny|clear/i.test(s))return "맑음";
+ return "";
+}
+function parseWeatherPage(html){
+ const text=String(html||"")
+   .replace(/<script[\s\S]*?<\/script>/gi," ")
+   .replace(/<style[\s\S]*?<\/style>/gi," ")
+   .replace(/<[^>]+>/g," ")
+   .replace(/&nbsp;|&#160;/gi," ")
+   .replace(/\s+/g," ").trim();
+ const weather=normalizeWeatherLabel(text);
+ const pats=[
+   /현재\s*온도[^0-9-]*(-?\d+(?:\.\d+)?)\s*°?/i,
+   /기온[^0-9-]*(-?\d+(?:\.\d+)?)\s*°?/i,
+   /(-?\d+(?:\.\d+)?)\s*°C/i,
+   /(-?\d+(?:\.\d+)?)\s*℃/
+ ];
+ let temp="";
+ for(const p of pats){const m=text.match(p);if(m){temp=m[1];break;}}
+ return (weather||temp)?{weather,temp}:null;
+}
+async function readPublicWeatherPage(url){
+ const r=await fetch(url,{method:"GET",mode:"cors",credentials:"omit",cache:"no-store"});
+ if(!r.ok)throw new Error("weather");
+ return parseWeatherPage(await r.text());
+}
+async function autoUpdateWeatherNoApi(){
+ if(!navigator.onLine)return false;
+ const q=encodeURIComponent("서울 마포구 합정동 오늘 날씨 기온");
+ const urls=[
+   `https://search.naver.com/search.naver?query=${q}`,
+   `https://www.google.com/search?q=${q}&hl=ko`
+ ];
+ for(const url of urls){
+   try{
+     const found=await readPublicWeatherPage(url);
+     if(found&&(found.weather||found.temp)){
+       if(found.weather)selectedWeather=found.weather;
+       if(found.temp)document.getElementById("tempInput").value=found.temp;
+       localStorage.setItem("SafetyV27:TBMWeatherV23",JSON.stringify({
+         weather:selectedWeather,
+         temp:document.getElementById("tempInput").value,
+         at:Date.now()
+       }));
+       renderHeader();
+       saveState();
+       return true;
+     }
+   }catch(e){}
+ }
+ return false;
+}
+function restoreLastWeather(){
+ try{
+   const last=JSON.parse(localStorage.getItem("SafetyV27:TBMWeatherV23")||"{}");
+   if(last.weather)selectedWeather=last.weather;
+   if(last.temp)document.getElementById("tempInput").value=last.temp;
+ }catch(e){}
+}
+
+function setWeather(w,btn){
+ selectedWeather=w;
+ document.querySelectorAll(".weather-btn").forEach(b=>b.classList.toggle("selected",b.dataset.weather===w));
+ renderHeader();saveState();
+}
+function makeAttendees(){
+ let h="";
+ for(let r=0;r<10;r++){
+   const n1=r+1, n2=r+11, n3=r+21;
+   h+=`<tr class="att-row">
+    <td>${n1}</td><td><input class="name-input" data-n="${n1-1}" tabindex="${n1}" type="text"></td><td class="sign-blank"></td>
+    <td>${n2}</td><td><input class="name-input" data-n="${n2-1}" tabindex="${n2}" type="text"></td><td class="sign-blank"></td>
+    <td>${n3}</td><td><input class="name-input" data-n="${n3-1}" tabindex="${n3}" type="text"></td><td class="sign-blank"></td>
+   </tr>`;
+ }
+ document.getElementById("attendeeRows").innerHTML=h;
+ const inputs=[...document.querySelectorAll(".name-input")];
+ inputs.forEach(x=>{
+   x.addEventListener("input",saveState);
+   x.addEventListener("keydown",e=>{
+     if(e.key==="Tab" && !e.shiftKey){
+       e.preventDefault();
+       const cur=Number(x.dataset.n);
+       const next=document.querySelector(`.name-input[data-n="${cur+1}"]`);
+       if(next) next.focus(); else x.blur();
+     }else if(e.key==="Tab" && e.shiftKey){
+       e.preventDefault();
+       const cur=Number(x.dataset.n);
+       const prev=document.querySelector(`.name-input[data-n="${cur-1}"]`);
+       if(prev) prev.focus();
+     }
+   });
+ });
+}
+function resetAll(){
+ if(!confirm("작성한 TBM 내용을 초기화할까요?"))return;
+ localStorage.removeItem("SafetyV27:TBMToolV23");location.reload();
+}
+window.addEventListener("beforeprint",()=>{
+  renderHeader();
+  renderContent();
+});
+
+function init(){
+ makeAttendees();
+ const st=loadState();
+ selectedProcesses=Array.isArray(st.selectedProcesses)?st.selectedProcesses.filter(x=>TBM_ALL_PROCESSES.includes(x)&&PROCESS_DATA[x]):[];
+  activeProcessCategory="";
+ selectedWeather=st.selectedWeather||"";
+ if(!selectedWeather&&!st.tempInput){
+   selectedWeather="";
+   st.tempInput="";
+ }
+ customWork=(st.customWork&&typeof st.customWork==="object")?st.customWork:{};
+ customTbmDetails=(st.customTbmDetails&&typeof st.customTbmDetails==="object")?st.customTbmDetails:{};
+ ids.forEach(id=>{if(st[id]!=null&&document.getElementById(id))document.getElementById(id).value=st[id]});
+
+ /* 문서를 새로 열면 PC/모바일의 로컬 날짜를 우선 표시한다.
+    이후 사용자는 서류의 달력 입력에서 원하는 날짜로 자유롭게 변경 가능 */
+ document.getElementById("dateInput").value=st.dateInput||localTodayISO();
+ if(Array.isArray(st.names))document.querySelectorAll(".name-input").forEach(x=>x.value=st.names[Number(x.dataset.n)]||"");
+ document.querySelectorAll(".weather-btn").forEach(b=>{b.onclick=()=>setWeather(b.dataset.weather,b);b.classList.toggle("selected",b.dataset.weather===selectedWeather)});
+ syncDocumentFromHidden();
+
+ ["docDateInput","docStartTime","docEndTime","docSiteNameInput","docCompanyInput","docPlaceInput"].forEach(id=>{
+   const el=document.getElementById(id);
+   if(el)el.addEventListener("input",()=>{renderHeader();saveState()});
+ });
+ ["remarkInput"].forEach(id=>{
+   const el=document.getElementById(id);
+   if(el)el.addEventListener("input",()=>{renderHeader();saveState()});
+ });
+
+ restoreLastWeather();
+ renderProcesses();renderHeader();renderContent();saveState();
+ // Weather remains editable; external weather scraping is not used in the integrated form.
+}
+init();
+</script>
+<script>
+window.MIN_WORKS_TBM_TOOL={
+ data(){syncHiddenFromDocument();saveState();const state=loadState();return {...state,site:state.siteNameInput||'',writeDate:state.dateInput||'',schema:'tbm-tool-v23'}},
+ print(){syncHiddenFromDocument();renderHeader();renderContent();saveState();window.print()},
+ validate(){const input=document.getElementById('docSiteNameInput');input.required=true;return input.reportValidity()},
+ applyContext(site){if(!site)return;document.getElementById('docSiteNameInput').value=site.name||'';document.getElementById('docCompanyInput').value=site.company||'(주)민커뮤니케이션';syncHiddenFromDocument();renderHeader();saveState()}
+};
+const weatherSelect=document.getElementById('integratedWeather'),temperature=document.getElementById('integratedTemp');weatherSelect.value=selectedWeather;temperature.value=document.getElementById('tempInput').value;weatherSelect.addEventListener('change',()=>{selectedWeather=weatherSelect.value;renderHeader();saveState()});temperature.addEventListener('input',()=>{document.getElementById('tempInput').value=temperature.value;renderHeader();saveState()});
+const sites=[...parent.document.querySelectorAll('[data-site-row]')].map(e=>e.dataset.siteRow);const list=document.createElement('datalist');list.id='tbmIntegratedSites';for(const name of new Set(sites)){const option=document.createElement('option');option.value=name;list.append(option)}document.body.append(list);document.getElementById('docSiteNameInput').setAttribute('list',list.id);
+document.getElementById('docSiteNameInput').addEventListener('change',event=>{const context=parent.MIN_WORKS_DOCUMENT_CONTEXT,site=context?.sites?.().find(item=>item.name===event.target.value);if(site){context.select(site.name);window.MIN_WORKS_TBM_TOOL.applyContext(site)}});
+window.MIN_WORKS_TBM_TOOL.applyContext(parent.MIN_WORKS_DOCUMENT_CONTEXT?.current?.());
+const signal=()=>{if(parent!==window)parent.postMessage({type:'minworks:tbm-height',height:document.documentElement.scrollHeight},location.origin==='null'?'*':location.origin)};new ResizeObserver(signal).observe(document.body);signal();
+</script></body>
+</html>

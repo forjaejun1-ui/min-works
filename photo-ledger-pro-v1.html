@@ -1,0 +1,3029 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>사진대지PRO_V1</title>
+<style>
+:root{
+  --navy:#102a43;
+  --navy-dark:#0a192f;
+  --blue:#1685f8;
+  --cyan:#22cde8;
+  --bg:#f4f7fb;
+  --card:#fff;
+  --text:#1f2d3d;
+  --muted:#6b7c93;
+  --line:#e2e8f0;
+  --danger:#d93838;
+  --good:#16a579;
+  --shadow:0 12px 34px rgba(16,42,67,.07);
+  --shadow-hover:0 16px 38px rgba(22,133,248,.12);
+  --radius:18px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:Pretendard,"Noto Sans KR","Malgun Gothic",Arial,sans-serif;color:var(--text);background:var(--bg);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+button:disabled{opacity:.45;cursor:not-allowed}
+
+/* 스크롤바 */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:99px}
+::-webkit-scrollbar-thumb:hover{background:#94a3b8}
+
+body{padding-left:228px;padding-top:76px}
+.grow{flex:1}
+
+/* Topbar */
+.topbar{height:76px;left:228px;right:0;top:0;position:fixed;background:rgba(255,255,255,.95);backdrop-filter:blur(18px);color:var(--text);padding:0 24px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:9px;z-index:80}
+.page-heading{display:flex;align-items:center;gap:10px}
+.topbar .brand{font-size:18px;font-weight:900;color:var(--navy)}
+.version{font-size:11px;color:#627d98;background:#f0f4f8;border:1px solid #d9e2ec;border-radius:99px;padding:3px 8px;font-weight:700}
+.save-pill{display:flex;align-items:center;gap:7px;background:#f0f9ff;border:1px solid #d0ebff;border-radius:999px;padding:5px 11px;margin-left:4px}
+.save-pill i{width:7px;height:7px;border-radius:50%;background:#22c78c;box-shadow:0 0 0 4px rgba(34,199,140,.15)}
+.save-state{color:#486581;font-size:11px;font-weight:700;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.btn{border:1px solid #d9e2ec;background:#fff;color:#334e68;border-radius:12px;padding:9px 13px;font-weight:800;box-shadow:0 2px 6px rgba(0,0,0,.03);transition:.16s ease;white-space:nowrap}
+.btn:hover{transform:translateY(-1px);border-color:#bcccdc;box-shadow:0 6px 14px rgba(0,0,0,.07)}
+.btn.primary{border:0;background:linear-gradient(135deg,var(--blue),var(--cyan));color:#fff;box-shadow:0 6px 18px rgba(22,133,248,.25)}
+.btn.soft{background:#f8fafc;border-color:#e2e8f0}
+.btn.ghost-soft{background:#eef7ff;color:#1574d0;border-color:#cfe6fc}
+.btn.danger{color:var(--danger);background:#fff5f5;border-color:#fed7d7}
+.btn.danger:hover{background:#fee2e2;border-color:#fca5a5}
+.btn.small{padding:5px 9px;font-size:11.5px;border-radius:8px}
+.iconbtn{width:36px;height:36px;padding:0;display:inline-flex;align-items:center;justify-content:center}
+
+/* Sidebar Nav */
+.tabs{position:fixed;left:0;top:0;bottom:0;width:228px;height:100vh;display:flex;flex-direction:column;align-items:stretch;background:#fff;border-right:1px solid var(--line);padding:18px 14px;z-index:90;box-shadow:6px 0 20px rgba(0,0,0,.02)}
+.side-brand{display:flex;align-items:center;gap:10px;padding:4px 8px 24px}
+.brand-mark{width:38px;height:38px;border-radius:12px;background:linear-gradient(145deg,var(--navy),#243b53);color:#fff;display:grid;place-items:center;font-size:20px;font-weight:950;box-shadow:0 6px 16px rgba(16,42,67,.25)}
+.side-brand b{display:block;font-size:15px;color:var(--navy)}
+.side-brand small{display:block;font-size:8.5px;letter-spacing:.12em;color:#829ab1;margin-top:2px;font-weight:800}
+.side-label{padding:0 10px 8px;font-size:9px;font-weight:900;letter-spacing:.14em;color:#9fb3c8}
+.tab{display:flex;align-items:center;gap:11px;border:0;background:transparent;padding:11px 12px;margin:2px 0;border-radius:13px;color:#627d98;font-weight:800;text-align:left;transition:.15s}
+.tab:hover{background:#f0f4f8;color:var(--navy)}
+.tab.active{color:#1574d0;background:linear-gradient(90deg,#edf7ff,#f6fcff);box-shadow:inset 0 0 0 1px #d0ebff}
+.tab .badge{margin-left:auto;background:#edf2f7;color:#627d98;min-width:22px;text-align:center;padding:3px 6px;border-radius:99px;font-size:10px}
+.tab.active .badge{background:#fff;color:var(--blue)}
+.nav-icon{width:22px;height:22px;display:grid;place-items:center}
+.nav-icon svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.side-tip{margin-top:auto;background:linear-gradient(145deg,#f8fafc,#f0f7fc);border:1px solid #e2e8f0;border-radius:16px;padding:12px}
+.side-tip b{font-size:11px;color:var(--navy);display:block;margin-bottom:6px}
+.side-tip span{display:block;font-size:9.5px;color:#627d98;line-height:1.7}
+
+/* Workspace */
+.workspace{padding:24px 28px 60px;max-width:1700px;margin:0 auto}
+.view{display:none;animation:viewfade .2s ease}
+.view.active{display:block}
+@keyframes viewfade{from{opacity:.4;transform:translateY(3px)}to{opacity:1;transform:none}}
+
+.panel{border:1px solid var(--line);border-radius:var(--radius);padding:18px;background:#fff;box-shadow:var(--shadow);margin-bottom:16px}
+.section-head{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.section-title{margin:0;font-size:16px;font-weight:900;color:var(--navy);white-space:nowrap}
+.muted{color:var(--muted);font-size:12px}
+.hint{font-size:11.5px;color:#829ab1}
+.divider{height:1px;background:#e2e8f0;margin:12px 0}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.project-fields{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.project-fields .field{margin-bottom:0}
+.compact-settings{display:grid;grid-template-columns:minmax(220px,360px) minmax(220px,360px);gap:10px;margin-top:10px}
+.compact-settings .field{margin-bottom:0}
+.field{margin-bottom:11px}
+.field label{display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:800;color:#486581;margin-bottom:6px}
+.req{color:var(--danger)}
+.field input,.field select,.field textarea,.toolbar input,.toolbar select,.prop-row input,.prop-row select{
+  width:100%;border:1px solid #d9e2ec;border-radius:12px;padding:9px 11px;background:#f8fafc;color:var(--text);transition:.16s;outline:none;
+}
+.field input:focus,.field select:focus,.field textarea:focus,.toolbar input:focus,.toolbar select:focus{
+  border-color:#6ab8ff;box-shadow:0 0 0 4px rgba(22,133,248,.09);background:#fff;
+}
+.checkline{display:flex;gap:8px;align-items:center;font-size:12.5px;margin:8px 0;background:#f8fafc;padding:9px 12px;border-radius:12px;border:1px solid #e2e8f0}
+.checkline input{width:auto}
+
+/* 날짜 3단 스마트 입력기 */
+.date-split-box{display:flex;align-items:center;gap:6px;background:#f8fafc;border:1px solid #d9e2ec;border-radius:12px;padding:4px 8px}
+.date-split-box input{border:0;background:transparent;text-align:center;padding:5px 2px;font-weight:800;color:var(--navy);outline:none;width:auto}
+.date-split-box input.year{width:54px}
+.date-split-box input.month,.date-split-box input.day{width:34px}
+.date-split-box span{color:#94a3b8;font-weight:700;font-size:12px}
+
+/* Workflow Hero */
+.hero-panel{display:grid;grid-template-columns:minmax(300px,.85fr) minmax(540px,1.15fr);gap:28px;align-items:center;background:linear-gradient(135deg,#fff 0%,#f8fcff 60%,#edf7ff 100%);border:1px solid #d0e2ec;border-radius:24px;padding:24px 26px;margin-bottom:16px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.eyebrow{font-size:9.5px;font-weight:900;letter-spacing:.15em;color:var(--blue)}
+.hero-copy h1{margin:6px 0 8px;font-size:22px;letter-spacing:-.03em;color:var(--navy)}
+.hero-copy p{margin:0;color:#627d98;font-size:12px;line-height:1.65}
+.workflow-card{position:relative;z-index:2}
+.workflow-head{display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:#486581;font-weight:700}
+.workflow-head span{font-weight:900;color:var(--blue)}
+.workflow-line{height:5px;background:#e2e8f0;border-radius:99px;overflow:hidden;margin:8px 0 14px}
+.workflow-line i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--cyan));border-radius:inherit;transition:.3s}
+.workflow-steps{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.workflow-steps button{border:0;background:transparent;text-align:left;padding:5px;cursor:pointer;color:#829ab1}
+.workflow-steps button>span{width:24px;height:24px;border-radius:8px;background:#e2e8f0;display:grid;place-items:center;font-size:10px;font-weight:900;margin-bottom:5px;color:#486581}
+.workflow-steps button b{display:block;color:#334e68;font-size:10.5px}
+.workflow-steps button small{font-size:8px;color:#9fb3c8}
+.workflow-steps button.done>span{background:#e3fcef;color:#0e7c57}
+.workflow-steps button.active>span{background:linear-gradient(135deg,var(--blue),var(--cyan));color:#fff;box-shadow:0 4px 10px rgba(22,133,248,.25)}
+.workflow-steps button.active b{color:var(--blue)}
+.workflow-next{margin-top:12px;width:100%}
+
+/* Stats */
+.stat-row{display:grid;grid-template-columns:repeat(6,minmax(105px,1fr));gap:10px}
+.stat{background:linear-gradient(145deg,#fff,#f8fafc);border:1px solid #e2e8f0;border-radius:16px;padding:13px;position:relative;overflow:hidden}
+.stat strong{display:block;font-size:21px;color:var(--navy);font-weight:900}
+.stat span{font-size:9.5px;color:#829ab1;font-weight:800;letter-spacing:.04em}
+
+/* Recent list */
+.recent-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.recent-card{border:1px solid #e2e8f0;border-radius:14px;padding:12px;background:#fff;box-shadow:0 3px 10px rgba(0,0,0,.02);transition:.16s}
+.recent-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-hover)}
+.recent-card b{display:block;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px}
+.recent-card small{display:block;color:#829ab1;margin-top:3px;font-size:11px}
+.recent-actions{display:flex;gap:6px;margin-top:9px}
+
+/* Photos View */
+.dropzone{border:1.5px dashed #bcd0e2;border-radius:20px;padding:26px;text-align:center;background:linear-gradient(145deg,#f8fcff,#f0f7fd);transition:.15s}
+.dropzone.compact{padding:10px 14px;border-radius:14px;display:flex;align-items:center;gap:12px;text-align:left}
+.dropzone.compact strong{font-size:13px;margin:0;white-space:nowrap}
+.dropzone.compact .muted{font-size:10.5px}
+.dropzone.compact .drop-actions{margin:0 0 0 auto;flex-wrap:nowrap}
+.compact-toolbar input,.compact-toolbar select{width:auto;min-width:125px;max-width:190px;padding:7px 9px}
+.compact-toolbar{margin:8px 0}
+.dropzone.drag{border-color:var(--blue);background:#e8f4fd;transform:translateY(-1px)}
+.dropzone strong{display:block;font-size:15px;margin-bottom:5px;color:var(--navy)}
+.drop-actions{margin-top:12px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+.toolbar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:12px 0}
+.toolbar .spacer{flex:1}
+
+.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;user-select:none;-webkit-user-select:none;position:relative}
+.photo-card{background:#fff;border:1.5px solid #e2e8f0;border-radius:16px;overflow:hidden;box-shadow:0 4px 14px rgba(16,42,67,.04);position:relative;cursor:grab;transition:.15s}
+.photo-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-hover);border-color:#b4d5fe}
+.photo-card.selected{border-color:#1685f8;box-shadow:0 0 0 3px rgba(22,133,248,.12),0 10px 22px rgba(22,133,248,.15)}
+.photo-card.dragging{opacity:.35;border:2px dashed #1685f8}
+.photo-card.drag-over{border-color:#1685f8;box-shadow:0 0 0 3px rgba(22,133,248,.25);transform:scale(1.02)}
+
+.photo-thumb{
+  aspect-ratio:1.589;
+  background:#edf2f7;
+  overflow:hidden;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.photo-thumb img{
+  pointer-events:none;
+}
+.photo-thumb .suggest{position:absolute;right:7px;top:7px;background:linear-gradient(135deg,var(--navy),#243b53);color:#fff;border-radius:6px;padding:3px 6px;font-size:9.5px;font-weight:800;z-index:3}
+.photo-body{padding:11px}
+.photo-name{font-size:12px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px;color:var(--navy)}
+.photo-meta{font-size:10px;color:#829ab1;display:flex;justify-content:space-between;margin-bottom:6px}
+.photo-body select,.photo-body input{width:100%;border:1px solid #d9e2ec;border-radius:8px;padding:6px 8px;font-size:11.5px;margin-top:5px;background:#f8fafc}
+.photo-footer{display:flex;gap:5px;margin-top:7px;flex-wrap:wrap}
+.check{position:absolute;left:8px;top:8px;background:rgba(255,255,255,.92);backdrop-filter:blur(4px);border-radius:8px;padding:4px;box-shadow:0 2px 8px rgba(0,0,0,.15);z-index:4;cursor:pointer}
+.check input{cursor:pointer;width:auto}
+.warn-dot{width:8px;height:8px;border-radius:50%;background:#f59f00;display:inline-block;margin-left:5px}
+
+/* Drag Select Box */
+.drag-select-box{position:fixed;border:1.5px solid #1685f8;background:rgba(22,133,248,.14);backdrop-filter:blur(1px);pointer-events:none;z-index:9999;border-radius:6px;display:none;box-shadow:0 2px 10px rgba(22,133,248,.2)}
+
+/* Selection Dock */
+.selection-dock{position:fixed;left:50%;bottom:22px;transform:translateX(calc(-50% + 114px)) translateY(110px);z-index:120;background:rgba(16,42,67,.95);backdrop-filter:blur(16px);color:#fff;border:1px solid rgba(255,255,255,.12);box-shadow:0 18px 50px rgba(16,42,67,.3);border-radius:18px;padding:9px 12px 9px 16px;display:flex;align-items:center;gap:7px;transition:.24s ease;opacity:0;pointer-events:none}
+.selection-dock.open{transform:translateX(calc(-50% + 114px)) translateY(0);opacity:1;pointer-events:auto}
+.selection-dock b{display:block;font-size:11.5px}
+.selection-dock small{display:block;font-size:8.5px;color:#9fb3c8}
+.selection-dock button{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.09);color:#fff;padding:7px 10px;border-radius:10px;font-size:10.5px;font-weight:800}
+.selection-dock button:hover{background:rgba(255,255,255,.18)}
+
+/* Preview & Page Shell */
+.preview-shell{display:grid;grid-template-columns:270px minmax(680px,1fr) 280px;gap:14px;align-items:start}
+.page-list,.preview-properties{position:sticky;top:96px}
+.page-list{max-height:calc(100vh - 120px);overflow-y:auto;padding:14px}
+.page-list .section-head{margin-bottom:10px}
+.page-mini{
+  width:100%;
+  border:1.5px solid #d9e2ec;
+  border-radius:14px;
+  padding:10px;
+  margin-bottom:10px;
+  background:#fff;
+  font-size:11px;
+  text-align:left;
+  cursor:grab;
+  transition:.15s;
+  overflow:hidden;
+  position:relative;
+  user-select:none;
+}
+.page-mini:hover{border-color:#b4d5fe;background:#fbfdff}
+.page-mini.active{border-color:#1685f8;background:#f0f7ff;box-shadow:0 4px 12px rgba(22,133,248,.12)}
+.page-mini.page-dragging{opacity:.35;border:2px dashed #1685f8}
+.page-mini.page-drag-over{border-color:#1685f8;box-shadow:0 0 0 3px rgba(22,133,248,.25);transform:scale(1.02)}
+
+.page-mini-del-btn{
+  position:absolute;
+  right:6px;
+  top:6px;
+  width:22px;
+  height:22px;
+  border-radius:6px;
+  background:#fee2e2;
+  color:var(--danger);
+  border:1px solid #fecaca;
+  display:grid;
+  place-items:center;
+  font-size:11px;
+  font-weight:900;
+  opacity:0;
+  transition:.15s;
+  z-index:10;
+}
+.page-mini:hover .page-mini-del-btn{opacity:1}
+.page-mini-del-btn:hover{background:var(--danger);color:#fff}
+
+/* 페이지 목록 썸네일 그리드 */
+.page-thumb-grid{
+  display:grid;
+  gap:4px;
+  margin-top:7px;
+  background:#e2e8f0;
+  padding:4px;
+  border-radius:8px;
+  width:100%;
+}
+.page-thumb-grid.cols-1{grid-template-columns:1fr}
+.page-thumb-grid.cols-2{grid-template-columns:1fr 1fr}
+.page-thumb-grid.cols-3{grid-template-columns:1fr 1fr 1fr}
+
+.page-thumb-cell{
+  width:100%;
+  aspect-ratio:1.589;
+  background:#cbd5e1;
+  border-radius:4px;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+}
+.page-thumb-cell img{
+  pointer-events:none;
+}
+.page-thumb-cell.empty{
+  background:#e2e8f0;
+}
+
+.preview-center{background:linear-gradient(145deg,#e9edf2,#f2f5f8);border-radius:22px;border:1px solid #d9e2ec;padding:20px 10px 40px;overflow:auto;min-height:75vh;display:flex;justify-content:center}
+.prop-row{display:grid;grid-template-columns:85px 1fr;gap:8px;align-items:center;margin-bottom:9px;font-size:11.5px}
+.prop-row label{color:#486581;font-weight:800}
+.prop-actions{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+
+/* Print Pages: A4 Landscape / Portrait */
+.print-page{
+  width:297mm;
+  height:209.5mm;
+  background:#fff;
+  box-shadow:0 12px 36px rgba(16,42,67,.16);
+  position:relative;
+  overflow:hidden;
+  transform-origin:top center;
+  color:#1f2d3d;
+  page-break-after:always;
+  break-after:page;
+  page-break-inside:avoid;
+  break-inside:avoid;
+}
+.print-page.orientation-portrait{width:210mm;height:297mm}
+.page-rotator{position:absolute;inset:0;width:100%;height:100%;overflow:hidden}
+.orientation-portrait .page-rotator{position:absolute;inset:0;width:210mm;height:297mm;overflow:hidden;transform:none}
+/* A4 세로 전용 안전 레이아웃: 회전 없이 실제 세로 용지 안에 구성한다. */
+.orientation-portrait .page-inner{left:20mm;right:20mm;top:25mm;bottom:25mm}
+.orientation-portrait .slots{gap:5mm;padding-top:5mm}
+.orientation-portrait .slots.layout-2{grid-template-columns:1fr;grid-template-rows:1fr 1fr}
+.orientation-portrait .slots.layout-4{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
+.orientation-portrait .slots.layout-6{grid-template-columns:1fr 1fr;grid-template-rows:repeat(3,1fr);gap:4mm}
+.orientation-portrait .doc-header{height:15mm;padding-bottom:2mm}
+.orientation-portrait .doc-title{font-size:12.5pt}
+.orientation-portrait .doc-context{font-size:7.8pt}
+.orientation-portrait .caption{height:8.5mm;padding:1.2mm 2mm;font-size:7.5pt;grid-template-columns:16mm 1fr}
+.orientation-portrait .frame{background:#fff}
+.orientation-portrait .footer{height:6mm;margin-top:3mm;padding-top:1.5mm}
+.page-inner{position:absolute;left:15mm;right:15mm;top:13mm;bottom:12mm;display:flex;flex-direction:column}
+.doc-header{height:14mm;border-bottom:.6mm solid var(--navy);display:flex;justify-content:space-between;align-items:flex-end;padding-bottom:2.5mm}
+.doc-title{font-size:14pt;font-weight:900;color:var(--navy);letter-spacing:-.02em}
+.doc-context{text-align:right;font-size:8.5pt;line-height:1.4;color:#334e68;font-weight:700}
+.slots{flex:1;display:grid;gap:4.5mm;padding-top:4.5mm;min-height:0}
+.slots.layout-1{grid-template-columns:1fr;grid-template-rows:1fr}
+.slots.layout-2{grid-template-columns:1fr 1fr;grid-template-rows:1fr}
+.slots.layout-4{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
+.slots.layout-6{grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:3.5mm}
+
+.slot{
+  border:.35mm solid #cfd8e3;
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+  overflow:hidden;
+  background:#fff;
+  cursor:grab;
+  position:relative;
+  transition:.15s;
+  user-select:none;
+}
+.slot.slot-drag-over{
+  border:2.5px dashed #1685f8!important;
+  background:#edf7ff!important;
+  box-shadow:0 0 0 3px rgba(22,133,248,.2);
+}
+.slot.dragging{
+  opacity:.35;
+  border:2px dashed #1685f8;
+}
+
+.frame{
+  flex:1;
+  min-height:0;
+  background:#f8fafc;
+  overflow:hidden;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.frame img{
+  pointer-events:none;
+}
+
+.caption{height:10.5mm;border-top:.35mm solid #d9e2ec;padding:1.8mm 3mm;font-size:8.5pt;display:grid;grid-template-columns:20mm 1fr;align-items:center;gap:2mm;overflow:hidden;background:#fff}
+.layout-6 .caption{height:8.5mm;font-size:7.5pt;grid-template-columns:16mm 1fr;padding:1.2mm 2mm}
+.caption .num{font-weight:900;color:var(--navy)}
+.caption .txt{font-weight:700;color:#243b53;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.footer{height:7mm;border-top:.3mm solid #d9e2ec;margin-top:3.5mm;padding-top:2mm;display:flex;justify-content:space-between;font-size:7.5pt;color:#829ab1;font-weight:700}
+.empty-slot{background:#f8fafc;color:#9fb3c8;display:flex;align-items:center;justify-content:center;font-size:9pt;font-weight:700}
+
+/* ========================================================
+   순수 코딩 벡터 기반 고정 표지 디자인 (첨부 이미지 100% 일치)
+   ======================================================== */
+.cover-page{
+  background:#ffffff!important;
+  position:relative;
+  overflow:hidden;
+  width:297mm;
+  height:209.5mm;
+}
+.cover-top-line-svg{
+  position:absolute;
+  left:0;
+  top:0;
+  width:100%;
+  height:24mm;
+  pointer-events:none;
+  z-index:2;
+}
+.cover-bottom-poly-svg{
+  position:absolute;
+  right:0;
+  bottom:0;
+  width:150mm;
+  height:150mm;
+  pointer-events:none;
+  z-index:1;
+}
+.cover-body{
+  position:relative;
+  z-index:5;
+  height:100%;
+  padding:25mm 22mm 14mm;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+}
+.cover-title-box{
+  margin-left:0;
+}
+.cover-title-main-row{
+  display:flex;
+  align-items:center;
+  gap:5mm;
+}
+.cover-title-bar{
+  width:3.6mm;
+  height:17.5mm;
+  background:var(--navy);
+}
+.cover-title-text{
+  font-size:37pt;
+  font-weight:950;
+  color:var(--navy);
+  letter-spacing:-0.5px;
+  line-height:1;
+}
+.cover-title-sub-bar{
+  width:116mm;
+  height:0.4mm;
+  background:var(--navy);
+  margin:4.5mm 0 3.2mm 8.6mm;
+}
+.cover-title-eng{
+  margin-left:8.6mm;
+  font-size:8.8pt;
+  font-weight:800;
+  letter-spacing:7px;
+  color:#334e68;
+}
+
+.cover-card-container{
+  width:184mm;
+  background:#ffffff;
+  border:1.2px solid #e2e8f0;
+  border-radius:18px;
+  box-shadow:0 4px 20px rgba(16,42,67,0.03);
+  padding:3mm 6mm;
+}
+.orientation-portrait.cover-page{width:210mm;height:297mm}
+.orientation-portrait .cover-body{padding:32mm 20mm 26mm}
+.orientation-portrait .cover-card-container{width:100%}
+.orientation-portrait .cover-title-text{font-size:29pt}
+.orientation-portrait .cover-title-sub-bar{width:88mm}
+.orientation-portrait .cover-bottom-poly-svg{width:120mm;height:120mm}
+.cover-card-row{
+  display:grid;
+  grid-template-columns:12mm 24mm 5mm 1fr;
+  align-items:center;
+  padding:3.8mm 0;
+  border-bottom:1px solid #edf2f7;
+}
+.cover-card-row:last-child{
+  border-bottom:0;
+}
+.cover-card-badge{
+  width:8.8mm;
+  height:8.8mm;
+  border-radius:50%;
+  background:var(--navy);
+  display:grid;
+  place-items:center;
+}
+.cover-card-badge svg{
+  width:4.8mm;
+  height:4.8mm;
+  stroke:#ffffff;
+  stroke-width:2.2;
+  fill:none;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.cover-card-label{
+  font-size:11.5pt;
+  font-weight:900;
+  color:var(--navy);
+  letter-spacing:1px;
+}
+.cover-card-sep{
+  color:#cbd5e1;
+  font-size:11pt;
+  text-align:center;
+  font-weight:300;
+}
+.cover-card-val{
+  font-size:11.8pt;
+  font-weight:800;
+  color:#1f2937;
+  padding-left:2mm;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.cover-footer-row{
+  display:flex;
+  align-items:center;
+  gap:3.5mm;
+  position:relative;
+  width:100%;
+}
+.cover-footer-slash-tab{
+  width:24mm;
+  height:3.6mm;
+  background:var(--navy);
+  clip-path:polygon(0 0, 80% 0, 100% 100%, 0 100%);
+}
+.cover-footer-slashes{
+  color:var(--navy);
+  font-size:13pt;
+  font-weight:950;
+  letter-spacing:-1px;
+}
+.cover-footer-desc{
+  font-size:9.5pt;
+  font-weight:800;
+  color:#334e68;
+  white-space:nowrap;
+}
+.cover-footer-rail{
+  flex:1;
+  height:0.4mm;
+  background:#cbd5e1;
+  margin-left:3mm;
+  margin-right:20mm;
+  position:relative;
+}
+.cover-footer-dot{
+  position:absolute;
+  right:0;
+  top:-1.3mm;
+  width:3mm;
+  height:3mm;
+  border-radius:50%;
+  background:var(--navy);
+}
+
+/* Validation & Modal */
+.issue{background:#fff;border-left:4px solid #aab6bd;padding:10px 12px;margin-bottom:7px;border-radius:8px;cursor:pointer}
+.issue.warn{border-left-color:#f59f00;background:#fffdfa}
+.issue.block{border-left-color:var(--danger);background:#fff5f5}
+.okbox{background:#e6fcf5;border:1px solid #96f2d7;padding:14px;border-radius:12px;color:#0ca678;font-weight:800}
+.validation-summary{display:grid;grid-template-columns:repeat(3,minmax(140px,1fr));gap:10px;margin-bottom:12px}
+.vstat{border-radius:12px;padding:11px;background:#f8fafc;border:1px solid #e2e8f0;font-size:12px}
+.vstat b{font-size:19px;margin-right:5px;font-weight:900}
+.vstat.block b{color:var(--danger)}
+.vstat.warn b{color:#f59f00}
+.vstat.good b{color:var(--good)}
+
+.modal-back{position:fixed;inset:0;background:rgba(16,42,67,.65);backdrop-filter:blur(4px);z-index:150;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-back.open{display:flex}
+.modal{width:min(1080px,96vw);max-height:92vh;overflow:auto;background:#fff;border-radius:20px;box-shadow:0 25px 80px rgba(0,0,0,.35)}
+.modal-head{display:flex;align-items:center;padding:15px 20px;border-bottom:1px solid #e2e8f0}
+.modal-head h3{margin:0;color:var(--navy);font-size:17px;font-weight:900}
+.modal-body{padding:20px}
+
+/* Photo Crop Stage & Interactive Canvas */
+.editor-grid{display:grid;grid-template-columns:minmax(480px,1fr) 320px;gap:20px}
+.crop-stage{
+  height:440px;
+  background:#e2e8f0;
+  border-radius:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  position:relative;
+  border:1px solid #cbd5e1;
+  padding:16px;
+}
+
+.crop-frame{
+  width:90%;
+  max-height:90%;
+  background:#ffffff;
+  border:2.5px solid #1685f8;
+  box-shadow:0 8px 30px rgba(0,0,0,.25);
+  overflow:hidden;
+  position:relative;
+  cursor:grab;
+  user-select:none;
+}
+.crop-frame:active{cursor:grabbing}
+.crop-frame img{
+  pointer-events:none;
+  position:absolute;
+  left:50%;
+  top:50%;
+  display:block;
+}
+
+.range-row{display:grid;grid-template-columns:75px 1fr 50px;gap:8px;align-items:center;margin:8px 0;font-size:11.5px}
+.range-row input{width:100%}
+.range-row output{text-align:right;color:#627d98;font-weight:800}
+
+.quick-btn-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px 0}
+
+#progressOverlay{position:fixed;inset:0;background:rgba(16,42,67,.55);z-index:300;display:none;align-items:center;justify-content:center}
+#progressOverlay.open{display:flex}
+.progress-card{background:#fff;border-radius:16px;padding:20px;width:340px;box-shadow:0 15px 50px rgba(0,0,0,.3)}
+.progress-card h3{margin:0 0 6px;color:var(--navy);font-size:15px}
+.progress-bar{height:7px;background:#e2e8f0;border-radius:99px;overflow:hidden;margin:10px 0}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--cyan));width:0%}
+
+.toast-wrap{position:fixed;right:18px;bottom:18px;z-index:200;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:var(--navy);color:#fff;padding:9px 13px;border-radius:10px;box-shadow:0 5px 18px rgba(0,0,0,.25);font-size:12.5px;max-width:360px;font-weight:700;pointer-events:auto}
+.toast.warn{background:#c05621}
+.toast.error{background:#c53030}
+
+#printRoot{display:none}
+@page{size:A4 landscape;margin:0}
+@page portraitSheet{size:A4 portrait;margin:0}
+@media print{
+  body{background:#fff!important;padding:0!important}
+  header,nav,.workspace,#toastWrap,.modal-back,#progressOverlay,.selection-dock,.drag-select-box{display:none!important}
+  #printRoot{display:block!important}
+  .print-page{display:block!important;box-shadow:none!important;transform:none!important;margin:0!important;break-after:page;page-break-after:always}
+  .print-page.orientation-landscape{width:297mm!important;height:209.5mm!important}
+  .print-page.orientation-portrait{page:portraitSheet;width:210mm!important;height:297mm!important;max-width:210mm!important;max-height:297mm!important;overflow:hidden!important}
+  .print-page:last-child{break-after:auto;page-break-after:auto}
+}
+
+@media(max-width:1250px){
+  body{padding-left:200px}.tabs{width:200px}.topbar{left:200px}
+  .selection-dock{transform:translateX(calc(-50% + 100px)) translateY(110px)}
+  .selection-dock.open{transform:translateX(calc(-50% + 100px)) translateY(0)}
+  .hero-panel{grid-template-columns:1fr}
+  .stat-row{grid-template-columns:repeat(3,1fr)}
+  .preview-shell{grid-template-columns:230px minmax(560px,1fr)}
+  .preview-properties{grid-column:1/-1;position:static}
+  .editor-grid{grid-template-columns:1fr}
+}
+@media(max-width:900px){
+  body{padding-left:0;padding-top:122px}
+  .tabs{top:76px;width:100%;height:46px;bottom:auto;flex-direction:row;padding:4px 8px;border-right:0;border-bottom:1px solid var(--line);overflow:auto}
+  .side-brand,.side-label,.side-tip{display:none}
+  .tab{min-width:max-content;padding:8px 10px}.nav-icon{display:none}
+  .topbar{left:0}.topbar .brand{font-size:14px}
+  .topbar .version,.topbar .save-pill,.topbar #quickAddBtn{display:none}
+  .workspace{padding:14px}
+  .workflow-steps{grid-template-columns:repeat(5,minmax(80px,1fr));overflow:auto}
+  .project-fields{grid-template-columns:1fr 1fr}
+  .compact-settings{grid-template-columns:1fr}
+  .dropzone.compact{align-items:stretch;flex-direction:column}
+  .dropzone.compact .drop-actions{margin-left:0}
+}
+</style>
+<style id="minWorksEmbedTheme">
+:root{--navy:#171b15;--navy-dark:#10130e;--blue:#75a719;--cyan:#9acb35;--bg:#f6f7f4;--text:#171b15;--muted:#747b6d;--line:#dfe4d8;--good:#75a719}
+body{padding-left:0;padding-top:122px}
+.topbar{left:0;height:72px;padding:0 22px;background:rgba(255,255,255,.97)}
+.topbar .brand{font-size:19px;color:#171b15;letter-spacing:-.03em}
+.topbar .version{color:#567b13;background:#eff6e5;border-color:#d9e8c2}
+.tabs{left:0;top:72px;bottom:auto;width:100%;height:50px;flex-direction:row;align-items:center;padding:5px 20px;border-right:0;border-bottom:1px solid var(--line);box-shadow:none;overflow-x:auto}
+.side-brand,.side-label,.side-tip{display:none!important}
+.tab{min-width:max-content;padding:9px 15px;margin:0 3px}
+.tab.active{color:#4e7412;background:#eff6e5;box-shadow:inset 0 0 0 1px #d6e7ba}
+.workspace{padding:18px 22px 60px}
+.btn.primary{background:#171b15;box-shadow:none}
+@media(max-width:720px){body{padding-top:112px}.topbar{height:66px;padding:0 12px}.topbar .brand{font-size:15px}.topbar .save-pill,.topbar .version,#restoreLatestBtn,#undoBtn,#redoBtn{display:none}.tabs{top:66px;height:46px;padding:4px 8px}.workspace{padding:12px}.topbar .btn{padding:8px 9px;font-size:11px}}
+</style>
+<style id="dynamicPrintStyle">@page{size:A4 landscape;margin:0}</style>
+<link rel="stylesheet" href="document-tool-theme.css?v=docs20"></head>
+<body>
+<header class="topbar">
+ <div class="page-heading">
+  <div class="brand">사진대지PRO_V1</div>
+  <span class="version">MIN WORKS</span>
+  <span class="save-pill"><i></i><span class="save-state" id="saveState">새 프로젝트</span></span>
+ </div>
+ <div class="grow"></div>
+ <button class="btn ghost-soft" id="restoreLatestBtn" title="최근 자동저장 프로젝트 복구">자동저장 복구</button>
+ <button class="btn ghost-soft" id="quickAddBtn" title="사진 빠르게 추가">＋ 사진 추가</button>
+ <button class="btn iconbtn soft" id="undoBtn" title="실행 취소 (Ctrl+Z)">↶</button>
+ <button class="btn iconbtn soft" id="redoBtn" title="다시 실행 (Ctrl+Y)">↷</button>
+ <button class="btn soft" id="newProjectBtn">새 프로젝트</button>
+ <button class="btn soft" id="savePackageBtn">JGD 저장</button>
+ <button class="btn soft" id="loadPackageBtn">열기</button>
+ <input id="packageInput" type="file" accept=".jgd,application/zip" hidden>
+ <button class="btn primary" id="printBtn">PDF 출력</button>
+</header>
+
+<nav class="tabs">
+ <div class="side-brand">
+  <div class="brand-mark">J</div>
+  <div><b>사진대지PRO_V1</b><small>PHOTO REPORT TOOL</small></div>
+ </div>
+ <div class="side-label">WORKSPACE</div>
+ <button class="tab active" data-view="projectView">
+  <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h4l1.5 2h7.5A1.5 1.5 0 0 1 20 7.5v10A1.5 1.5 0 0 1 18.5 19h-13A1.5 1.5 0 0 1 4 17.5z"/></svg></span>
+  <span>프로젝트</span>
+  <span class="badge" id="photoTabBadge">0</span>
+ </button>
+ <button class="tab" data-view="previewView">
+  <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span>
+  <span>페이지 편집</span>
+  <span class="badge" id="pageTabBadge">0</span>
+ </button>
+ <button class="tab" data-view="validateView">
+  <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="m12 3 8 4v5c0 4.8-3.2 7.7-8 9-4.8-1.3-8-4.2-8-9V7z"/><path d="m8.5 12 2.2 2.2 4.8-5"/></svg></span>
+  <span>검수 · 출력</span>
+  <span class="badge" id="issueTabBadge">0</span>
+ </button>
+ <div class="side-tip">
+  <b>조작 안내</b>
+  <span>사진 클릭: 선택 / 다중선택</span>
+  <span>슬롯 드래그: 해당 페이지 내 교체</span>
+  <span>페이지 목록 드래그: 페이지 순서 이동</span>
+  <span>Ctrl+S: 프로젝트 저장</span>
+ </div>
+</nav>
+
+<main class="workspace">
+<!-- 1. 프로젝트 뷰 -->
+<section class="view active" id="projectView">
+ <div class="panel">
+  <div class="section-head">
+   <h2 class="section-title">프로젝트 기본정보</h2>
+  </div>
+  <div class="project-fields">
+   <div class="field"><label>공사명 <span class="req">*</span></label><input id="siteName" placeholder="예: 과천문원중학교 통합 시설개선 공사"></div>
+   <div class="field"><label>문서 제목</label><input id="documentTitle" placeholder="준공사진대지"></div>
+   <div class="field"><label>현장명</label><input id="locationName" placeholder="예: 과천문원중학교"></div>
+   <div class="field"><label>시공사</label><select id="contractor"><option value="(주)민커뮤니케이션">(주)민커뮤니케이션</option><option value="(주)공감에스디">(주)공감에스디</option></select></div>
+   <div class="field"><label>현장 담당자</label><input id="siteManager" placeholder="현장관리 담당자"></div>
+   <div class="field"><label>발주처</label><input id="clientName" placeholder="발주처명"></div>
+   <div class="field"><label>공사 시작일</label><input id="startDate" type="date"></div>
+   <div class="field"><label>공사 종료일</label><input id="endDate" type="date"></div>
+   <div class="field"><label>공사금액</label><input id="projectAmount" inputmode="numeric" placeholder="0원"></div>
+  </div>
+  <div class="compact-settings">
+   <div class="field">
+    <label>출력 옵션</label>
+    <select id="outputOption">
+      <option value="landscape4">4장형 가로</option>
+      <option value="portrait6">6장형 세로</option>
+    </select>
+   </div>
+  </div>
+ </div>
+
+<!-- 프로젝트 내 사진 관리 -->
+ <div class="panel" id="photosViewPanel">
+  <div class="section-head"><h2 class="section-title">사진 등록</h2><span class="muted">JPG / JPEG / PNG / WebP</span></div>
+  <div class="dropzone compact" id="dropzone">
+   <strong>사진 또는 폴더 끌어놓기</strong>
+   <div class="muted">여러 장을 한 번에 등록할 수 있습니다.</div>
+   <div class="drop-actions">
+    <button class="btn primary" id="addPhotosBtn">사진 추가</button>
+    <button class="btn" id="addFolderBtn">폴더 추가</button>
+    <input id="photoInput" type="file" accept="image/*" multiple hidden>
+    <input id="folderInput" type="file" accept="image/*" multiple webkitdirectory directory hidden>
+    <input id="replacePhotoInput" type="file" accept="image/*" hidden>
+   </div>
+  </div>
+
+  <datalist id="spaceOptions"></datalist>
+
+  <div class="toolbar compact-toolbar" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:8px">
+   <b class="small" style="color:var(--navy)">일괄 편집:</b>
+   <select id="bulkStage">
+    <option value="">단계 유지</option>
+    <option value="before">공사 전</option>
+    <option value="during">공사 중</option>
+    <option value="complete">준공</option>
+    <option value="unclassified">미분류</option>
+   </select>
+   <input id="bulkSpace" list="spaceOptions" placeholder="공간명 일괄 적용">
+   <input id="bulkTrade" placeholder="공종 일괄 적용">
+   <button class="btn primary small" id="applyBulkBtn">선택 사진 적용</button>
+   <button class="btn small" id="selectAllVisibleBtn">전체 선택</button>
+   <button class="btn small" id="clearSelectionBtn">선택 해제</button>
+   <button class="btn danger small" id="deleteSelectedBtn">선택 삭제</button>
+  </div>
+
+  <div style="font-size:11.5px;color:#627d98;margin:8px 0 10px">
+   💡 <b>마우스로 카드를 드래그</b>하여 순서를 자유롭게 바꿀 수 있습니다 (다중 선택 시 <b>선택한 사진 전체 일괄 이동</b>) | <b>더블클릭</b>: 위치/크기 편집
+  </div>
+
+  <div class="photo-grid" id="photoGrid"></div>
+ </div>
+</section>
+
+<!-- 3. 페이지 편집 뷰 -->
+<section class="view" id="previewView">
+ <div class="preview-shell">
+  <aside class="panel page-list">
+   <div class="section-head">
+    <h3 class="section-title">페이지 목록</h3>
+    <div class="grow"></div>
+    <button class="btn small" id="reflowBtn" title="자동 재배치">자동 재배치</button>
+   </div>
+   <p class="hint" style="margin:-4px 0 8px">💡 페이지 카드를 <b>마우스로 드래그</b>하여 페이지 순서를 바꿀 수 있습니다.</p>
+   <div id="pageList"></div>
+  </aside>
+  <div class="preview-center"><div id="pageCanvas"></div></div>
+  <aside class="panel preview-properties">
+   <div class="section-head"><h3 class="section-title">페이지 설정</h3></div>
+   <div id="pagePropsEmpty" class="muted">페이지를 선택하면 설정할 수 있습니다.</div>
+   <div id="pageProps" style="display:none">
+    <div class="prop-row">
+      <label>레이아웃</label>
+      <select id="pageLayout">
+        <option value="1">1장형</option>
+        <option value="2">2장형</option>
+        <option value="4">4장형</option>
+        <option value="6">6장형</option>
+      </select>
+    </div>
+    <div class="prop-row">
+      <label>자동배치 잠금</label>
+      <select id="pageLocked">
+        <option value="false">해제</option>
+        <option value="true">현재 사진 고정</option>
+      </select>
+    </div>
+    <div class="prop-row">
+      <label>전후 비교형</label>
+      <select id="pageCompare">
+        <option value="false">일반</option>
+        <option value="true">BEFORE / AFTER</option>
+      </select>
+    </div>
+    <div class="prop-actions">
+      <button class="btn small" id="breakBeforePageBtn">이 페이지 앞 강제 나눔</button>
+      <button class="btn small" id="clearBreakBtn">강제 나눔 해제</button>
+      <div class="divider" style="margin:8px 0"></div>
+      <button class="btn danger small" id="deleteCurrentPageBtn" style="width:100%">🗑️ 현재 페이지 삭제 (사진 포함)</button>
+      <button class="btn soft small" id="releasePagePhotosBtn" style="width:100%">↩️ 페이지만 해제 (사진 앞뒤 병합)</button>
+    </div>
+    <div class="divider"></div>
+    <p class="hint">💡 <b>사진을 마우스로 잡고 다른 슬롯으로 드래그</b>하면 해당 페이지 내에서 사진 위치가 깔끔하게 교체됩니다.<br><b>더블클릭</b>하면 사진 위치/확대 구도를 맞출 수 있습니다.</p>
+   </div>
+  </aside>
+ </div>
+</section>
+
+<!-- 4. 검수 및 출력 뷰 -->
+<section class="view" id="validateView">
+ <div class="panel">
+  <div class="section-head">
+   <h2 class="section-title">출력 전 검수</h2>
+   <div class="grow"></div>
+   <button class="btn" id="refreshValidationBtn">다시 검사</button>
+  </div>
+  <div id="validationSummary"></div>
+  <div id="validationResults"></div>
+ </div>
+ <div class="panel">
+  <h3 class="section-title">인쇄 가이드</h3>
+  <p class="muted">출력물은 <b>A4 기준</b>으로 생성됩니다. 브라우저 인쇄창에서 <b>용지 크기: A4, 방향: 프로젝트에서 선택한 방향, 여백: 없음(None), 배경 그래픽: 체크(켬), 배율: 기본값(100%)</b>으로 설정하세요.</p>
+ </div>
+</section>
+</main>
+
+<!-- Selection Floating Dock -->
+<div class="selection-dock" id="selectionDock">
+ <div><b id="dockSelectedCount">0장 선택</b><small>선택 사진 빠른 단계 지정</small></div>
+ <button data-dock-stage="before">공사 전</button>
+ <button data-dock-stage="during">공사 중</button>
+ <button data-dock-stage="complete">준공</button>
+ <button id="dockEditBtn">일괄 수정</button>
+ <button id="dockClearBtn">선택 해제</button>
+</div>
+
+<!-- Drag Select Box -->
+<div class="drag-select-box" id="dragSelectBox"></div>
+
+<!-- Photo Editor Modal -->
+<div class="modal-back" id="photoEditorModal">
+ <div class="modal">
+  <div class="modal-head">
+   <h3>사진 프레임 맞춤 및 위치 편집</h3>
+   <div class="grow"></div>
+   <button class="btn" id="closeEditorBtn">닫기</button>
+  </div>
+  <div class="modal-body">
+   <div class="editor-grid">
+    <div class="crop-stage">
+     <div class="crop-frame" id="cropFrame" title="마우스로 이미지를 잡고 직접 드래그하여 원하는 위치로 맞추세요 (휠: 확대/축소)">
+      <img id="editorImage" alt="">
+     </div>
+    </div>
+    <div>
+     <div class="field">
+      <label>맞춤 방식</label>
+      <select id="editFit">
+       <option value="cover">프레임 채우기 (Cover - 빈틈없이 꽉 채움)</option>
+       <option value="contain">전체 표시 (Contain - 원본 전체 다 보기)</option>
+      </select>
+     </div>
+     <div class="range-row">
+      <label>확대(Zoom)</label>
+      <input id="editZoom" type="range" min="1" max="3" step="0.01">
+      <output id="editZoomOut">1.00×</output>
+     </div>
+     <div class="range-row">
+      <label>가로 이동</label>
+      <input id="editX" type="range" min="-100" max="100" step="0.5">
+      <output id="editXOut">0%</output>
+     </div>
+     <div class="range-row">
+      <label>세로 이동</label>
+      <input id="editY" type="range" min="-100" max="100" step="0.5">
+      <output id="editYOut">0%</output>
+     </div>
+     <div class="range-row">
+      <label>회전</label>
+      <input id="editRotation" type="range" min="-180" max="180" step="1">
+      <output id="editRotationOut">0°</output>
+     </div>
+     <div class="quick-btn-grid">
+      <button class="btn small" id="centerPosBtn">중앙 정렬</button>
+      <button class="btn small" id="rotateLeftBtn">↶ 90°</button>
+      <button class="btn small" id="rotateRightBtn">↷ 90°</button>
+     </div>
+     <div class="quick-btn-grid">
+      <button class="btn small" id="fitCoverQuickBtn">프레임 꽉차게</button>
+      <button class="btn small" id="fitContainQuickBtn">전체 다보기</button>
+      <button class="btn small" id="resetCropBtn">위치 초기화</button>
+     </div>
+     <div class="divider"></div>
+     <div class="field"><label>공간명</label><input id="editSpace" list="spaceOptions" placeholder="예: 2층 과학실"></div>
+     <div class="field"><label>공종</label><input id="editTrade" placeholder="예: 바닥 철거"></div>
+     <p class="hint">💡 <b>마우스로 이미지를 직접 잡고 드래그</b>하면 손끝에 맞추어 즉시 이동합니다.</p>
+     <button class="btn primary" id="applyEditorBtn" style="width:100%;margin-top:10px">편집 완료 적용</button>
+    </div>
+   </div>
+  </div>
+ </div>
+</div>
+
+<div id="progressOverlay">
+ <div class="progress-card">
+  <h3 id="progressTitle">처리 중</h3>
+  <div class="muted" id="progressText">잠시만 기다려 주세요.</div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+ </div>
+</div>
+
+<div id="printRoot"></div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+'use strict';
+const APP_VERSION='3.7.2';
+const DB_NAME='JGDPhotoToolDB_v2', DB_VERSION=2, STORE='projects', ASSET_STORE='assets';
+const STAGES={before:{label:'공사 전',order:10},during:{label:'공사 중',order:20},complete:{label:'준공',order:30},unclassified:{label:'미분류',order:99}};
+const $=id=>document.getElementById(id); const $$=s=>[...document.querySelectorAll(s)];
+
+const uid=()=>{
+  if(window.crypto && crypto.randomUUID) {
+    try{ return crypto.randomUUID(); }catch(e){}
+  }
+  return 'id_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,10);
+};
+
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtBytes=n=>n<1024?`${n} B`:n<1048576?`${(n/1024).toFixed(1)} KB`:`${(n/1048576).toFixed(1)} MB`;
+const safeName=s=>String(s||'project').replace(/[\\/:*?"<>|]/g,'_').trim()||'project';
+
+let assetMap=new Map();
+let history=[],future=[],historyLock=false,autosaveTimer=null,checkpointTimer=null,editorPhotoId=null,autosaveErrorShown=false;
+let autosaveInFlight=null,autosavePending=false;
+const AUTOSAVE_DELAY=700;
+const AUTOSAVE_CHECKPOINT=15000;
+let lastSelectedCardId=null;
+let draggedPhotoId=null;
+let draggedPageIdx=null;
+let state=createState();
+
+function createState(){
+  return {
+    project:{
+      id:uid(),
+      siteName:'',
+      documentTitle:'준공사진대지',
+      locationName:'',
+      contractor:'(주)민커뮤니케이션',
+      siteManager:'',
+      clientName:'',
+      projectAmount:'',
+      startDate:'',
+      endDate:'',
+      defaultLayout:4,
+      printOrientation:'landscape',
+      stageSeparate:false,
+      spaceSeparate:false,
+      coverEnabled:true,
+      createdAt:new Date().toISOString(),
+      updatedAt:new Date().toISOString()
+    },
+    photos:[],
+    pageOverrides:{},
+    lockedPages:[],
+    selected:new Set(),
+    pages:[],
+    activePage:0,
+    dirty:false
+  };
+}
+
+function updatePrintPageRule(){
+  const orientation=state?.project?.printOrientation==='portrait'?'portrait':'landscape';
+  const style=$('dynamicPrintStyle');
+  if(!style)return;
+  if(orientation==='portrait'){
+    style.textContent='@page{size:A4 portrait;margin:0}@page portraitSheet{size:A4 portrait;margin:0}@media print{html,body,#printRoot{width:210mm!important;max-width:210mm!important;overflow:visible!important}}';
+  }else{
+    style.textContent='@page{size:A4 landscape;margin:0}';
+  }
+}
+
+window.addEventListener('beforeprint',()=>{
+  updatePrintPageRule();
+  renderPrintRoot();
+});
+
+function serializableState(){
+  return {
+    project:{...state.project},
+    photos:state.photos.map(p=>({...p})),
+    pageOverrides:{...state.pageOverrides},
+    lockedPages:state.lockedPages.map(lp=>({...lp})),
+    activePage:state.activePage
+  };
+}
+
+function snapshot(){return JSON.stringify(serializableState());}
+
+function restoreSnapshot(text){
+  const s=JSON.parse(text);
+  state.project=s.project;
+  state.photos=s.photos;
+  state.pageOverrides=s.pageOverrides||{};
+  state.lockedPages=s.lockedPages||[];
+  state.activePage=state.activePage??0;
+  state.selected=new Set();
+  hydrateUrls();
+  syncAllUI();
+}
+
+function pushHistory(){
+  if(historyLock)return;
+  history.push(snapshot());
+  if(history.length>50)history.shift();
+  future=[];
+  updateUndoButtons();
+}
+
+function undo(){
+  if(!history.length)return;
+  future.push(snapshot());
+  historyLock=true;
+  restoreSnapshot(history.pop());
+  historyLock=false;
+  markDirty(false);
+  updateUndoButtons();
+  toast('실행 취소했습니다.');
+}
+
+function redo(){
+  if(!future.length)return;
+  history.push(snapshot());
+  historyLock=true;
+  restoreSnapshot(future.pop());
+  historyLock=false;
+  markDirty(false);
+  updateUndoButtons();
+  toast('다시 실행했습니다.');
+}
+
+function updateUndoButtons(){
+  $('undoBtn').disabled=!history.length;
+  $('redoBtn').disabled=!future.length;
+}
+
+function toast(msg,type=''){
+  const el=document.createElement('div');
+  el.className='toast '+type;
+  el.textContent=msg;
+  $('toastWrap').appendChild(el);
+  setTimeout(()=>{if(el.parentNode)el.remove();},3200);
+}
+
+function setProgress(open,title='',text='',pct=0){
+  $('progressOverlay').classList.toggle('open',open);
+  if(title)$('progressTitle').textContent=title;
+  if(text)$('progressText').textContent=text;
+  $('progressFill').style.width=Math.max(0,Math.min(100,pct))+'%';
+}
+
+function markDirty(push=false){
+  state.dirty=true;
+  state.project.updatedAt=new Date().toISOString();
+  $('saveState').textContent='변경사항 저장 중…';
+  if(push)pushHistory();
+  clearTimeout(autosaveTimer);
+  autosaveTimer=setTimeout(()=>saveToDB().catch(console.warn),AUTOSAVE_DELAY);
+  renderStats();
+  updateUX();
+}
+
+function openView(id){
+  if(id==='photosView')id='projectView';
+  $$('.view').forEach(v=>v.classList.toggle('active',v.id===id));
+  $$('.tab').forEach(t=>t.classList.toggle('active',t.dataset.view===id));
+  if(id==='projectView')renderPhotos();
+  if(id==='previewView')renderPreview();
+  if(id==='validateView')renderValidation();
+  updateUX();
+}
+$$('.tab').forEach(t=>t.addEventListener('click',()=>openView(t.dataset.view)));
+
+const projectFields=['siteName','documentTitle','locationName','contractor','siteManager','clientName','startDate','endDate','projectAmount'];
+
+function setupDateAutoJump(prefix, stateKey){
+  const y=$(`${prefix}Year`), m=$(`${prefix}Month`), d=$(`${prefix}Day`);
+  if(!y||!m||!d) return;
+
+  function updateStateDate(){
+    const yVal=y.value.trim(), mVal=m.value.trim(), dVal=d.value.trim();
+    if(yVal && mVal && dVal){
+      const mm = mVal.padStart(2,'0');
+      const dd = dVal.padStart(2,'0');
+      state.project[stateKey] = `${yVal}-${mm}-${dd}`;
+    } else {
+      state.project[stateKey] = '';
+    }
+    markDirty();
+  }
+
+  y.addEventListener('input', ()=>{
+    y.value = y.value.replace(/\D/g,'');
+    if(y.value.length === 4){
+      m.focus();
+      m.select();
+    }
+    updateStateDate();
+  });
+
+  m.addEventListener('input', ()=>{
+    m.value = m.value.replace(/\D/g,'');
+    if(m.value.length === 2 || (Number(m.value) >= 2 && m.value.length === 1)){
+      d.focus();
+      d.select();
+    }
+    updateStateDate();
+  });
+
+  d.addEventListener('input', ()=>{
+    d.value = d.value.replace(/\D/g,'');
+    updateStateDate();
+  });
+
+  m.addEventListener('keydown', (e)=>{
+    if(e.key === 'Backspace' && !m.value){ y.focus(); }
+  });
+  d.addEventListener('keydown', (e)=>{
+    if(e.key === 'Backspace' && !d.value){ m.focus(); }
+  });
+}
+function syncProjectFields(){
+  state.project.coverEnabled=true;
+  state.project.stageSeparate=false;
+  state.project.spaceSeparate=false;
+  state.project.printOrientation=state.project.printOrientation==='portrait'?'portrait':'landscape';
+  state.project.defaultLayout=state.project.printOrientation==='portrait'?6:4;
+  if(!['(주)민커뮤니케이션','(주)공감에스디'].includes(state.project.contractor))state.project.contractor='(주)민커뮤니케이션';
+  for(const id of projectFields){
+    const el=$(id),v=state.project[id];
+    if(!el)continue;
+    if(el.type==='checkbox')el.checked=!!v;
+    else el.value=String(v??'');
+  }
+  if($('outputOption'))$('outputOption').value=state.project.printOrientation==='portrait'?'portrait6':'landscape4';
+  updatePrintPageRule();
+}
+
+projectFields.forEach(id=>{
+  const el=$(id);
+  if(!el)return;
+  el.addEventListener('focus',()=>{el.dataset.before=snapshot();},{once:false});
+  const evt=(el.type==='checkbox'||el.tagName==='SELECT')?'change':'input';
+  el.addEventListener(evt,()=>{
+    let v=el.type==='checkbox'?el.checked:el.value;
+    state.project[id]=v;
+    markDirty();
+    rebuildPages();
+  });
+  el.addEventListener('blur',()=>{
+    if(el.dataset.before&&el.dataset.before!==snapshot()){
+      history.push(el.dataset.before);
+      if(history.length>50)history.shift();
+      future=[];
+      updateUndoButtons();
+    }
+    delete el.dataset.before;
+  });
+});
+
+if($('outputOption')){
+  $('outputOption').addEventListener('focus',()=>{$('outputOption').dataset.before=snapshot();});
+  $('outputOption').addEventListener('change',e=>{
+    const portrait=e.target.value==='portrait6';
+    state.project.printOrientation=portrait?'portrait':'landscape';
+    state.project.defaultLayout=portrait?6:4;
+    updatePrintPageRule();
+    markDirty();
+    rebuildPages();
+    if($('previewView').classList.contains('active'))renderPreview();
+  });
+  $('outputOption').addEventListener('blur',()=>{
+    const el=$('outputOption');
+    if(el.dataset.before&&el.dataset.before!==snapshot()){
+      history.push(el.dataset.before);
+      if(history.length>50)history.shift();
+      future=[];
+      updateUndoButtons();
+    }
+    delete el.dataset.before;
+  });
+}
+
+function inferStage(path=''){
+  const s=path.toLowerCase().replace(/\s/g,'');
+  if(/공사전|착공전|before/.test(s))return'before';
+  if(/공사중|시공중|during|process/.test(s))return'during';
+  if(/준공|완료|complete|after/.test(s))return'complete';
+  return'';
+}
+
+function inferSpace(path=''){
+  const parts=path.split(/[\\/]/).filter(Boolean);
+  if(parts.length>1){
+    const candidate=parts[parts.length-2];
+    if(!inferStage(candidate))return candidate;
+  }
+  return'';
+}
+
+async function importFiles(fileList){
+  const files=[...fileList].filter(f=>f.type.startsWith('image/')||/\.(jpe?g|png|webp|bmp|gif)$/i.test(f.name));
+  if(!files.length){
+    toast('추가할 수 있는 이미지 파일이 없습니다.','warn');
+    return;
+  }
+  pushHistory();
+  setProgress(true,'사진 등록','파일을 즉시 등록하고 있습니다.',0);
+  let added=0,dupes=0;
+  const existing=new Set(state.photos.map(p=>p.hash).filter(Boolean));
+
+  for(let i=0;i<files.length;i++){
+    const f=files[i];
+    try{
+      setProgress(true,'사진 등록',`${i+1} / ${files.length} · ${f.name}`,Math.round(i/files.length*100));
+      const hash=`${f.name}_${f.size}_${f.lastModified}`;
+      if(existing.has(hash)){dupes++;continue;}
+      existing.add(hash);
+
+      const id=uid(), path=f.webkitRelativePath||'', suggested=inferStage(path);
+      const url=URL.createObjectURL(f);
+      assetMap.set(id,{blob:f,thumbBlob:f,url,thumbUrl:url});
+
+      const p={
+        id,fileName:f.name,mime:f.type||'image/jpeg',size:f.size,hash,
+        width:1200,height:800,stage:suggested||'unclassified',
+        suggestedStage:suggested,space:inferSpace(path),trade:'',
+        order:state.photos.length,fitMode:'contain',
+        zoom:1,x:0,y:0,rotation:0,breakBefore:false
+      };
+      state.photos.push(p);
+
+      const img=new Image();
+      img.onload=()=>{
+        p.width=img.naturalWidth||1200;
+        p.height=img.naturalHeight||800;
+      };
+      img.src=url;
+
+      added++;
+    }catch(err){
+      console.error('File import error:', err);
+    }
+  }
+  setProgress(false);
+  markDirty();
+  rebuildPages();
+  renderPhotos();
+  renderStats();
+  openView('photosView');
+  toast(`${added}장 등록 완료${dupes?` · 중복 ${dupes}장 제외`:''}`);
+}
+
+$('addPhotosBtn').onclick=()=>$('photoInput').click();
+$('addFolderBtn').onclick=()=>$('folderInput').click();
+$('photoInput').onchange=e=>{if(e.target.files?.length)importFiles(e.target.files);e.target.value='';};
+$('folderInput').onchange=e=>{if(e.target.files?.length)importFiles(e.target.files);e.target.value='';};
+
+$('replacePhotoInput').onchange=async e=>{
+  const f=e.target.files[0];
+  e.target.value='';
+  const p=state.photos.find(x=>x.id===editorPhotoId);
+  if(!f||!p)return;
+  try{
+    pushHistory();
+    const old=assetMap.get(p.id);
+    if(old?.url)URL.revokeObjectURL(old.url);
+    const url=URL.createObjectURL(f);
+    assetMap.set(p.id,{blob:f,thumbBlob:f,url,thumbUrl:url});
+    Object.assign(p,{fileName:f.name,mime:f.type||'image/jpeg',size:f.size,hash:`${f.name}_${f.size}_${f.lastModified}`,fitMode:'contain',zoom:1,x:0,y:0});
+    const img=new Image();
+    img.onload=()=>{p.width=img.naturalWidth;p.height=img.naturalHeight;};
+    img.src=url;
+    markDirty();
+    renderPhotos();
+    renderPreview();
+    toast('사진 교체 완료');
+  }catch(err){
+    toast('사진 교체 실패: '+err.message,'error');
+  }
+};
+
+const dz=$('dropzone');
+['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('drag');}));
+['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('drag');}));
+dz.addEventListener('drop',e=>{
+  e.preventDefault();
+  if(e.dataTransfer?.files)importFiles(e.dataTransfer.files);
+});
+
+function filteredPhotos(){
+  return state.photos;
+}
+
+function photoUrl(p,thumb=false){
+  const a=assetMap.get(p.id);
+  return a?(thumb?(a.thumbUrl||a.url):a.url):'';
+}
+
+function getLayoutSlotAspect(layout=4){
+  layout = Number(layout);
+  if(state.project.printOrientation==='portrait'){
+    if(layout === 1) return 170 / 210;
+    if(layout === 2) return 170 / 96;
+    if(layout === 6) return 82.5 / 61;
+    return 82.5 / 96;
+  }
+  if(layout === 1) return 267 / 167;
+  if(layout === 2) return 129.5 / 167;
+  if(layout === 6) return 84 / 81.5;
+  return 129.5 / 81.5;
+}
+
+function calcImageStyle(p, frameAspect = 1.589){
+  const imgAspect = (p.width && p.height) ? (p.width / p.height) : 1.333;
+  const fit = p.fitMode || 'cover';
+  const x = p.x || 0;
+  const y = p.y || 0;
+  const z = p.zoom || 1;
+  const r = p.rotation || 0;
+
+  let sizeCss = '';
+  if(fit === 'cover'){
+    if(imgAspect >= frameAspect){
+      sizeCss = 'height:100%!important;width:auto!important;min-width:100%!important;min-height:100%!important;max-width:none!important;max-height:none!important;';
+    } else {
+      sizeCss = 'width:100%!important;height:auto!important;min-width:100%!important;min-height:100%!important;max-width:none!important;max-height:none!important;';
+    }
+  } else {
+    if(imgAspect >= frameAspect){
+      sizeCss = 'width:100%!important;height:auto!important;max-width:100%!important;max-height:100%!important;min-width:0!important;min-height:0!important;';
+    } else {
+      sizeCss = 'height:100%!important;width:auto!important;max-width:100%!important;max-height:100%!important;min-width:0!important;min-height:0!important;';
+    }
+  }
+
+  const transformCss = `transform:translate(calc(-50% + ${x}%), calc(-50% + ${y}%)) scale(${z}) rotate(${r}deg);`;
+  return `position:absolute;left:50%;top:50%;${sizeCss}${transformCss}transform-origin:center center;`;
+}
+
+function renderSpaces(){
+  const arr=[...new Set(state.photos.map(p=>(p.space||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ko'));
+  $('spaceOptions').innerHTML=arr.map(s=>`<option value="${esc(s)}"></option>`).join('');
+}
+
+function updateSelectionDock(){
+  const n=state.selected?.size||0;
+  if($('selectionDock'))$('selectionDock').classList.toggle('open',n>0 && $('projectView').classList.contains('active'));
+  if($('dockSelectedCount'))$('dockSelectedCount').textContent=n+'장 선택';
+}
+
+function updateSelectionUIOnly(){
+  $$('.photo-card').forEach(card=>{
+    const id=card.dataset.id;
+    const isSel=state.selected.has(id);
+    card.classList.toggle('selected',isSel);
+    const chk=card.querySelector('[data-action=select]');
+    if(chk)chk.checked=isSel;
+  });
+  updateSelectionDock();
+}
+
+/* =========================================================
+   사진 관리 탭: 다중 선택된 사진 일괄(묶음) 드래그 앤 드롭 이동
+   ========================================================= */
+function renderPhotos(){
+  renderSpaces();
+  const list=filteredPhotos();
+  if(!list.length){
+    $('photoGrid').innerHTML='<div class="empty" style="grid-column:1/-1;text-align:center;padding:40px;color:#829ab1;background:#fff;border-radius:16px;border:1px solid #e2e8f0">등록된 사진이 없습니다. 상단 [사진 추가] 버튼을 눌러 사진을 등록해 주세요.</div>';
+    updateUX();
+    return;
+  }
+  $('photoGrid').innerHTML=list.map((p,i)=>{
+    const low=Math.max(p.width,p.height)<1600;
+    return `<article class="photo-card ${state.selected.has(p.id)?'selected':''}" data-id="${p.id}" draggable="true">
+      <label class="check" title="선택"><input type="checkbox" data-action="select" ${state.selected.has(p.id)?'checked':''}></label>
+      <div class="photo-thumb" data-action="thumb-area" title="클릭: 선택 | 더블클릭: 위치 맞춤 편집 | 드래그: 순서 변경">
+        <img loading="lazy" src="${photoUrl(p,true)}" style="${calcImageStyle(p, 1.589)}" alt="">
+        ${p.suggestedStage&&p.stage==='unclassified'?`<span class="suggest">추천: ${STAGES[p.suggestedStage].label}</span>`:''}
+      </div>
+      <div class="photo-body">
+        <div class="photo-name">${i+1}. ${esc(p.fileName)}${low?'<span class="warn-dot" title="권장 1600px 미만"></span>':''}</div>
+        <div class="photo-meta"><span>${p.width}×${p.height}</span><span>${fmtBytes(p.size)}</span></div>
+        <select data-action="stage">
+          <option value="before" ${p.stage==='before'?'selected':''}>공사 전</option>
+          <option value="during" ${p.stage==='during'?'selected':''}>공사 중</option>
+          <option value="complete" ${p.stage==='complete'?'selected':''}>준공</option>
+          <option value="unclassified" ${p.stage==='unclassified'?'selected':''}>미분류</option>
+        </select>
+        <input data-action="space" value="${esc(p.space)}" list="spaceOptions" placeholder="공간명 (예: 2층 과학실)">
+        <input data-action="trade" value="${esc(p.trade)}" placeholder="공종 (예: 바닥 철거)">
+        <div class="photo-footer">
+          <button class="btn small" data-action="edit">위치·크기 편집</button>
+          <button class="btn small" data-action="replace">사진 교체</button>
+          <button class="btn small" data-action="break">${p.breakBefore?'나눔 해제':'페이지 나눔'}</button>
+        </div>
+      </div>
+    </article>`;
+  }).join('');
+
+  $$('.photo-card').forEach(card=>{
+    const id=card.dataset.id, p=state.photos.find(x=>x.id===id);
+    if(!p)return;
+
+    card.addEventListener('dragstart', e=>{
+      draggedPhotoId = id;
+      card.classList.add('dragging');
+      if(!state.selected.has(id)){
+        state.selected.clear();
+        state.selected.add(id);
+        updateSelectionUIOnly();
+      }
+      e.dataTransfer.setData('text/plain', id);
+      e.dataTransfer.effectAllowed = 'move';
+    });
+
+    card.addEventListener('dragend', ()=>{
+      card.classList.remove('dragging');
+      $$('.photo-card').forEach(c=>c.classList.remove('drag-over'));
+      draggedPhotoId = null;
+    });
+
+    card.addEventListener('dragover', e=>{
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      if(draggedPhotoId && draggedPhotoId !== id){
+        card.classList.add('drag-over');
+      }
+    });
+
+    card.addEventListener('dragleave', ()=>{
+      card.classList.remove('drag-over');
+    });
+
+    card.addEventListener('drop', e=>{
+      e.preventDefault();
+      card.classList.remove('drag-over');
+      if(!draggedPhotoId || draggedPhotoId === id) return;
+
+      pushHistory();
+
+      const selectedIds = state.selected.has(draggedPhotoId) ? [...state.selected] : [draggedPhotoId];
+      const movingPhotos = state.photos.filter(x => selectedIds.includes(x.id));
+      const targetPhoto = state.photos.find(x => x.id === id);
+
+      if(movingPhotos.length && targetPhoto){
+        const remaining = state.photos.filter(x => !selectedIds.includes(x.id));
+        let targetIdx = remaining.findIndex(x => x.id === id);
+        if(targetIdx < 0) targetIdx = remaining.length;
+
+        remaining.splice(targetIdx, 0, ...movingPhotos);
+        state.photos = remaining;
+        state.photos.forEach((ph, idx) => ph.order = idx);
+
+        markDirty();
+        rebuildPages();
+        renderPhotos();
+        renderPreview();
+        toast(`${movingPhotos.length}장의 사진 순서가 일괄 이동되었습니다.`);
+      }
+    });
+
+    const thumb=card.querySelector('[data-action=thumb-area]');
+    if(thumb){
+      thumb.ondblclick=(e)=>{
+        e.stopPropagation();
+        openPhotoEditor(id);
+      };
+    }
+
+    card.addEventListener('click',e=>{
+      if(['INPUT','SELECT','BUTTON','LABEL'].includes(e.target.tagName))return;
+      if(e.shiftKey && lastSelectedCardId && lastSelectedCardId!==id){
+        const visible=filteredPhotos();
+        const idx1=visible.findIndex(x=>x.id===lastSelectedCardId);
+        const idx2=visible.findIndex(x=>x.id===id);
+        if(idx1>=0&&idx2>=0){
+          const [start,end]=[Math.min(idx1,idx2),Math.max(idx1,idx2)];
+          for(let k=start;k<=end;k++)state.selected.add(visible[k].id);
+          updateSelectionUIOnly();
+          return;
+        }
+      }
+      if(state.selected.has(id)){
+        state.selected.delete(id);
+      }else{
+        state.selected.add(id);
+        lastSelectedCardId=id;
+      }
+      updateSelectionUIOnly();
+    });
+
+    const selectCheck=card.querySelector('[data-action=select]');
+    selectCheck.onchange=e=>{
+      if(e.target.checked){
+        state.selected.add(id);
+        lastSelectedCardId=id;
+      }else{
+        state.selected.delete(id);
+      }
+      updateSelectionUIOnly();
+    };
+
+    card.querySelector('[data-action=edit]').onclick=(e)=>{
+      e.stopPropagation();
+      openPhotoEditor(id);
+    };
+    card.querySelector('[data-action=replace]').onclick=(e)=>{
+      e.stopPropagation();
+      editorPhotoId=id;
+      $('replacePhotoInput').click();
+    };
+
+    ['stage','space','trade'].forEach(key=>{
+      const el=card.querySelector(`[data-action=${key}]`);
+      if(!el)return;
+      el.onfocus=()=>{el.dataset.before=p[key]||'';};
+      el.onchange=()=>{
+        if(p[key]!==el.value){
+          pushHistory();
+          p[key]=el.value;
+          markDirty();
+          rebuildPages();
+          renderPreview();
+        }
+      };
+    });
+
+    card.querySelector('[data-action=break]').onclick=(e)=>{
+      e.stopPropagation();
+      pushHistory();
+      p.breakBefore=!p.breakBefore;
+      markDirty();
+      rebuildPages();
+      renderPhotos();
+      renderPreview();
+    };
+  });
+  updateUX();
+}
+
+/* Rubberband Drag Selection */
+let isDraggingBox=false, dragStartX=0, dragStartY=0, initialSelectedOnDrag=new Set();
+
+function initDragSelection(){
+  const panel=$('photosViewPanel')||$('photosView');
+  const box=$('dragSelectBox');
+  if(!panel||!box)return;
+
+  panel.addEventListener('mousedown',e=>{
+    if(e.button!==0)return;
+    if(['INPUT','SELECT','BUTTON','LABEL','OPTION'].includes(e.target.tagName))return;
+    if(e.target.closest('button')||e.target.closest('select')||e.target.closest('input'))return;
+    if(e.target.closest('.photo-card')) return;
+
+    isDraggingBox=true;
+    dragStartX=e.clientX;
+    dragStartY=e.clientY;
+
+    if(e.shiftKey||e.ctrlKey||e.metaKey){
+      initialSelectedOnDrag=new Set(state.selected);
+    }else{
+      state.selected.clear();
+      initialSelectedOnDrag=new Set();
+      updateSelectionUIOnly();
+    }
+
+    box.style.display='none';
+    box.style.left=dragStartX+'px';
+    box.style.top=dragStartY+'px';
+    box.style.width='0px';
+    box.style.height='0px';
+  });
+
+  window.addEventListener('mousemove',e=>{
+    if(!isDraggingBox)return;
+    const curX=e.clientX, curY=e.clientY;
+    const dx=curX-dragStartX, dy=curY-dragStartY;
+    if(Math.abs(dx)<5 && Math.abs(dy)<5)return;
+
+    e.preventDefault();
+    const left=Math.min(dragStartX,curX);
+    const top=Math.min(dragStartY,curY);
+    const width=Math.abs(dx);
+    const height=Math.abs(dy);
+
+    box.style.display='block';
+    box.style.left=left+'px';
+    box.style.top=top+'px';
+    box.style.width=width+'px';
+    box.style.height=height+'px';
+
+    const boxRect={left,top,right:left+width,bottom:top+height};
+    const newSelected=new Set(initialSelectedOnDrag);
+
+    $$('.photo-card').forEach(card=>{
+      const r=card.getBoundingClientRect();
+      const isIntersecting=!(r.right<boxRect.left || r.left>boxRect.right || r.bottom<boxRect.top || r.top>boxRect.bottom);
+      const id=card.dataset.id;
+      if(isIntersecting) newSelected.add(id);
+    });
+
+    state.selected=newSelected;
+    updateSelectionUIOnly();
+  });
+
+  window.addEventListener('mouseup',()=>{
+    if(!isDraggingBox)return;
+    isDraggingBox=false;
+    box.style.display='none';
+  });
+}
+initDragSelection();
+
+$('selectAllVisibleBtn').onclick=()=>{
+  filteredPhotos().forEach(p=>state.selected.add(p.id));
+  renderPhotos();
+};
+
+$('clearSelectionBtn').onclick=()=>{
+  state.selected.clear();
+  renderPhotos();
+};
+
+$('applyBulkBtn').onclick=()=>{
+  if(!state.selected.size){
+    toast('먼저 사진을 선택해 주세요.','warn');
+    return;
+  }
+  pushHistory();
+  const stage=$('bulkStage').value;
+  const space=$('bulkSpace').value.trim();
+  const trade=$('bulkTrade').value.trim();
+  const selectedIds=new Set(state.selected);
+  let count=0;
+  state.photos.forEach(p=>{
+    if(!selectedIds.has(p.id))return;
+    if(stage)p.stage=stage;
+    if(space)p.space=space;
+    if(trade)p.trade=trade;
+    count++;
+  });
+  state.selected.clear();
+  lastSelectedCardId=null;
+  markDirty();
+  rebuildPages();
+  renderPhotos();
+  if($('previewView').classList.contains('active'))renderPreview();
+  toast(`${count}장의 사진에 일괄 적용되었습니다.`);
+};
+
+$('deleteSelectedBtn').onclick=()=>{
+  if(!state.selected.size)return;
+  if(!confirm(`선택한 ${state.selected.size}장의 사진을 삭제하시겠습니까?\n실행 취소(Ctrl+Z)로 복구할 수 있습니다.`))return;
+  pushHistory();
+  state.photos=state.photos.filter(p=>!state.selected.has(p.id));
+  state.photos.forEach((p,i)=>p.order=i);
+  state.selected.clear();
+  markDirty();
+  rebuildPages();
+  renderPhotos();
+  renderPreview();
+};
+
+/* =========================================================
+   사진 편집 모달 (실제 대지 슬롯 크기 100% 동기화 & 1:1 직관적 Pan)
+   ========================================================= */
+let isPanDragging=false, panStartX=0, panStartY=0, panOrigX=0, panOrigY=0, curEditorAspect=1.589;
+
+function openPhotoEditor(id){
+  const p=state.photos.find(x=>x.id===id);
+  if(!p)return;
+  editorPhotoId=id;
+
+  const pageWithPhoto = state.pages.find(pg=>pg.photoIds.includes(id));
+  const currentLayout = pageWithPhoto ? pageWithPhoto.layout : (state.project.defaultLayout || 4);
+  curEditorAspect = getLayoutSlotAspect(currentLayout);
+
+  $('cropFrame').style.aspectRatio = String(curEditorAspect);
+
+  const im = $('editorImage');
+  im.onload = () => updateEditorPreview();
+  im.src = photoUrl(p);
+
+  $('editFit').value=p.fitMode||'cover';
+  $('editZoom').value=p.zoom||1;
+  $('editX').value=p.x||0;
+  $('editY').value=p.y||0;
+  $('editRotation').value=normalizeRotation(p.rotation||0);
+  $('editSpace').value=p.space||'';
+  $('editTrade').value=p.trade||'';
+
+  updateEditorPreview();
+  $('photoEditorModal').classList.add('open');
+}
+
+function normalizeRotation(deg){
+  let r=Math.round(deg)%360;
+  if(r>180)r-=360;
+  if(r<-180)r+=360;
+  return r;
+}
+
+function updateEditorPreview(){
+  const p=state.photos.find(x=>x.id===editorPhotoId);
+  if(!p)return;
+
+  const tempP = {
+    ...p,
+    fitMode: $('editFit').value,
+    zoom: Number($('editZoom').value),
+    x: Number($('editX').value),
+    y: Number($('editY').value),
+    rotation: Number($('editRotation').value)
+  };
+
+  const styleStr = calcImageStyle(tempP, curEditorAspect);
+  $('editorImage').style.cssText = styleStr;
+
+  $('editZoomOut').value = tempP.zoom.toFixed(2) + '×';
+  $('editXOut').value = (tempP.x > 0 ? '+' : '') + tempP.x.toFixed(1) + '%';
+  $('editYOut').value = (tempP.y > 0 ? '+' : '') + tempP.y.toFixed(1) + '%';
+  $('editRotationOut').value = tempP.rotation + '°';
+}
+
+['editFit','editZoom','editX','editY','editRotation'].forEach(id=>{
+  $(id).addEventListener('input',updateEditorPreview);
+  $(id).addEventListener('change',updateEditorPreview);
+});
+
+const cropFrameEl=$('cropFrame');
+cropFrameEl.addEventListener('mousedown',e=>{
+  if(e.button!==0)return;
+  isPanDragging=true;
+  panStartX=e.clientX;
+  panStartY=e.clientY;
+  panOrigX=Number($('editX').value);
+  panOrigY=Number($('editY').value);
+  e.preventDefault();
+});
+
+window.addEventListener('mousemove',e=>{
+  if(!isPanDragging)return;
+  const frameRect=cropFrameEl.getBoundingClientRect();
+  const dx=e.clientX-panStartX;
+  const dy=e.clientY-panStartY;
+
+  const pctX = (dx / frameRect.width) * 100;
+  const pctY = (dy / frameRect.height) * 100;
+
+  const newX = Math.max(-100, Math.min(100, Math.round((panOrigX + pctX) * 2) / 2));
+  const newY = Math.max(-100, Math.min(100, Math.round((panOrigY + pctY) * 2) / 2));
+
+  $('editX').value = newX;
+  $('editY').value = newY;
+  updateEditorPreview();
+});
+
+window.addEventListener('mouseup',()=>{
+  if(isPanDragging) isPanDragging=false;
+});
+
+cropFrameEl.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const curZ=Number($('editZoom').value);
+  const delta=e.deltaY<0?0.05:-0.05;
+  const newZ=Math.max(1,Math.min(3,curZ+delta));
+  $('editZoom').value=newZ.toFixed(2);
+  updateEditorPreview();
+},{passive:false});
+
+$('centerPosBtn').onclick=()=>{
+  $('editX').value=0;
+  $('editY').value=0;
+  updateEditorPreview();
+};
+
+$('fitCoverQuickBtn').onclick=()=>{
+  $('editFit').value='cover';
+  $('editZoom').value=1;
+  $('editX').value=0;
+  $('editY').value=0;
+  updateEditorPreview();
+};
+
+$('fitContainQuickBtn').onclick=()=>{
+  $('editFit').value='contain';
+  $('editZoom').value=1;
+  $('editX').value=0;
+  $('editY').value=0;
+  updateEditorPreview();
+};
+
+$('rotateLeftBtn').onclick=()=>{
+  const cur=Number($('editRotation').value);
+  $('editRotation').value=normalizeRotation(cur-90);
+  updateEditorPreview();
+};
+
+$('rotateRightBtn').onclick=()=>{
+  const cur=Number($('editRotation').value);
+  $('editRotation').value=normalizeRotation(cur+90);
+  updateEditorPreview();
+};
+
+$('resetCropBtn').onclick=()=>{
+  $('editFit').value='cover';
+  $('editZoom').value=1;
+  $('editX').value=0;
+  $('editY').value=0;
+  $('editRotation').value=0;
+  updateEditorPreview();
+};
+
+$('closeEditorBtn').onclick=()=>$('photoEditorModal').classList.remove('open');
+$('photoEditorModal').addEventListener('click',e=>{if(e.target===$('photoEditorModal'))$('photoEditorModal').classList.remove('open');});
+
+$('applyEditorBtn').onclick=()=>{
+  const p=state.photos.find(x=>x.id===editorPhotoId);
+  if(!p)return;
+  pushHistory();
+  Object.assign(p,{
+    fitMode:$('editFit').value,
+    zoom:Number($('editZoom').value),
+    x:Number($('editX').value),
+    y:Number($('editY').value),
+    rotation:normalizeRotation(Number($('editRotation').value)),
+    space:$('editSpace').value.trim(),
+    trade:$('editTrade').value.trim()
+  });
+  markDirty();
+  rebuildPages();
+  renderPhotos();
+  renderPreview();
+  $('photoEditorModal').classList.remove('open');
+  toast('사진 맞춤 및 정보가 완벽하게 연동되었습니다.');
+};
+
+/* 사용자가 배치한 순서(order) 100% 완전 보존 정렬 엔진 */
+function sortedPhotos(exclude=new Set()){
+  const filtered = state.photos.filter(p=>!exclude.has(p.id));
+  if(state.project.stageSeparate){
+    return filtered.slice().sort((a,b)=>{
+      const ordA=STAGES[a.stage]?.order??99, ordB=STAGES[b.stage]?.order??99;
+      if(ordA!==ordB)return ordA-ordB;
+      return a.order-b.order;
+    });
+  }
+  return filtered.slice().sort((a,b)=>a.order-b.order);
+}
+
+function buildAutoPages(photos){
+  const pages=[];
+  let cur=null,lastStage=null,lastSpace=null;
+  for(const p of photos){
+    const portrait=state.project.printOrientation==='portrait';
+    const cap=portrait?6:(state.project.defaultLayout||4);
+    const needNew=!cur||cur.photoIds.length>=cur.layout||p.breakBefore||
+      (state.project.stageSeparate&&lastStage!==null&&p.stage!==lastStage)||
+      (state.project.spaceSeparate&&lastSpace!==null&&(p.space||'')!==lastSpace);
+
+    if(needNew){
+      cur={id:'auto_'+p.id,photoIds:[],layout:cap,locked:false,compare:false,stage:p.stage,space:p.space||''};
+      const ov=state.pageOverrides[p.id];
+      if(!portrait&&ov?.layout)cur.layout=Number(ov.layout);
+      if(!portrait&&ov?.compare)cur.compare=true;
+      pages.push(cur);
+    }
+    cur.photoIds.push(p.id);
+    lastStage=p.stage;
+    lastSpace=p.space||'';
+  }
+  return pages;
+}
+
+function rebuildPages(){
+  const portrait=state.project.printOrientation==='portrait';
+  const lockedIds=portrait?new Set():new Set(state.lockedPages.flatMap(p=>p.photoIds));
+  let pages=buildAutoPages(sortedPhotos(lockedIds));
+  const locked=portrait?[]:state.lockedPages.slice().sort((a,b)=>a.index-b.index);
+  for(const lp of locked){
+    const firstP=state.photos.find(p=>p.id===lp.photoIds[0]);
+    const page={...lp,locked:true,stage:firstP?.stage||'unclassified',space:firstP?.space||''};
+    pages.splice(Math.min(lp.index,pages.length),0,page);
+  }
+  state.pages=pages;
+  if(state.activePage>=pages.length)state.activePage=Math.max(0,pages.length-1);
+  renderStats();
+}
+
+function currentPage(){
+  if(state.activePage===-1)return null;
+  return state.pages[state.activePage]||null;
+}
+
+function setPageLayout(layout){
+  const pg=currentPage();
+  if(!pg)return;
+  if(state.project.printOrientation==='portrait'){
+    toast('세로 출력은 페이지당 6장(가로 2 × 세로 3)으로 고정됩니다.','warn');
+    $('pageLayout').value='6';
+    return;
+  }
+  pushHistory();
+  if(pg.locked){
+    const lp=state.lockedPages.find(x=>x.id===pg.id);
+    if(lp)lp.layout=Number(layout);
+  }else{
+    const first=pg.photoIds[0];
+    if(first)state.pageOverrides[first]={...(state.pageOverrides[first]||{}),layout:Number(layout)};
+  }
+  markDirty();
+  rebuildPages();
+  renderPreview();
+}
+
+function setPageLock(lock){
+  const pg=currentPage();
+  if(!pg)return;
+  pushHistory();
+  if(lock&&!pg.locked){
+    state.lockedPages.push({id:'locked_'+uid(),index:state.activePage,photoIds:[...pg.photoIds],layout:pg.layout,compare:!!pg.compare});
+  }else if(!lock&&pg.locked){
+    state.lockedPages=state.lockedPages.filter(x=>x.id!==pg.id);
+  }
+  markDirty();
+  rebuildPages();
+  renderPreview();
+}
+
+function setPageCompare(on){
+  const pg=currentPage();
+  if(!pg)return;
+  pushHistory();
+  if(pg.locked){
+    const lp=state.lockedPages.find(x=>x.id===pg.id);
+    if(lp){lp.compare=on;if(on)lp.layout=2;}
+  }else{
+    const first=pg.photoIds[0];
+    if(first){state.pageOverrides[first]={...(state.pageOverrides[first]||{}),compare:on,layout:on?2:pg.layout};}
+  }
+  markDirty();
+  rebuildPages();
+  renderPreview();
+}
+
+function deletePageByIndex(pageIdx, deletePhotos = true){
+  const pg = state.pages[pageIdx];
+  if(!pg) return;
+
+  pushHistory();
+  if(deletePhotos){
+    const idsToDelete = new Set(pg.photoIds);
+    state.photos = state.photos.filter(p => !idsToDelete.has(p.id));
+    state.photos.forEach((p, i) => p.order = i);
+  } else {
+    pg.photoIds.forEach(id=>{
+      const p = state.photos.find(x=>x.id===id);
+      if(p) p.breakBefore = false;
+      delete state.pageOverrides[id];
+    });
+  }
+
+  if(pg.locked){
+    state.lockedPages = state.lockedPages.filter(x => x.id !== pg.id);
+  }
+  const firstId = pg.photoIds[0];
+  if(firstId){
+    delete state.pageOverrides[firstId];
+    const p = state.photos.find(x => x.id === firstId);
+    if(p) p.breakBefore = false;
+  }
+
+  markDirty();
+  rebuildPages();
+  if(state.activePage >= state.pages.length) state.activePage = Math.max(0, state.pages.length - 1);
+  renderPhotos();
+  renderPreview();
+  toast(deletePhotos ? '페이지와 포함된 사진이 삭제되었습니다.' : '페이지 분할/잠금이 해제되었습니다.');
+}
+
+$('pageLayout').onchange=e=>setPageLayout(e.target.value);
+$('pageLocked').onchange=e=>setPageLock(e.target.value==='true');
+$('pageCompare').onchange=e=>setPageCompare(e.target.value==='true');
+
+$('deleteCurrentPageBtn').onclick=()=>{
+  const pg=currentPage();
+  if(!pg)return;
+  if(confirm(`현재 페이지 (PAGE ${state.activePage+1})를 사진과 함께 완전히 삭제하시겠습니까?\n\n- 확인: 사진 ${pg.photoIds.length}장 및 페이지 영구 삭제\n- 취소: 삭제 안 함`)){
+    deletePageByIndex(state.activePage, true);
+  }
+};
+
+$('releasePagePhotosBtn').onclick=()=>{
+  const pg=currentPage();
+  if(!pg)return;
+  deletePageByIndex(state.activePage, false);
+};
+
+$('reflowBtn').onclick=()=>{
+  if(!confirm('잠금된 페이지를 제외하고 사진을 자동 재배치합니다.'))return;
+  pushHistory();
+  state.pageOverrides={};
+  state.photos.forEach(p=>p.breakBefore=false);
+  markDirty();
+  rebuildPages();
+  renderPreview();
+  renderPhotos();
+  toast('자동 재배치를 완료했습니다.');
+};
+
+$('breakBeforePageBtn').onclick=()=>{
+  const pg=currentPage(),p=pg&&state.photos.find(x=>x.id===pg.photoIds[0]);
+  if(!p)return;
+  pushHistory();
+  p.breakBefore=true;
+  markDirty();
+  rebuildPages();
+  renderPreview();
+  renderPhotos();
+};
+
+$('clearBreakBtn').onclick=()=>{
+  const pg=currentPage(),p=pg&&state.photos.find(x=>x.id===pg.photoIds[0]);
+  if(!p)return;
+  pushHistory();
+  p.breakBefore=false;
+  markDirty();
+  rebuildPages();
+  renderPreview();
+  renderPhotos();
+};
+
+/* =========================================================
+   페이지 대지 HTML (상단 헤더 표준화: [공사명 / 공사단계 · 현장명])
+   ========================================================= */
+function pageHtml(page,index){
+  const ids=page.photoIds, layout=Number(page.layout||4), slots=[];
+  const slotAspect = getLayoutSlotAspect(layout);
+  const orientation=state.project.printOrientation==='portrait'?'portrait':'landscape';
+
+  let slotSeqBase = 0;
+  for(let pIdx = 0; pIdx < index; pIdx++){
+    slotSeqBase += Number(state.pages[pIdx]?.layout || 4);
+  }
+
+  for(let i=0;i<layout;i++){
+    const p=state.photos.find(x=>x.id===ids[i]);
+    const slotNumber = slotSeqBase + i + 1;
+    const numLabel = page.compare ? (i===0?'BEFORE':'AFTER') : ('PHOTO ' + String(slotNumber).padStart(2,'0'));
+
+    if(!p){
+      slots.push(`<div class="slot" data-slot-idx="${i}" data-photo-id="">
+        <div class="frame empty-slot">빈 사진 슬롯 (여기로 드래그)</div>
+        <div class="caption"><span class="num">${numLabel}</span><span class="txt"></span></div>
+      </div>`);
+      continue;
+    }
+    const txtParts=[p.space,p.trade].filter(Boolean).join(' · ');
+    const displayPhoto = {...p,fitMode:'contain',x:0,y:0,zoom:1};
+    slots.push(`<div class="slot" data-slot-idx="${i}" data-photo-id="${p.id}" draggable="true" title="더블클릭: 위치 맞춤 편집 | 드래그: 다른 슬롯으로 이동">
+      <div class="frame"><img src="${photoUrl(p)}" style="${calcImageStyle(displayPhoto, slotAspect)}" alt=""></div>
+      <div class="caption">
+        <span class="num">${numLabel}</span>
+        <span class="txt">${esc(txtParts||'미지정')}</span>
+      </div>
+    </div>`);
+  }
+
+  const first=state.photos.find(x=>x.id===ids[0]);
+  const stageLabel=first ? (STAGES[first.stage]?.label||'미분류') : '미분류';
+  const locationLabel=state.project.locationName ? (' · ' + state.project.locationName) : '';
+
+  return `<section class="print-page orientation-${orientation}">
+    <div class="page-rotator">
+    <div class="page-inner">
+      <div class="doc-header">
+        <div class="doc-title">${esc(state.project.documentTitle||'준공사진대지')}</div>
+        <div class="doc-context">${esc(state.project.siteName||'공사명 미입력')}<br>${esc(stageLabel)}${esc(locationLabel)}</div>
+      </div>
+      <div class="slots layout-${layout}">${slots.join('')}</div>
+      <div class="footer">
+        <span>${esc(state.project.contractor||'MIN COMMUNICATION')}</span>
+        <span>${index+1} / ${state.pages.length}</span>
+      </div>
+    </div>
+    </div>
+  </section>`;
+}
+
+function coverHtml(){
+  const siteName = state.project.siteName || '과천문원중학교 통합 시설개선 공사';
+  const locationName = state.project.locationName || '과천문원중학교';
+  const contractor = state.project.contractor || '(주)민커뮤니케이션';
+  const docTitle = state.project.documentTitle || '준공사진대지';
+  const orientation=state.project.printOrientation==='portrait'?'portrait':'landscape';
+
+  return `<section class="print-page cover-page orientation-${orientation}">
+    <div class="page-rotator">
+    <svg class="cover-top-line-svg" viewBox="0 0 1122.5 90" preserveAspectRatio="none">
+      <line x1="60" y1="45" x2="1122.5" y2="45" stroke="#102a43" stroke-width="4.5" />
+      <polygon points="985,20 1122.5,20 1122.5,45 968,45" fill="#102a43" />
+    </svg>
+
+    <svg class="cover-bottom-poly-svg" viewBox="0 0 560 560" preserveAspectRatio="none">
+      <polygon points="0,560 170,560 560,170 560,0" fill="#eef4f9" />
+      <line x1="170" y1="560" x2="560" y2="170" stroke="#cbd5e1" stroke-width="2" />
+      <polygon points="260,560 560,560 560,260" fill="#102a43" />
+    </svg>
+
+    <div class="cover-body">
+      <div class="cover-title-box">
+        <div class="cover-title-main-row">
+          <div class="cover-title-bar"></div>
+          <div class="cover-title-text">${esc(docTitle)}</div>
+        </div>
+        <div class="cover-title-sub-bar"></div>
+        <div class="cover-title-eng">COMPLETION PHOTO RECORD</div>
+      </div>
+
+      <div class="cover-card-container">
+        <div class="cover-card-row">
+          <div class="cover-card-badge">
+            <svg viewBox="0 0 24 24"><path d="M4 22h16M4 2h10l6 6v14M9 18v-4h6v4M8 6h4M8 10h4M8 14h4"/></svg>
+          </div>
+          <div class="cover-card-label">공사명</div>
+          <div class="cover-card-sep">|</div>
+          <div class="cover-card-val">${esc(siteName)}</div>
+        </div>
+        <div class="cover-card-row">
+          <div class="cover-card-badge">
+            <svg viewBox="0 0 24 24"><path d="M12 21s-6-5.5-6-10a6 6 0 1 1 12 0c0 4.5-6 10-6 10z"/><circle cx="12" cy="11" r="2.5"/></svg>
+          </div>
+          <div class="cover-card-label">현장명</div>
+          <div class="cover-card-sep">|</div>
+          <div class="cover-card-val">${esc(locationName)}</div>
+        </div>
+        <div class="cover-card-row">
+          <div class="cover-card-badge">
+            <svg viewBox="0 0 24 24"><path d="M3 17h18M5 17c0-4 3.5-7 7-7s7 3 7 7M10 7h4v3h-4z"/></svg>
+          </div>
+          <div class="cover-card-label">시공사</div>
+          <div class="cover-card-sep">|</div>
+          <div class="cover-card-val">${esc(contractor)}</div>
+        </div>
+      </div>
+
+      <div class="cover-footer-row">
+        <div class="cover-footer-slash-tab"></div>
+        <span class="cover-footer-slashes">///</span>
+        <span class="cover-footer-desc">준공사진 기록 문서</span>
+        <div class="cover-footer-rail"><div class="cover-footer-dot"></div></div>
+      </div>
+    </div>
+    </div>
+  </section>`;
+}
+
+/* =========================================================
+   페이지 목록 렌더링 & 슬롯 간 안전 교체 (새 페이지 발생 원천 차단)
+   ========================================================= */
+function renderPreview(){
+  rebuildPages();
+  const list=$('pageList');
+  const photosById=new Map(state.photos.map(p=>[p.id,p]));
+  let itemsHtml = '';
+
+  itemsHtml += `<button class="page-mini ${state.activePage===-1?'active':''}" data-index="-1" style="background:${state.activePage===-1?'#f0f7ff':'#ffffff'}">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <b>[표지] COVER PAGE</b>
+        <span class="muted" style="color:var(--blue)">프로젝트 정보</span>
+      </div>
+      <div style="margin-top:6px;padding:8px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-size:10.5px">
+        <b style="color:var(--navy);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(state.project.documentTitle||'준공사진대지')}</b>
+        <span style="color:#627d98;font-size:9.5px;display:block;margin-top:2px">${esc(state.project.siteName||'공사명 미입력')}</span>
+      </div>
+    </button>`;
+
+  itemsHtml += state.pages.map((pg,i)=>{
+    const layout = Number(pg.layout || 4);
+    const slotAspect = getLayoutSlotAspect(layout);
+    const slotsThumb = [];
+    for(let s=0; s<layout; s++){
+      const id = pg.photoIds[s];
+      const p = id ? photosById.get(id) : null;
+      if(p){
+        const thumbPhoto = {...p,fitMode:'contain',x:0,y:0,zoom:1};
+        slotsThumb.push(`<div class="page-thumb-cell" style="aspect-ratio:${slotAspect}"><img src="${photoUrl(p,true)}" style="${calcImageStyle(thumbPhoto, slotAspect)}"></div>`);
+      } else {
+        slotsThumb.push(`<div class="page-thumb-cell empty" style="aspect-ratio:${slotAspect}"></div>`);
+      }
+    }
+
+    const colClass = (layout===1)?'cols-1':(layout===6)?'cols-3':'cols-2';
+
+    return `<div class="page-mini ${i===state.activePage?'active':''} ${pg.locked?'locked':''}" data-index="${i}" draggable="true" title="클릭: 페이지 보기 | 마우스 드래그: 페이지 순서 이동">
+      <button class="page-mini-del-btn" data-del-page="${i}" title="이 페이지 삭제 (사진 포함)">✕</button>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <b>PAGE ${String(i+1).padStart(2,'0')}</b>
+        <span class="muted">${STAGES[pg.stage]?.label||'미분류'} · ${pg.photoIds.length}/${layout}장</span>
+      </div>
+      <div class="page-thumb-grid ${colClass}">
+        ${slotsThumb.join('')}
+      </div>
+    </div>`;
+  }).join('');
+
+  list.innerHTML = itemsHtml || '<div class="empty small" style="padding:20px;text-align:center;color:#829ab1">사진을 등록하면 페이지가 생성됩니다.</div>';
+
+  $$('.page-mini').forEach(b=>{
+    const pIdx = Number(b.dataset.index);
+
+    b.onclick=(e)=>{
+      if(e.target.closest('[data-del-page]')) return;
+      state.activePage=pIdx;
+      renderPreview();
+    };
+
+    if(pIdx >= 0){
+      b.addEventListener('dragstart', e=>{
+        draggedPageIdx = pIdx;
+        b.classList.add('page-dragging');
+        e.dataTransfer.setData('text/plain', 'page_'+pIdx);
+        e.dataTransfer.effectAllowed = 'move';
+      });
+
+      b.addEventListener('dragend', ()=>{
+        b.classList.remove('page-dragging');
+        $$('.page-mini').forEach(m=>m.classList.remove('page-drag-over'));
+        draggedPageIdx = null;
+      });
+
+      b.addEventListener('dragover', e=>{
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if(draggedPageIdx !== null && draggedPageIdx !== pIdx){
+          b.classList.add('page-drag-over');
+        }
+      });
+
+      b.addEventListener('dragleave', ()=>{
+        b.classList.remove('page-drag-over');
+      });
+
+      b.addEventListener('drop', e=>{
+        e.preventDefault();
+        b.classList.remove('page-drag-over');
+        if(draggedPageIdx === null || draggedPageIdx === pIdx) return;
+
+        pushHistory();
+
+        const srcPage = state.pages[draggedPageIdx];
+        const tgtPage = state.pages[pIdx];
+        if(srcPage && tgtPage){
+          const srcPhotoIds = srcPage.photoIds;
+          const tgtFirstPhoto = state.photos.find(x => x.id === tgtPage.photoIds[0]);
+
+          const movingPhotos = state.photos.filter(x => srcPhotoIds.includes(x.id));
+          const remainingPhotos = state.photos.filter(x => !srcPhotoIds.includes(x.id));
+
+          let insertIdx = tgtFirstPhoto ? remainingPhotos.findIndex(x => x.id === tgtFirstPhoto.id) : remainingPhotos.length;
+          if(draggedPageIdx > pIdx){
+            remainingPhotos.splice(insertIdx, 0, ...movingPhotos);
+          } else {
+            const tgtLastPhoto = state.photos.find(x => x.id === tgtPage.photoIds[tgtPage.photoIds.length - 1]);
+            const tgtLastIdx = tgtLastPhoto ? remainingPhotos.findIndex(x => x.id === tgtLastPhoto.id) : insertIdx;
+            remainingPhotos.splice(tgtLastIdx + 1, 0, ...movingPhotos);
+          }
+
+          state.photos = remainingPhotos;
+          state.photos.forEach((ph, idx) => ph.order = idx);
+          state.activePage = pIdx;
+
+          markDirty();
+          rebuildPages();
+          renderPreview();
+          renderPhotos();
+          toast(`PAGE ${draggedPageIdx+1}이(가) PAGE ${pIdx+1} 위치로 이동되었습니다.`);
+        }
+      });
+    }
+  });
+
+  $$('[data-del-page]').forEach(delBtn=>{
+    delBtn.onclick=(e)=>{
+      e.stopPropagation();
+      const idx = Number(delBtn.dataset.delPage);
+      const pg = state.pages[idx];
+      if(!pg) return;
+      if(confirm(`PAGE ${idx+1}을 사진과 함께 삭제하시겠습니까?`)){
+        deletePageByIndex(idx, true);
+      }
+    };
+  });
+
+  if(state.activePage===-1){
+    $('pageCanvas').innerHTML=coverHtml();
+    $('pageProps').style.display='none';
+    $('pagePropsEmpty').style.display='block';
+    $('pagePropsEmpty').textContent='표지는 프로젝트 기본정보 탭의 내용을 자동으로 반영합니다.';
+  } else {
+    const pg=currentPage();
+    if(pg){
+      $('pageCanvas').innerHTML=pageHtml(pg,state.activePage);
+
+      const slotEls = $('pageCanvas').querySelectorAll('.slot');
+      slotEls.forEach(slotEl=>{
+        const photoId = slotEl.dataset.photoId;
+        const slotIdx = Number(slotEl.dataset.slotIdx);
+
+        if(photoId){
+          slotEl.ondblclick = () => openPhotoEditor(photoId);
+
+          slotEl.addEventListener('dragstart', e=>{
+            draggedPhotoId = photoId;
+            slotEl.classList.add('dragging');
+            e.dataTransfer.setData('text/plain', photoId);
+            e.dataTransfer.effectAllowed = 'move';
+          });
+
+          slotEl.addEventListener('dragend', ()=>{
+            slotEl.classList.remove('dragging');
+            slotEls.forEach(s=>s.classList.remove('slot-drag-over'));
+            draggedPhotoId = null;
+          });
+        }
+
+        slotEl.addEventListener('dragover', e=>{
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          if(draggedPhotoId && draggedPhotoId !== photoId){
+            slotEl.classList.add('slot-drag-over');
+          }
+        });
+
+        slotEl.addEventListener('dragleave', ()=>{
+          slotEl.classList.remove('slot-drag-over');
+        });
+
+        slotEl.addEventListener('drop', e=>{
+          e.preventDefault();
+          slotEl.classList.remove('slot-drag-over');
+          if(!draggedPhotoId || draggedPhotoId === photoId) return;
+
+          pushHistory();
+          const fromIdx = state.photos.findIndex(x=>x.id===draggedPhotoId);
+
+          if(photoId){
+            // 두 사진의 위치 1:1 완벽 교체
+            const toIdx = state.photos.findIndex(x=>x.id===photoId);
+            if(fromIdx>=0 && toIdx>=0){
+              const temp = state.photos[fromIdx];
+              state.photos[fromIdx] = state.photos[toIdx];
+              state.photos[toIdx] = temp;
+              // 강제 페이지 분할 오류 방지를 위해 breakBefore 초기화
+              state.photos[fromIdx].breakBefore = false;
+              state.photos[toIdx].breakBefore = false;
+              state.photos.forEach((ph, idx)=>ph.order=idx);
+            }
+          } else {
+            // 현재 페이지 내의 빈 슬롯 위치로 정확히 재배치
+            const curPagePhotoIds = pg.photoIds.filter(id => id && id !== draggedPhotoId);
+            const targetInsertPos = Math.min(slotIdx, curPagePhotoIds.length);
+
+            let anchorPhotoId = curPagePhotoIds[targetInsertPos] || curPagePhotoIds[curPagePhotoIds.length - 1];
+            let anchorIdx = anchorPhotoId ? state.photos.findIndex(x=>x.id===anchorPhotoId) : -1;
+
+            const [movedPhoto] = state.photos.splice(fromIdx, 1);
+            movedPhoto.breakBefore = false;
+
+            if(anchorIdx >= 0){
+              state.photos.splice(anchorIdx, 0, movedPhoto);
+            } else {
+              state.photos.push(movedPhoto);
+            }
+            state.photos.forEach((ph, idx)=>ph.order=idx);
+          }
+
+          markDirty();
+          rebuildPages();
+          renderPreview();
+          renderPhotos();
+          toast('사진 위치가 교체되었습니다.');
+        });
+      });
+
+      $('pagePropsEmpty').style.display='none';
+      $('pageProps').style.display='block';
+      $('pageLayout').value=String(pg.layout);
+      $('pageLayout').disabled=state.project.printOrientation==='portrait';
+      $('pageLayout').title=state.project.printOrientation==='portrait'?'세로 출력은 6장형으로 고정됩니다.':'';
+      $('pageLocked').value=String(!!pg.locked);
+      $('pageCompare').value=String(!!pg.compare);
+    } else {
+      $('pageCanvas').innerHTML='<div class="panel empty" style="padding:40px;text-align:center;color:#829ab1">미리보기할 페이지가 없습니다.</div>';
+      $('pageProps').style.display='none';
+      $('pagePropsEmpty').style.display='block';
+    }
+  }
+
+  fitPreview();
+}
+
+function renderPrintRoot(){
+  $('printRoot').innerHTML=coverHtml()+state.pages.map((p,i)=>pageHtml(p,i)).join('');
+}
+
+function fitPreview(){
+  requestAnimationFrame(()=>{
+    const canvas=$('pageCanvas');
+    const page=canvas.querySelector('.print-page');
+    if(!page)return;
+    const center=$('.preview-center');
+    if(!center)return;
+    const max=Math.max(560,center.clientWidth-30);
+    const portrait=state.project.printOrientation==='portrait';
+    const pageW=portrait?210:297;
+    const pageH=portrait?297:209.5;
+    const pxW=pageW/25.4*96;
+    const pxH=pageH/25.4*96;
+    const visualW=pxW;
+    const visualH=pxH;
+    const scale=Math.min(1,max/visualW);
+
+    canvas.style.position='relative';
+    canvas.style.width=Math.round(visualW*scale)+'px';
+    canvas.style.height=Math.round(visualH*scale)+'px';
+    page.style.position='absolute';
+    page.style.left='0';
+    page.style.top='0';
+    page.style.marginBottom='0';
+    page.style.transformOrigin='0 0';
+    page.style.transform=`scale(${scale})`;
+  });
+}
+let previewResizeFrame=0;
+window.addEventListener('resize',()=>{
+  if(!$('previewView').classList.contains('active')||previewResizeFrame)return;
+  previewResizeFrame=requestAnimationFrame(()=>{
+    previewResizeFrame=0;
+    fitPreview();
+  });
+});
+
+function validate(){
+  const issues=[];
+  if(!state.project.siteName.trim())issues.push({level:'block',text:'공사명이 입력되지 않았습니다.',view:'projectView',focusId:'siteName'});
+  if(!state.photos.length)issues.push({level:'block',text:'등록된 사진이 없습니다.',view:'photosView'});
+  for(const p of state.photos){
+    if(!assetMap.get(p.id)?.blob)issues.push({level:'block',text:`원본 사진 데이터가 유실되었습니다: ${p.fileName}`,view:'photosView'});
+  }
+  const un=state.photos.filter(p=>p.stage==='unclassified').length;
+  if(un)issues.push({level:'warn',text:`미분류 사진이 ${un}장 있습니다.`,view:'photosView'});
+  const noSpace=state.photos.filter(p=>!(p.space||'').trim()).length;
+  if(noSpace)issues.push({level:'warn',text:`공간명이 비어 있는 사진이 ${noSpace}장 있습니다.`,view:'photosView'});
+  const low=state.photos.filter(p=>Math.max(p.width,p.height)<1600).length;
+  if(low)issues.push({level:'warn',text:`권장 해상도(1600px) 미만 사진이 ${low}장 있습니다.`,view:'photosView'});
+  const empty=state.pages.reduce((n,p)=>n+Math.max(0,p.layout-p.photoIds.length),0);
+  if(empty)issues.push({level:'info',text:`페이지 내 빈 사진 슬롯이 총 ${empty}칸 있습니다.`,view:'previewView'});
+  return issues;
+}
+
+function renderValidation(){
+  rebuildPages();
+  const issues=validate(),blocks=issues.filter(x=>x.level==='block').length,warns=issues.filter(x=>x.level==='warn').length;
+  $('issueTabBadge').textContent=blocks+warns;
+  $('validationSummary').innerHTML=`<div class="validation-summary">
+    <div class="vstat block"><b>${blocks}</b>차단 오류</div>
+    <div class="vstat warn"><b>${warns}</b>경고</div>
+    <div class="vstat good"><b>${blocks?0:1}</b>${blocks?'출력 불가':'출력 가능'}</div>
+  </div>`;
+  $('validationResults').innerHTML=issues.length?issues.map(x=>`<div class="issue ${x.level}" data-view="${x.view||''}" data-focus="${x.focusId||''}">
+    <b>${x.level==='block'?'차단':x.level==='warn'?'경고':'정보'}</b> · ${esc(x.text)}
+  </div>`).join(''):'<div class="okbox">출력 전 모든 검수를 완벽하게 통과했습니다.</div>';
+
+  $$('#validationResults .issue').forEach(el=>el.onclick=()=>{
+    if(el.dataset.view)openView(el.dataset.view);
+    if(el.dataset.focus){
+      setTimeout(()=>{
+        const target=$(el.dataset.focus);
+        if(target){target.focus();target.scrollIntoView({behavior:'smooth',block:'center'});}
+      },150);
+    }
+  });
+}
+
+$('refreshValidationBtn').onclick=renderValidation;
+
+$('printBtn').onclick=()=>{
+  if(state.project.printOrientation==='portrait')updatePrintPageRule();
+  rebuildPages();
+  const issues=validate(),blocks=issues.filter(x=>x.level==='block'),warns=issues.filter(x=>x.level==='warn');
+  if(blocks.length){
+    toast('차단 오류를 먼저 해결해야 출력할 수 있습니다.','error');
+    openView('validateView');
+    return;
+  }
+  if(warns.length&&!confirm(`경고 항목이 ${warns.length}건 있습니다.\n계속 진행하여 PDF를 출력하시겠습니까?`))return;
+  renderPreview();
+  renderPrintRoot();
+  setTimeout(()=>window.print(),100);
+};
+
+function renderStats(){
+  const cnt=k=>state.photos.filter(p=>p.stage===k).length;
+  if($('statPhotos'))$('statPhotos').textContent=state.photos.length;
+  if($('statPages'))$('statPages').textContent=state.pages.length;
+  if($('statBefore'))$('statBefore').textContent=cnt('before');
+  if($('statDuring'))$('statDuring').textContent=cnt('during');
+  if($('statComplete'))$('statComplete').textContent=cnt('complete');
+  if($('statUnclassified'))$('statUnclassified').textContent=cnt('unclassified');
+  if($('photoTabBadge'))$('photoTabBadge').textContent=state.photos.length;
+  if($('pageTabBadge'))$('pageTabBadge').textContent=state.pages.length;
+  const i=validate();
+  $('issueTabBadge').textContent=i.filter(x=>x.level!=='info').length;
+}
+
+function openDB(){
+  return new Promise((res,rej)=>{
+    try{
+      const r=indexedDB.open(DB_NAME,DB_VERSION);
+      r.onupgradeneeded=()=>{
+        const db=r.result;
+        if(!db.objectStoreNames.contains(STORE))db.createObjectStore(STORE,{keyPath:'id'});
+        if(!db.objectStoreNames.contains(ASSET_STORE)){
+          const assets=db.createObjectStore(ASSET_STORE,{keyPath:'key'});
+          assets.createIndex('projectId','projectId',{unique:false});
+        }
+      };
+      r.onsuccess=()=>res(r.result);
+      r.onerror=()=>rej(r.error);
+    }catch(e){
+      rej(e);
+    }
+  });
+}
+
+async function performAutosave(){
+  if(!state.project.id)return false;
+  try{
+    const projectId=state.project.id;
+    const db=await openDB(),dirtyAssets=[],validKeys=new Set();
+    for(const p of state.photos){
+      const a=assetMap.get(p.id);
+      const key=`${projectId}:${p.id}`;
+      validKeys.add(key);
+      if(a?.blob&&a.persisted!==true){
+        dirtyAssets.push({key,projectId,id:p.id,blob:a.blob,thumbBlob:a.thumbBlob||null});
+      }
+    }
+    const rec={id:projectId,updatedAt:new Date().toISOString(),name:state.project.siteName||'새 프로젝트',state:serializableState()};
+    try{localStorage.setItem('jgd_emergency_state_v1',JSON.stringify(rec));}catch(e){}
+    await new Promise((res,rej)=>{
+      const tx=db.transaction([STORE,ASSET_STORE],'readwrite');
+      tx.objectStore(STORE).put(rec);
+      const assetStore=tx.objectStore(ASSET_STORE);
+      dirtyAssets.forEach(a=>assetStore.put(a));
+      const keysReq=assetStore.index('projectId').getAllKeys(IDBKeyRange.only(projectId));
+      keysReq.onsuccess=()=>{
+        keysReq.result.forEach(key=>{if(!validKeys.has(key))assetStore.delete(key);});
+      };
+      tx.oncomplete=res;
+      tx.onerror=()=>rej(tx.error);
+      tx.onabort=()=>rej(tx.error||new Error('자동저장 트랜잭션이 중단되었습니다.'));
+    });
+    db.close();
+    dirtyAssets.forEach(saved=>{
+      const a=assetMap.get(saved.id);
+      if(a&&a.blob===saved.blob)a.persisted=true;
+    });
+    state.dirty=false;
+    autosaveErrorShown=false;
+    $('saveState').textContent='자동 저장됨 · '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+    updateRecentIndex(rec);
+    renderRecent();
+    return true;
+  }catch(e){
+    console.warn('DB save skipped:', e);
+    $('saveState').textContent='자동 저장 실패';
+    if(!autosaveErrorShown){
+      autosaveErrorShown=true;
+      toast('자동저장에 실패했습니다. 브라우저 저장 공간을 확인해 주세요.','error');
+    }
+    return false;
+  }
+}
+
+function saveToDB(){
+  if(autosaveInFlight){
+    autosavePending=true;
+    return autosaveInFlight;
+  }
+  autosaveInFlight=performAutosave().finally(()=>{
+    autosaveInFlight=null;
+    if(autosavePending){
+      autosavePending=false;
+      if(state.dirty)setTimeout(()=>saveToDB().catch(console.warn),0);
+    }
+  });
+  return autosaveInFlight;
+}
+
+async function loadFromDB(id){
+  try{
+    const db=await openDB();
+    const rec=await new Promise((res,rej)=>{
+      const r=db.transaction(STORE).objectStore(STORE).get(id);
+      r.onsuccess=()=>res(r.result);
+      r.onerror=()=>rej(r.error);
+    });
+    if(!rec){db.close();return false;}
+    const separateAssets=await new Promise((res,rej)=>{
+      const r=db.transaction(ASSET_STORE).objectStore(ASSET_STORE).index('projectId').getAll(IDBKeyRange.only(id));
+      r.onsuccess=()=>res(r.result||[]);
+      r.onerror=()=>rej(r.error);
+    });
+    db.close();
+    cleanupAllUrls();
+    assetMap=new Map();
+    const usingSeparateAssets=separateAssets.length>0;
+    const savedAssets=usingSeparateAssets?separateAssets:(rec.assets||[]);
+    for(const a of savedAssets){
+      assetMap.set(a.id,{blob:a.blob,thumbBlob:a.thumbBlob,url:URL.createObjectURL(a.blob),thumbUrl:URL.createObjectURL(a.thumbBlob||a.blob),persisted:usingSeparateAssets});
+    }
+    const s=rec.state;
+    state.project=s.project;
+    state.photos=s.photos;
+    state.pageOverrides=s.pageOverrides||{};
+    state.lockedPages=s.lockedPages||[];
+    state.activePage=s.activePage??0;
+    state.selected=new Set();
+    history=[];
+    future=[];
+    syncAllUI();
+    toast('자동저장 프로젝트를 복구했습니다.');
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+
+function updateRecentIndex(rec){
+  try{
+    let list=JSON.parse(localStorage.getItem('jgd_recent_v2')||'[]').filter(x=>x.id!==rec.id);
+    list.unshift({id:rec.id,name:rec.name,updatedAt:rec.updatedAt,photos:state.photos.length});
+    localStorage.setItem('jgd_recent_v2',JSON.stringify(list.slice(0,10)));
+  }catch(e){}
+}
+
+function recentIndex(){
+  try{return JSON.parse(localStorage.getItem('jgd_recent_v2')||'[]');}catch{return[];}
+}
+
+function renderRecent(){
+  if(!$('recentList'))return;
+  const list=recentIndex();
+  $('recentList').innerHTML=list.length?list.map(r=>`<div class="recent-card">
+    <b>${esc(r.name)}</b>
+    <small>${new Date(r.updatedAt).toLocaleString('ko-KR')} · ${r.photos||0}장</small>
+    <div class="recent-actions">
+      <button class="btn small" data-open="${r.id}">열기</button>
+      <button class="btn danger small" data-delete="${r.id}">삭제</button>
+    </div>
+  </div>`).join(''):'<div class="muted" style="padding:15px;text-align:center">자동저장된 프로젝트가 없습니다.</div>';
+
+  $$('[data-open]').forEach(b=>b.onclick=()=>loadFromDB(b.dataset.open));
+  $$('[data-delete]').forEach(b=>b.onclick=()=>deleteDBProject(b.dataset.delete));
+}
+
+async function deleteDBProject(id){
+  if(!confirm('이 브라우저의 자동저장 프로젝트를 삭제하시겠습니까?'))return;
+  try{
+    const db=await openDB();
+    await new Promise((res,rej)=>{
+      const tx=db.transaction([STORE,ASSET_STORE],'readwrite');
+      tx.objectStore(STORE).delete(id);
+      const assetStore=tx.objectStore(ASSET_STORE);
+      const keysReq=assetStore.index('projectId').getAllKeys(IDBKeyRange.only(id));
+      keysReq.onsuccess=()=>keysReq.result.forEach(key=>assetStore.delete(key));
+      tx.oncomplete=res;
+      tx.onerror=()=>rej(tx.error);
+    });
+    db.close();
+    localStorage.setItem('jgd_recent_v2',JSON.stringify(recentIndex().filter(x=>x.id!==id)));
+    renderRecent();
+  }catch(e){}
+}
+
+if($('restoreLatestBtn'))$('restoreLatestBtn').onclick=async()=>{
+  const r=recentIndex()[0];
+  if(!r){toast('복구할 자동저장 프로젝트가 없습니다.','warn');return;}
+  await loadFromDB(r.id);
+};
+
+checkpointTimer=setInterval(()=>{if(state.dirty)saveToDB().catch(console.warn);},AUTOSAVE_CHECKPOINT);
+
+function cleanupAllUrls(){
+  for(const a of assetMap.values()){
+    if(a.url)URL.revokeObjectURL(a.url);
+    if(a.thumbUrl&&a.thumbUrl!==a.url)URL.revokeObjectURL(a.thumbUrl);
+  }
+}
+
+function hydrateUrls(){
+  for(const [id,a] of assetMap){
+    if(a.blob&&!a.url)a.url=URL.createObjectURL(a.blob);
+    if(!a.thumbUrl)a.thumbUrl=URL.createObjectURL(a.thumbBlob||a.blob);
+  }
+}
+
+/* ZIP Library */
+function crcTable(){
+  const t=new Uint32Array(256);
+  for(let n=0;n<256;n++){
+    let c=n;
+    for(let k=0;k<8;k++)c=(c&1)?0xedb88320^(c>>>1):c>>>1;
+    t[n]=c>>>0;
+  }
+  return t;
+}
+const CRC_TABLE=crcTable();
+function crc32(u8){
+  let c=0xffffffff;
+  for(const b of u8)c=CRC_TABLE[(c^b)&255]^(c>>>8);
+  return(c^0xffffffff)>>>0;
+}
+function u16(n){return [n&255,(n>>>8)&255];}
+function u32(n){return [n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255];}
+function concatU8(parts){
+  const len=parts.reduce((n,p)=>n+p.length,0),o=new Uint8Array(len);
+  let x=0;
+  for(const p of parts){o.set(p,x);x+=p.length;}
+  return o;
+}
+
+async function makeZip(entries){
+  const te=new TextEncoder(),locals=[],centrals=[];
+  let offset=0;
+  for(const e of entries){
+    const name=te.encode(e.name),data=e.data instanceof Uint8Array?e.data:new Uint8Array(await e.data.arrayBuffer()),crc=crc32(data);
+    const local=Uint8Array.from([...u32(0x04034b50),...u16(20),...u16(0x800),...u16(0),...u16(0),...u16(0),...u32(crc),...u32(data.length),...u32(data.length),...u16(name.length),...u16(0)]);
+    locals.push(local,name,data);
+    const central=Uint8Array.from([...u32(0x02014b50),...u16(20),...u16(20),...u16(0x800),...u16(0),...u16(0),...u16(0),...u32(crc),...u32(data.length),...u32(data.length),...u16(name.length),...u16(0),...u16(0),...u16(0),...u16(0),...u32(0),...u32(offset)]);
+    centrals.push(central,name);
+    offset+=local.length+name.length+data.length;
+  }
+  const centralData=concatU8(centrals),localData=concatU8(locals),end=Uint8Array.from([...u32(0x06054b50),...u16(0),...u16(0),...u16(entries.length),...u16(entries.length),...u32(centralData.length),...u32(localData.length),...u16(0)]);
+  return new Blob([localData,centralData,end],{type:'application/zip'});
+}
+
+function parseStoreZip(buf){
+  const u=new Uint8Array(buf),dv=new DataView(buf),td=new TextDecoder(),out=new Map();
+  let p=0;
+  while(p+30<=u.length&&dv.getUint32(p,true)===0x04034b50){
+    const method=dv.getUint16(p+8,true),size=dv.getUint32(p+18,true),nameLen=dv.getUint16(p+26,true),extraLen=dv.getUint16(p+28,true);
+    if(method!==0)throw new Error('지원하지 않는 압축 방식입니다 (무압축 ZIP 전용).');
+    const ns=p+30,name=td.decode(u.slice(ns,ns+nameLen)),ds=ns+nameLen+extraLen;
+    out.set(name,u.slice(ds,ds+size));
+    p=ds+size;
+  }
+  return out;
+}
+
+function downloadBlob(blob,name){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),3000);
+}
+
+$('savePackageBtn').onclick=async()=>{
+  if(!state.photos.length&&!state.project.siteName){
+    toast('저장할 프로젝트 내용이 없습니다.','warn');
+    return;
+  }
+  setProgress(true,'JGD 프로젝트 저장','원본 사진을 패키징하고 있습니다.',0);
+  try{
+    const entries=[],meta=serializableState();
+    for(let i=0;i<meta.photos.length;i++){
+      const p=meta.photos[i],a=assetMap.get(p.id);
+      if(!a?.blob)continue;
+      const ext=p.fileName.includes('.')?p.fileName.slice(p.fileName.lastIndexOf('.')):'';
+      p.packagePath=`originals/${p.id}${ext}`;
+      entries.push({name:p.packagePath,data:a.blob});
+      if(a.thumbBlob)entries.push({name:`previews/${p.id}.jpg`,data:a.thumbBlob});
+      setProgress(true,'JGD 프로젝트 저장',`${i+1} / ${meta.photos.length}`,Math.round((i+1)/Math.max(1,meta.photos.length)*85));
+    }
+    const manifest={format:'JGD',version:2,appVersion:APP_VERSION,createdAt:state.project.createdAt,updatedAt:new Date().toISOString(),photoCount:meta.photos.length};
+    entries.unshift(
+      {name:'manifest.json',data:new TextEncoder().encode(JSON.stringify(manifest,null,2))},
+      {name:'project.json',data:new TextEncoder().encode(JSON.stringify(meta,null,2))}
+    );
+    const zip=await makeZip(entries);
+    downloadBlob(zip,safeName(state.project.siteName||'준공사진대지')+'.jgd');
+    setProgress(false);
+    await saveToDB();
+    toast('JGD 프로젝트를 성공적으로 저장했습니다.');
+  }catch(e){
+    setProgress(false);
+    console.error(e);
+    toast('JGD 저장 중 오류 발생: '+e.message,'error');
+  }
+};
+
+$('loadPackageBtn').onclick=()=>$('packageInput').click();
+$('packageInput').onchange=async e=>{
+  const f=e.target.files[0];
+  e.target.value='';
+  if(!f)return;
+  if(state.photos.length&&!confirm('현재 프로젝트를 닫고 JGD 프로젝트 파일을 불러오시겠습니까?'))return;
+  setProgress(true,'JGD 프로젝트 열기','패키지를 읽고 있습니다.',10);
+  try{
+    const entries=parseStoreZip(await f.arrayBuffer());
+    const pj=entries.get('project.json');
+    if(!pj)throw new Error('project.json 메타데이터가 존재하지 않습니다.');
+    const s=JSON.parse(new TextDecoder().decode(pj));
+    cleanupAllUrls();
+    assetMap=new Map();
+    for(let i=0;i<s.photos.length;i++){
+      const p=s.photos[i],bytes=entries.get(p.packagePath);
+      if(!bytes)continue;
+      const blob=new Blob([bytes],{type:p.mime||'application/octet-stream'});
+      const thumbBytes=entries.get(`previews/${p.id}.jpg`);
+      const thumbBlob=thumbBytes?new Blob([thumbBytes],{type:'image/jpeg'}):blob;
+      assetMap.set(p.id,{blob,thumbBlob,url:URL.createObjectURL(blob),thumbUrl:URL.createObjectURL(thumbBlob)});
+      setProgress(true,'JGD 프로젝트 열기',`${i+1} / ${s.photos.length}`,20+Math.round((i+1)/Math.max(1,s.photos.length)*75));
+    }
+    state.project=s.project;
+    state.photos=s.photos;
+    state.pageOverrides=s.pageOverrides||{};
+    state.lockedPages=s.lockedPages||[];
+    state.activePage=state.activePage??0;
+    state.selected=new Set();
+    history=[];
+    future=[];
+    syncAllUI();
+    setProgress(false);
+    saveToDB().catch(()=>{});
+    toast('JGD 프로젝트를 정상적으로 열었습니다.');
+  }catch(err){
+    setProgress(false);
+    console.error(err);
+    toast('JGD 파일 열기 실패: '+err.message,'error');
+  }
+};
+
+if($('saveCompanyDefaultBtn'))$('saveCompanyDefaultBtn').onclick=()=>{
+  try{
+    localStorage.setItem('jgd_contractor_default',state.project.contractor);
+    toast('시공사를 기본값으로 저장했습니다.');
+  }catch(e){}
+};
+
+function applyCompanyDefaults(){
+  try{
+    const c=localStorage.getItem('jgd_contractor_default');
+    if(c) state.project.contractor=c;
+  }catch(e){}
+}
+
+$('newProjectBtn').onclick=()=>{
+  if((state.photos.length||state.project.siteName)&&!confirm('현재 프로젝트를 닫고 새 프로젝트를 시작하시겠습니까?\n자동저장본은 보관됩니다.'))return;
+  cleanupAllUrls();
+  assetMap=new Map();
+  state=createState();
+  applyCompanyDefaults();
+  history=[];
+  future=[];
+  syncAllUI();
+  toast('새 프로젝트를 시작했습니다.');
+};
+
+$('undoBtn').onclick=undo;
+$('redoBtn').onclick=redo;
+
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){
+    e.preventDefault();
+    if(e.shiftKey)redo();else undo();
+  }else if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='y'){
+    e.preventDefault();
+    redo();
+  }else if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){
+    e.preventDefault();
+    $('savePackageBtn').click();
+  }else if(e.key==='Delete'&&state.selected.size&&$('projectView').classList.contains('active')){
+    if(document.activeElement?.tagName!=='INPUT'){
+      $('deleteSelectedBtn').click();
+    }
+  }
+});
+
+function syncAllUI(){
+  syncProjectFields();
+  rebuildPages();
+  renderStats();
+  renderSpaces();
+  renderPhotos();
+  renderRecent();
+  renderValidation();
+  updateUndoButtons();
+  $('saveState').textContent=state.project.siteName||'새 프로젝트';
+  updateUX();
+}
+
+window.addEventListener('pagehide',()=>{if(state.dirty)saveToDB().catch(()=>{});});
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='hidden'&&state.dirty)saveToDB().catch(()=>{});
+});
+
+function workflowStatus(){
+  const info=!!state.project.siteName.trim();
+  const photos=state.photos.length>0;
+  const classified=photos && state.photos.every(p=>p.stage!=='unclassified' && (p.space||'').trim());
+  const pages=state.pages.length>0;
+  const issues=validate();
+  const ready=pages && !issues.some(i=>i.level==='block');
+  const done=[info,photos,classified,pages,ready];
+  let current=done.findIndex(x=>!x);
+  if(current<0)current=4;
+  return {done,current,percent:Math.round(done.filter(Boolean).length/5*100)};
+}
+
+function updateUX(){
+  const w=workflowStatus();
+  if($('workflowPercent'))$('workflowPercent').textContent=w.percent+'%';
+  if($('workflowFill'))$('workflowFill').style.width=w.percent+'%';
+  $$('[data-step]').forEach((b,i)=>{
+    b.classList.toggle('done',w.done[i]);
+    b.classList.toggle('active',i===w.current);
+  });
+  if($('workflowNextBtn')){
+    const labels=['기본정보를 입력하세요 →','사진을 등록하세요 →','사진 분류를 마무리하세요 →','페이지를 확인하세요 →','검수 후 PDF 출력 →'];
+    $('workflowNextBtn').textContent=labels[w.current];
+    $('workflowNextBtn').dataset.target=['projectView','photosView','photosView','previewView','validateView'][w.current];
+  }
+  updateSelectionDock();
+}
+
+$$('[data-go]').forEach(b=>b.onclick=()=>openView(b.dataset.go));
+if($('workflowNextBtn'))$('workflowNextBtn').onclick=()=>openView($('workflowNextBtn').dataset.target||'projectView');
+$('quickAddBtn').onclick=()=>{openView('projectView');setTimeout(()=>{$('photosViewPanel').scrollIntoView({behavior:'smooth',block:'start'});$('addPhotosBtn').click();},100);};
+$$('[data-dock-stage]').forEach(b=>b.onclick=()=>{
+  $('bulkStage').value=b.dataset.dockStage;
+  $('bulkSpace').value='';
+  $('bulkTrade').value='';
+  $('applyBulkBtn').click();
+});
+$('dockClearBtn').onclick=()=>$('clearSelectionBtn').click();
+$('dockEditBtn').onclick=()=>{openView('projectView');$('bulkSpace').focus();};
+
+async function init(){
+  applyCompanyDefaults();
+  syncAllUI();
+  const latest=recentIndex()[0];
+  if(latest&&$('restoreLatestBtn'))$('restoreLatestBtn').textContent='최근 자동저장 복구 · '+latest.name;
+  $('saveState').textContent='자동 저장 켜짐';
+  console.log('JGD Photo Tool v'+APP_VERSION+' 준비 완료');
+}
+init();
+</script>
+<script>
+(() => {
+  const context=parent.MIN_WORKS_DOCUMENT_CONTEXT;
+  const list=document.createElement('datalist');list.id='photoLedgerSites';for(const site of context?.sites?.()||[]){const option=document.createElement('option');option.value=site.name;list.append(option)}document.body.append(list);document.getElementById('siteName')?.setAttribute('list',list.id);
+  const applyContext=site=>{if(!site)return;Object.assign(state.project,{siteName:site.name||'',locationName:site.name||'',contractor:site.company||'(주)민커뮤니케이션',siteManager:site.manager||'',clientName:site.client||'',startDate:site.start||'',endDate:site.end||'',projectAmount:site.amount||''});syncProjectFields();markDirty();rebuildPages();};
+  window.MIN_WORKS_PHOTO_LEDGER={applyContext};
+  document.getElementById('siteName')?.addEventListener('change',event=>{const site=(context?.sites?.()||[]).find(item=>item.name===event.target.value);if(site){context.select(site.name);applyContext(site)}});
+  applyContext(context?.current?.());
+  const reportHeight=()=>parent.postMessage({type:'minworks:photo-ledger-height',height:document.documentElement.scrollHeight},location.origin==='null'?'*':location.origin);
+  addEventListener('load',reportHeight);
+  new ResizeObserver(reportHeight).observe(document.body);
+  document.addEventListener('input',()=>parent.dispatchEvent(new CustomEvent('minworks:photo-ledger-input')));
+  document.addEventListener('change',()=>parent.dispatchEvent(new CustomEvent('minworks:photo-ledger-input')));
+})();
+</script>
+</body>
+</html>
