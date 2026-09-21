@@ -12,9 +12,9 @@
   <meta name="apple-mobile-web-app-title" content="MIN WORKS" />
   <meta name="description" content="MIN WORKS 현장·공사일보 통합 관리 앱" />
   <title>MIN WORKS</title>
-  <link rel="manifest" href="manifest.webmanifest?v=57" />
-  <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/min-works-v4-192.png" />
-  <link rel="apple-touch-icon" href="assets/icons/min-works-v4-180.png" />
+  <link rel="manifest" href="manifest.webmanifest?v=design68" />
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/min-works-design-192.png" />
+  <link rel="apple-touch-icon" href="assets/icons/min-works-design-180.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Michroma&family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -208,7 +208,7 @@
         <section class="storage-sites panel"><div class="panel-head"><div><p class="eyebrow">BY SITE</p><h2>현장별 자료</h2></div><small>ZIP · PDF 내보내기</small></div><div id="storageSiteList"></div></section>
         <section class="storage-trash panel"><div><span class="material-symbols-rounded">delete_sweep</span><div><b>휴지통</b><small id="storageTrashCount">0개 자료 · 7일 후 영구 삭제</small></div></div><div><button id="restoreStorageTrash">전체 복구</button><button class="danger" id="emptyStorageTrash">휴지통 비우기</button></div></section>
       </section>
-      <section class="view" id="settingsView"><section id="appInstallSettings" class="app-install-settings"><h3>앱 설치</h3><p>업무용 민웍스와 조회용 민웍스+를 각각 설치할 수 있어요.</p><a class="plus-install-link" href="reader.html?v=60#install"><img src="plus-icon-192.png" alt=""><span><b>민웍스+ 설치 안내</b><small>공사일보 조회 전용 · 본판 없이 설치 가능</small></span><span aria-hidden="true">↗</span></a></section>
+      <section class="view" id="settingsView"><section id="appInstallSettings" class="app-install-settings"><h3>앱 설치</h3><p>업무용 민웍스와 조회용 민웍스+를 각각 설치할 수 있어요.</p><a class="plus-install-link" href="reader.html?v=design68#install"><img src="plus-icon-design-192.png" alt=""><span><b>민웍스+ 설치 안내</b><small>공사일보 조회 전용 · 본판 없이 설치 가능</small></span><span aria-hidden="true">↗</span></a></section>
         <div class="section-title settings-title"><div><p class="eyebrow">PERSONAL SETTINGS</p><h2>내 화면·알림 설정</h2><small>내 계정에만 적용되고 자동 저장됩니다.</small></div><div class="settings-head-actions"><button class="settings-help" data-go="help"><span class="material-symbols-rounded">help</span>앱 사용법</button><button class="settings-reset" id="resetSettings"><span class="material-symbols-rounded">restart_alt</span>기본값 복원</button></div></div>
         <div class="settings-layout">
           <aside class="settings-menu"><button class="active" data-settings-group="display">화면</button><button data-settings-group="home">홈</button><button data-settings-group="report">공사일보</button><button data-settings-group="data">데이터</button></aside>
@@ -240,7 +240,7 @@
   <div class="money-form-modal" id="paymentFormModal"><div class="money-modal-backdrop"></div><section><header><div><p class="eyebrow">SITE PAYMENT</p><h2>지출·기성 작성</h2><small>현장소장 작성</small></div><button data-close-money="paymentFormModal">×</button></header><div class="money-form-grid"><label>현장<select id="paymentSite"><option>연세대학교 고를샘</option><option>에잇세컨즈 AK분당점</option><option>알뜰주유소 시설개선</option><option>힐스테이트 아산</option></select></label><label>구분<select id="paymentType"><option>월 기성</option><option>월요일 긴급지출</option></select></label><label>금액<input id="paymentAmount" type="number" placeholder="금액 입력"></label><label>지급 희망일<input id="paymentDate" type="date" value="2026-09-10"></label></div><label>내용<textarea id="paymentMemo" rows="3" placeholder="인건비, 현지업체 결제 등 내용을 입력하세요."></textarea></label><button class="primary full" id="savePayment">작성 완료 · 공무부로 전달</button></section></div>
   <div class="money-form-modal" id="receivableFormModal"><div class="money-modal-backdrop"></div><section><header><div><p class="eyebrow">RECEIVABLE</p><h2>거래처 수금 예정 작성</h2><small>공무부·경리부 작성</small></div><button data-close-money="receivableFormModal">×</button></header><div class="money-form-grid"><label>거래처<input id="receivableClient" placeholder="거래처명"></label><label>현장<select id="receivableSite"><option>연세대학교 고를샘</option><option>에잇세컨즈 AK분당점</option><option>알뜰주유소 시설개선</option><option>힐스테이트 아산</option></select></label><label>청구 금액<input id="receivableAmount" type="number" placeholder="금액 입력"></label><label>입금 예정일<input id="receivableDate" type="date"></label></div><label>비고<textarea id="receivableMemo" rows="3" placeholder="청구 조건이나 입금 관련 내용을 입력하세요."></textarea></label><button class="primary full" id="saveReceivable">수금 예정 등록</button></section></div>
 <script src="navigation-refresh.js?v=57"></script>
-<script src="app-latest.js?v=64"></script>
+<script src="app-latest.js?v=design68"></script>
 <script src="ui-experience.js?v=57"></script>
 <script src="report-update.js?v=57"></script><script src="documents-update.js?v=57"></script><script src="safety-enhancements.js?v=docs20"></script><script src="safety-engine.js?v=docs20"></script><script src="safety-native.js?v=docs20"></script><script src="reader-admin.js?v=66"></script><script src="device-session.js?v=63"></script><script src="mobile-controls.js?v=66"></script></body>
 </html>

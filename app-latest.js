@@ -1495,13 +1495,13 @@ applyExtendedSettings();
   const installButton = document.createElement('button');
   installButton.className = 'install-min-works';
   installButton.type = 'button';
-  installButton.innerHTML = '<img src="assets/icons/min-works-v4-192.png" alt=""><span><b>MIN WORKS 설치</b><small>휴대폰 앱으로 사용</small></span><i class="material-symbols-rounded">download</i>';
+  installButton.innerHTML = '<img src="assets/icons/min-works-design-192.png" alt=""><span><b>MIN WORKS 설치</b><small>휴대폰 앱으로 사용</small></span><i class="material-symbols-rounded">download</i>';
 
   document.querySelector('#appInstallSettings')?.append(installButton);
 
   const guide = document.createElement('div');
   guide.className = 'install-guide';
-  guide.innerHTML = '<div class="install-guide-backdrop"></div><section><button class="install-guide-close" aria-label="닫기">×</button><img src="assets/icons/min-works-v4-192.png" alt="MIN WORKS"><p class="eyebrow">INSTALL APP</p><h2>MIN WORKS를 앱으로 설치</h2><div class="install-guide-steps"></div><button class="install-guide-done">확인</button></section>';
+  guide.innerHTML = '<div class="install-guide-backdrop"></div><section><button class="install-guide-close" aria-label="닫기">×</button><img src="assets/icons/min-works-design-192.png" alt="MIN WORKS"><p class="eyebrow">INSTALL APP</p><h2>MIN WORKS를 앱으로 설치</h2><div class="install-guide-steps"></div><button class="install-guide-done">확인</button></section>';
   document.body.appendChild(guide);
 
   const closeGuide = () => guide.classList.remove('show');
