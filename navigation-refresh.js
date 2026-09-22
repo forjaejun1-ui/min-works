@@ -38,6 +38,7 @@
     <button class="nav-item nav-utility" data-view="settings"><span class="nav-icon material-symbols-rounded">settings</span><b>설정</b></button>
     <button class="nav-item nav-utility" data-view="help"><span class="nav-icon material-symbols-rounded">help</span><b>사용법</b></button>
     <button class="nav-item nav-utility" data-view="patch"><span class="nav-icon material-symbols-rounded">new_releases</span><b>패치노트</b></button>
+    <button class="nav-item nav-utility" data-view="qa"><span class="nav-icon material-symbols-rounded">forum</span><b>버그·개선 Q&amp;A</b></button>
   `;
 
   financeView.insertAdjacentHTML('beforebegin', `

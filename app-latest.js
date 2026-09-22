@@ -63,7 +63,7 @@
 /* SOURCE: app.js */
 const views = document.querySelectorAll('.view');
 const navButtons = document.querySelectorAll('[data-view]');
-const titles = {dashboard:'좋은 아침입니다',sites:'현장관리',daily:'공사일보',documents:'현장서류',finance:'공사보고·분석',issues:'이슈 관리',calendar:'회사 일정',settings:'사용자 설정',help:'앱 사용법',patch:'패치노트',storage:'저장공간 정리'};
+const titles = {dashboard:'좋은 아침입니다',sites:'현장관리',daily:'공사일보',documents:'현장서류',finance:'공사보고·분석',issues:'이슈 관리',calendar:'회사 일정',settings:'사용자 설정',help:'앱 사용법',patch:'패치노트',qa:'버그·개선 Q&A',storage:'저장공간 정리'};
 function currentSiteNames(){return [...new Set([...document.querySelectorAll('.site-table-row')].map(row=>row.dataset.siteRow?.trim()).filter(Boolean))]}
 function syncOperationalSiteOptions(){
   const names=currentSiteNames(),selectors=['#dailyForm>div:first-child select','#issueSite','#paymentSite','#receivableSite','#mwPaymentSite','#mwReceivableSite'];
@@ -1331,7 +1331,7 @@ applyExtendedSettings();
     }
     const sheet = document.createElement('div');
     sheet.className = 'mobile-all-menu';
-    sheet.innerHTML = `<div class="mobile-menu-backdrop"></div><section><header><div><p class="eyebrow">ALL MENU</p><h2>전체 메뉴</h2></div><button class="mobile-menu-close" aria-label="닫기">×</button></header><div class="mobile-menu-grid"><button data-menu-view="dashboard"><span class="material-symbols-rounded">home</span><b>홈</b></button><button data-menu-view="sites"><span class="material-symbols-rounded">construction</span><b>현장관리</b></button><button data-menu-view="daily"><span class="material-symbols-rounded">description</span><b>공사일보</b></button><button data-menu-view="documents"><span class="material-symbols-rounded">folder_open</span><b>현장서류</b></button><button data-menu-view="settings"><span class="material-symbols-rounded">settings</span><b>설정</b></button><button data-menu-view="help"><span class="material-symbols-rounded">help</span><b>사용법</b></button><button data-menu-view="patch"><span class="material-symbols-rounded">new_releases</span><b>패치노트</b></button><button data-menu-view="storage"><span class="material-symbols-rounded">storage</span><b>저장공간</b></button></div></section>`;
+    sheet.innerHTML = `<div class="mobile-menu-backdrop"></div><section><header><div><p class="eyebrow">ALL MENU</p><h2>전체 메뉴</h2></div><button class="mobile-menu-close" aria-label="닫기">×</button></header><div class="mobile-menu-grid"><button data-menu-view="dashboard"><span class="material-symbols-rounded">home</span><b>홈</b></button><button data-menu-view="sites"><span class="material-symbols-rounded">construction</span><b>현장관리</b></button><button data-menu-view="daily"><span class="material-symbols-rounded">description</span><b>공사일보</b></button><button data-menu-view="documents"><span class="material-symbols-rounded">folder_open</span><b>현장서류</b></button><button data-menu-view="settings"><span class="material-symbols-rounded">settings</span><b>설정</b></button><button data-menu-view="help"><span class="material-symbols-rounded">help</span><b>사용법</b></button><button data-menu-view="patch"><span class="material-symbols-rounded">new_releases</span><b>패치노트</b></button><button data-menu-view="qa"><span class="material-symbols-rounded">forum</span><b>버그·개선 Q&amp;A</b></button><button data-menu-view="storage"><span class="material-symbols-rounded">storage</span><b>저장공간</b></button></div></section>`;
     document.body.appendChild(sheet);
     sheet.querySelector('.mobile-menu-close').addEventListener('click', closeMenu);
     sheet.querySelector('.mobile-menu-backdrop').addEventListener('click', closeMenu);
@@ -1585,7 +1585,7 @@ applyExtendedSettings();
   if (!window.MIN_WORKS_TEST && 'serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
 
   const hashView = location.hash.replace('#', '');
-  if (['dashboard', 'sites', 'daily', 'risk', 'documents', 'finance', 'issues', 'settings', 'help', 'patch', 'storage'].includes(hashView)) window.showView?.(hashView);
+  if (['dashboard', 'sites', 'daily', 'risk', 'documents', 'finance', 'issues', 'settings', 'help', 'patch', 'qa', 'storage'].includes(hashView)) window.showView?.(hashView);
 })();
 
 

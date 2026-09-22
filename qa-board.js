@@ -1,10 +1,8 @@
 /* Employee Q&A is stored with company state. Gemini answers require the private Worker route. */
 (() => {
   const KEY = 'minWorksQaBoardV1';
-  const button = document.getElementById('qaTabButton');
   const board = document.getElementById('qaBoard');
-  const list = document.querySelector('#patchView .patch-list');
-  if (!button || !board || !list) return;
+  if (!board) return;
   const admin = () => window.MIN_WORKS_USER?.role === 'admin';
   const user = () => window.MIN_WORKS_USER || {};
   const read = () => {
@@ -43,7 +41,7 @@
     const data = read();
     board.replaceChildren();
     const intro = el('div','qa-intro');
-    intro.append(el('h3','', '버그·개선 Q&A'), el('p','', '사용 중 발견한 오류나 개선 의견을 남겨 주세요. 답변은 직원들과 공유됩니다.'),el('p','qa-muted','Gemini AI 자동 답변은 다음 패치 예정입니다. 지금은 개발자 답변으로 안내합니다.'));
+    intro.append(el('p','', '사용 중 발견한 오류나 개선 의견을 남겨 주세요. 답변은 직원들과 공유됩니다.'),el('p','qa-muted','Gemini AI 자동 답변은 다음 패치 예정입니다. 지금은 개발자 답변으로 안내합니다.'));
     board.append(intro);
     const form = el('form','qa-form');
     const kind = el('select');
@@ -103,13 +101,6 @@
     });
     board.append(posts);
   };
-  button.addEventListener('click',()=>{
-    const open=board.hidden;
-    board.hidden=!open;
-    list.hidden=open;
-    button.setAttribute('aria-expanded',String(open));
-    if(open)render();
-  });
   document.addEventListener('minworks:user-ready',render);
   render();
 })();
