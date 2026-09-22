@@ -1,32 +1,175 @@
 (()=>{'use strict';
 const API='https://min-works-api.forjaejun.workers.dev';
-const $=s=>document.querySelector(s),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const SESSION_KEY='minWorksSessionV1';
+const $=selector=>document.querySelector(selector);
+const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const day=(offset=0)=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(Date.now()+offset*86400000));
-let selected=day(),busy=false,currentPhotos=[],photoIndex=0,lastFingerprint='',lastToday=day(),groups=[],siteIndex=0,reportIndex=0,gesture=null,suppressClickUntil=0;
-const money=n=>n===null||n===undefined||n===''?'미등록':Number(n)>=100000000?(Number(n)/100000000).toLocaleString('ko-KR',{maximumFractionDigits:2})+'억 원':Number(n)>=10000?(Number(n)/10000).toLocaleString('ko-KR',{maximumFractionDigits:1})+'만 원':Number(n).toLocaleString('ko-KR')+'원';
-const safePhoto=src=>{try{const u=new URL(src,location.href);return /^data:image\/(png|jpeg|webp|gif);/i.test(src)||u.protocol==='https:'||u.origin===location.origin?src:''}catch{return''}};
-const current=()=>groups[siteIndex]?.reports[reportIndex];
-function pager(){$('#pagePosition').textContent=groups.length?`${siteIndex+1} / ${groups.length} 현장`:'0 / 0 현장';$('#prevSite').disabled=siteIndex<=0;$('#nextSite').disabled=siteIndex>=groups.length-1;$('#swipeHint').textContent=groups.length>1?'좌우로 넘겨 현장 보기':'조회 전용 · 15초마다 갱신'}
-function closePhotos(){$('#photoDialog').close();$('#largePhoto').removeAttribute('src');currentPhotos=[]}
-function clear(){groups=[];siteIndex=reportIndex=0;lastFingerprint='';$('#count').textContent='—';$('#reports').replaceChildren();closePhotos();pager()}
-function draw(direction=0){const r=current();pager();if(!r){$('#reports').innerHTML='<div class="empty"><b>등록된 일보가 없습니다</b>날짜를 선택해 이전 일보를 확인하세요.</div>';return}
-const photos=(r.photos||[]).filter(p=>safePhoto(p.src)),progress=Math.min(100,Math.max(0,Number(r.progress)||0)),group=groups[siteIndex];
-$('#reports').innerHTML=`<article class="report ${direction>0?'slide-next':direction<0?'slide-prev':''}" aria-label="${esc(r.site)} 공사일보"><div class="report-top"><h2>${esc(r.site)}</h2><time>${esc(r.time||'')}</time></div><div class="site-progress"><div><span>공정률</span><b>${progress}%</b></div><div class="progress" role="progressbar" aria-label="현장 공정률" aria-valuenow="${progress}" aria-valuemin="0" aria-valuemax="100"><i style="width:${progress}%"></i></div></div><div class="process-list" tabindex="0" aria-label="공정별 작업내용"><table><thead><tr><th scope="col">공정</th><th scope="col">인원</th><th scope="col">작업내용</th></tr></thead><tbody>${(r.processes||[]).map(p=>`<tr><td>${esc(p.name||'미등록')}</td><td>${Number(p.today)||0}명</td><td>${esc(p.work||'—')}</td></tr>`).join('')||'<tr><td colspan="3">등록된 작업내용이 없습니다.</td></tr>'}</tbody></table>${r.note?`<p class="report-note"><b>특이사항</b> ${esc(r.note)}</p>`:''}</div><div class="photos">${photos.slice(0,3).map((p,j)=>`<button data-photo="${j}" aria-label="${esc(r.site)} 사진 ${j+1} 확대"><img draggable="false" src="${esc(safePhoto(p.src))}" alt="현장사진 ${j+1}">${j===2&&photos.length>3?`<em>+${photos.length-2}</em>`:''}</button>`).join('')||'<small>등록된 사진 없음</small>'}</div><div class="meta"><span>${esc(r.author||'작성자 미등록')} · 총 ${Number(r.totalPeople)||0}명</span><span>${esc(r.reportDate||'—')}</span></div>${group.reports.length>1?`<div class="report-bottom"><select id="reportSelect" aria-label="이 현장의 일보 선택">${group.reports.map((x,i)=>`<option value="${i}" ${i===reportIndex?'selected':''}>${i+1}번째 일보 · ${esc(x.author||x.time||'작성자 미등록')}</option>`).join('')}</select></div>`:''}</article>`;
-$('#reportSelect')?.addEventListener('change',e=>{reportIndex=Number(e.target.value);closePhotos();draw()});$('#reports').querySelectorAll('[data-photo]').forEach(b=>b.onclick=()=>{currentPhotos=photos;photoIndex=Number(b.dataset.photo);showPhoto();$('#photoDialog').showModal()});
-}
-function render(data){const oldSite=groups[siteIndex]?.key,oldId=current()?.id,rows=data.reports||[],bySite=new Map;for(const r of rows){const key=r.site||'현장 미등록';if(!bySite.has(key))bySite.set(key,{key,reports:[]});bySite.get(key).reports.push(r)}groups=[...bySite.values()];siteIndex=Math.max(0,groups.findIndex(g=>g.key===oldSite));reportIndex=Math.max(0,groups[siteIndex]?.reports.findIndex(r=>r.id===oldId)??0);draw();if($('#photoDialog').open){if(current()?.id!==oldId)closePhotos();else{const src=currentPhotos[photoIndex]?.src;currentPhotos=(current().photos||[]).filter(p=>safePhoto(p.src));photoIndex=currentPhotos.findIndex(p=>p.src===src);if(photoIndex<0)closePhotos();else showPhoto()}}}
-function move(delta){const next=siteIndex+delta;if(next<0||next>=groups.length)return;siteIndex=next;reportIndex=0;closePhotos();draw(delta)}
-function showPhoto(){$('#largePhoto').src=safePhoto(currentPhotos[photoIndex]?.src||'');$('#photoCount').textContent=`${photoIndex+1} / ${currentPhotos.length}`;$('.photo-stage').classList.remove('zoomed');$('#zoomPhoto').textContent='확대 ＋';$('#prevPhoto').disabled=photoIndex===0;$('#nextPhoto').disabled=photoIndex===currentPhotos.length-1}
-async function load(){if(busy||!window.MINWORKS_PLUS_READY)return;busy=true;$('#refresh').disabled=true;const requested=selected;try{const token=localStorage.getItem('minWorksSessionV1');if(!token){clear();$('#reports').innerHTML='<div class="empty"><b>로그인이 필요합니다</b><a href="./index.html?reader=1">민웍스로 로그인</a></div>';$('#sync').textContent='로그인 대기';return}const response=await fetch(API+'/daily-reader?date='+encodeURIComponent(requested),{headers:{Authorization:'Bearer '+token},cache:'no-store'});if(selected!==requested)return;if(!response.ok){if([401,403].includes(response.status)){clear();window.MINWORKS_PLUS_AUTH?.check();}throw Error(response.status===403?'관리자가 지정한 계정만 열람할 수 있습니다.':response.status===401?'로그인이 만료되었습니다. 민웍스에서 다시 로그인하세요.':'연결이 끊겼습니다. 마지막 조회 자료를 표시합니다.')}const data=await response.json();if(selected!==requested)return;let todayData=data;if(requested!==day()){const todayResponse=await fetch(API+'/daily-reader?date='+encodeURIComponent(day()),{headers:{Authorization:'Bearer '+token},cache:'no-store'});if(!todayResponse.ok)throw Error('오늘 등록 건수를 확인하지 못했어요. 새로고침해 주세요.');todayData=await todayResponse.json()}if(selected!==requested)return;$('#count').textContent='+'+(todayData.reports||[]).length;const fingerprint=JSON.stringify(data);if(fingerprint!==lastFingerprint){render(data);lastFingerprint=fingerprint}$('#notice').textContent='';$('#sync').textContent=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})+' 갱신';}catch(e){$('#notice').textContent=e.message;$('#sync').textContent='연결 확인 필요'}finally{busy=false;$('#refresh').disabled=false;if(selected!==requested)load()}}
-function select(date){selected=date;$('#date').value=date;$('#today').classList.toggle('selected',date===day());$('#yesterday').classList.toggle('selected',date===day(-1));$('#summaryLabel').textContent=date===day()?'오늘 올라온 공사일보':date===day(-1)?'전일 올라온 공사일보':date+' 공사일보';clear();load()}
-const surface=$('#reports');surface.addEventListener('pointerdown',e=>{if(!e.isPrimary||e.button!==0||e.target.closest('select'))return;gesture={id:e.pointerId,x:e.clientX,y:e.clientY}});surface.addEventListener('pointerup',e=>{if(!gesture||e.pointerId!==gesture.id)return;const dx=e.clientX-gesture.x,dy=e.clientY-gesture.y;gesture=null;if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.4){suppressClickUntil=Date.now()+350;move(dx<0?1:-1)}});surface.addEventListener('pointercancel',()=>gesture=null);surface.addEventListener('pointerleave',()=>gesture=null);surface.addEventListener('click',e=>{if(Date.now()<suppressClickUntil){e.preventDefault();e.stopImmediatePropagation()}},true);surface.addEventListener('dragstart',e=>e.preventDefault());surface.addEventListener('keydown',e=>{if(e.target.closest('select'))return;if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();move(e.key==='ArrowRight'?1:-1)}});
-$('#prevSite').onclick=()=>move(-1);$('#nextSite').onclick=()=>move(1);$('#today').onclick=()=>select(day());$('#yesterday').onclick=()=>select(day(-1));$('#date').onchange=()=>$('#date').value&&select($('#date').value);$('#refresh').onclick=load;$('#closePhoto').onclick=closePhotos;$('#prevPhoto').onclick=()=>{if(photoIndex>0){photoIndex--;showPhoto()}};$('#nextPhoto').onclick=()=>{if(photoIndex<currentPhotos.length-1){photoIndex++;showPhoto()}};$('#zoomPhoto').onclick=()=>{$('.photo-stage').classList.toggle('zoomed');$('#zoomPhoto').textContent=$('.photo-stage').classList.contains('zoomed')?'축소 −':'확대 ＋'};document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});window.addEventListener('storage',e=>{if(e.key==='minWorksSessionV1')load()});setInterval(()=>{if(document.hidden)return;const today=day();if(today!==lastToday){const wasToday=selected===lastToday;lastToday=today;if(wasToday)return select(today)}load()},15000);window.addEventListener('minworks:plus-ready',load);select(selected);
+const safePhoto=src=>{try{const url=new URL(src,location.href);return /^data:image\/(png|jpeg|webp|gif);/i.test(src)||url.protocol==='https:'||url.origin===location.origin?src:''}catch{return''}};
+const number=value=>Number.isFinite(Number(value))&&value!==null&&value!==''?Number(value):null;
 
-let photoGesture=null;const photoStage=$('.photo-stage');
-photoStage.addEventListener('pointerdown',e=>{if(!e.isPrimary||e.button!==0||photoStage.classList.contains('zoomed'))return;photoGesture={id:e.pointerId,x:e.clientX,y:e.clientY};photoStage.setPointerCapture(e.pointerId)});
-photoStage.addEventListener('pointerup',e=>{if(!photoGesture||e.pointerId!==photoGesture.id)return;const dx=e.clientX-photoGesture.x,dy=e.clientY-photoGesture.y;photoGesture=null;if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.3){const next=photoIndex+(dx<0?1:-1);if(next>=0&&next<currentPhotos.length){photoIndex=next;showPhoto()}}});
-photoStage.addEventListener('pointercancel',()=>photoGesture=null);photoStage.addEventListener('dragstart',e=>e.preventDefault());
-$('#photoDialog').addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();const next=photoIndex+(e.key==='ArrowRight'?1:-1);if(next>=0&&next<currentPhotos.length){photoIndex=next;showPhoto()}}});
+let selected=day(),groups=[],siteIndex=0,reportIndex=0,busy=false,lastFingerprint='',lastToday=day();
+let currentPhotos=[],photoIndex=0,photoGesture=null,gesture=null,suppressClickUntil=0,readTimer=null;
+const dayReports=new Map();
+
+function scopeKey(){
+  const token=localStorage.getItem(SESSION_KEY)||'guest';
+  let hash=2166136261;
+  for(let i=0;i<token.length;i++)hash=Math.imul(hash^token.charCodeAt(i),16777619);
+  return 'minworks-plus-seen-v1-'+(hash>>>0).toString(36);
+}
+let seenScope=scopeKey();
+function readSeen(){try{return new Set(JSON.parse(localStorage.getItem(seenScope)||'[]'))}catch{return new Set()}}
+let seen=readSeen();
+function syncSeenScope(){const next=scopeKey();if(next!==seenScope){seenScope=next;seen=readSeen()}}
+function reportKey(report){return [report.id||[report.site,report.reportDate,report.author,report.time].join(':'),report.createdAt||report.reportDate||''].join('|')}
+function saveSeen(){try{localStorage.setItem(seenScope,JSON.stringify([...seen].slice(-1500)))}catch{}}
+function unread(date){return (dayReports.get(date)||[]).filter(report=>!seen.has(reportKey(report))).length}
+function updateUnread(){
+  for(const [date,badge] of [[day(),'#todayUnread'],[day(-1),'#yesterdayUnread']]){
+    const count=unread(date),node=$(badge);
+    node.hidden=!count;
+    node.textContent=count?'+'+count:'';
+    node.setAttribute('aria-label',count?`읽지 않은 공사일보 ${count}건`:'');
+  }
+}
+const current=()=>groups[siteIndex]?.reports[reportIndex];
+function markVisible(){
+  clearTimeout(readTimer);
+  const report=current(),date=selected;
+  if(!report)return;
+  const key=reportKey(report);
+  readTimer=setTimeout(()=>{
+    if(selected!==date||reportKey(current()||{})!==key||document.hidden||!window.MINWORKS_PLUS_READY)return;
+    syncSeenScope();
+    if(!seen.has(key)){seen.add(key);saveSeen();updateUnread()}
+  },800);
+}
+function pager(){
+  $('#pagePosition').textContent=groups.length?`${siteIndex+1} / ${groups.length} 현장`:'0 / 0 현장';
+  $('#prevSite').disabled=siteIndex<=0;
+  $('#nextSite').disabled=siteIndex>=groups.length-1;
+  $('#swipeHint').textContent=groups.length>1?'좌우로 넘겨 현장 보기':'15초마다 자동 갱신';
+}
+function closePhotos(){if($('#photoDialog').open)$('#photoDialog').close();$('#largePhoto').removeAttribute('src');currentPhotos=[]}
+function clear(){clearTimeout(readTimer);groups=[];siteIndex=reportIndex=0;lastFingerprint='';$('#reports').replaceChildren();closePhotos();pager()}
+function processRows(processes){
+  if(!processes?.length)return '<p class="process-empty">등록된 공정 정보가 없습니다.</p>';
+  return processes.map(process=>{
+    const cumulative=number(process.cumulative);
+    return `<button type="button" class="process-row" aria-expanded="false" aria-label="${esc(`${process.name||'미등록'}, ${process.work||'작업내용 없음'}, 금일 ${number(process.today)??0}명, 누계 ${cumulative===null?'미입력':cumulative+'명'}`)}"><b>${esc(process.name||'미등록')}</b><span class="process-work">${esc(process.work||'작업내용 없음')}</span><strong>${number(process.today)??0}<small>명</small></strong><strong class="cumulative">${cumulative===null?'—':cumulative+'<small>명</small>'}</strong></button>`;
+  }).join('');
+}
+function draw(direction=0){
+  const report=current();pager();
+  if(!report){$('#reports').innerHTML='<div class="empty"><b>등록된 일보가 없습니다</b><span>날짜를 선택해 이전 일보를 확인하세요.</span></div>';return}
+  const photos=(report.photos||[]).filter(photo=>safePhoto(photo.src));
+  const progress=Math.min(100,Math.max(0,number(report.progress)??0));
+  const group=groups[siteIndex];
+  $('#reports').innerHTML=`<article class="report ${direction>0?'slide-next':direction<0?'slide-prev':''}" aria-label="${esc(report.site)} 공사일보">
+    <div class="report-top"><div><span class="report-kicker ${groups.length>1?'swipe-guide':''}">${groups.length>1?'← 좌우로 스와이프해 다른 현장 보기 →':'DAILY REPORT'}</span><h2>${esc(report.site)}</h2></div><time>${esc(report.time||'')}</time></div>
+    <div class="site-progress"><div><span>공정률</span><b>${progress}%</b><span class="today-total">금일 총인원 <strong>${number(report.totalPeople)??0}명</strong></span></div><div class="progress" role="progressbar" aria-label="현장 공정률" aria-valuenow="${progress}" aria-valuemin="0" aria-valuemax="100"><i style="width:${progress}%"></i></div></div>
+    <div class="process-list" aria-label="공정별 작업내용과 인원"><div class="process-head"><span>공정</span><span>작업내용</span><span>금일</span><span>누계</span></div>${processRows(report.processes)}${report.note?`<p class="report-note"><b>특이사항</b> ${esc(report.note)}</p>`:''}</div>
+    <div class="photos" aria-label="현장사진">${photos.slice(0,3).map((photo,index)=>`<button data-photo="${index}" aria-label="${esc(report.site)} 사진 ${index+1} 확대"><img draggable="false" src="${esc(safePhoto(photo.src))}" alt="현장사진 ${index+1}">${index===2&&photos.length>3?`<em>+${photos.length-2}</em>`:''}</button>`).join('')||'<small>등록된 사진 없음</small>'}</div>
+    <div class="meta"><span>${esc(report.author||'작성자 미등록')}</span><span>${esc(report.reportDate||'—')}</span></div>
+    ${group.reports.length>1?`<div class="report-bottom"><select id="reportSelect" aria-label="이 현장의 일보 선택">${group.reports.map((item,index)=>`<option value="${index}" ${index===reportIndex?'selected':''}>${index+1}번째 일보 · ${esc(item.author||item.time||'작성자 미등록')}</option>`).join('')}</select></div>`:''}
+  </article>`;
+  $('#reportSelect')?.addEventListener('change',event=>{reportIndex=Number(event.target.value);closePhotos();draw()});
+  $('#reports').querySelectorAll('.process-row').forEach(row=>row.onclick=()=>{
+    const expanded=row.getAttribute('aria-expanded')==='true';
+    row.setAttribute('aria-expanded',String(!expanded));
+  });
+  $('#reports').querySelectorAll('[data-photo]').forEach(button=>button.onclick=()=>{
+    currentPhotos=photos;photoIndex=Number(button.dataset.photo);showPhoto();$('#photoDialog').showModal();
+  });
+  markVisible();
+}
+function render(data){
+  const oldSite=groups[siteIndex]?.key,oldId=current()?.id,bySite=new Map();
+  for(const report of data.reports||[]){const key=report.site||'현장 미등록';if(!bySite.has(key))bySite.set(key,{key,reports:[]});bySite.get(key).reports.push(report)}
+  groups=[...bySite.values()];
+  siteIndex=Math.max(0,groups.findIndex(group=>group.key===oldSite));
+  reportIndex=Math.max(0,groups[siteIndex]?.reports.findIndex(report=>report.id===oldId)??0);
+  draw();
+  if($('#photoDialog').open){
+    if(current()?.id!==oldId)closePhotos();
+    else{
+      const src=currentPhotos[photoIndex]?.src;
+      currentPhotos=(current().photos||[]).filter(photo=>safePhoto(photo.src));
+      photoIndex=currentPhotos.findIndex(photo=>photo.src===src);
+      if(photoIndex<0)closePhotos();else showPhoto();
+    }
+  }
+}
+function move(delta){const next=siteIndex+delta;if(next<0||next>=groups.length)return;siteIndex=next;reportIndex=0;closePhotos();draw(delta)}
+function showPhoto(){
+  $('#largePhoto').src=safePhoto(currentPhotos[photoIndex]?.src||'');
+  $('#photoCount').textContent=`${photoIndex+1} / ${currentPhotos.length}`;
+  $('.photo-stage').classList.remove('zoomed');$('#zoomPhoto').textContent='확대 ＋';
+  $('#prevPhoto').disabled=photoIndex===0;$('#nextPhoto').disabled=photoIndex===currentPhotos.length-1;
+}
+async function fetchDay(date,token){
+  const response=await fetch(API+'/daily-reader?date='+encodeURIComponent(date),{headers:{Authorization:'Bearer '+token},cache:'no-store'});
+  if(!response.ok){
+    if([401,403].includes(response.status))window.MINWORKS_PLUS_AUTH?.check();
+    throw Error(response.status===403?'관리자가 지정한 계정만 열람할 수 있습니다.':response.status===401?'로그인이 만료되었습니다. 다시 연결해 주세요.':'연결이 끊겼습니다. 마지막 조회 자료를 표시합니다.');
+  }
+  return response.json();
+}
+async function load(){
+  if(busy||!window.MINWORKS_PLUS_READY)return;
+  busy=true;$('#refresh').disabled=true;
+  const requested=selected;
+  try{
+    const token=localStorage.getItem(SESSION_KEY);
+    if(!token){clear();$('#reports').innerHTML='<div class="empty"><b>로그인이 필요합니다</b><span>직원 기기를 연결해 주세요.</span></div>';$('#sync').textContent='로그인 대기';return}
+    syncSeenScope();
+    const dates=[...new Set([requested,day(),day(-1)])];
+    const responses=await Promise.all(dates.map(date=>fetchDay(date,token)));
+    if(selected!==requested)return;
+    const byDate=new Map(dates.map((date,index)=>[date,responses[index]]));
+    for(const [date,data] of byDate)dayReports.set(date,data.reports||[]);
+    const todayData=byDate.get(day());
+    const active=number(todayData?.activeSiteCount);
+    $('#activeSiteCount').textContent=active===null?'—':`+${active.toLocaleString('ko-KR')}`;
+    updateUnread();
+    const data=byDate.get(requested),fingerprint=JSON.stringify(data);
+    if(fingerprint!==lastFingerprint){render(data);lastFingerprint=fingerprint}
+    $('#notice').textContent='';
+    $('#sync').textContent=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})+' 갱신';
+  }catch(error){$('#notice').textContent=error.message;$('#sync').textContent='연결 확인 필요'}
+  finally{busy=false;$('#refresh').disabled=false;if(selected!==requested)load()}
+}
+function select(date){
+  selected=date;
+  $('#today').classList.toggle('selected',date===day());
+  $('#yesterday').classList.toggle('selected',date===day(-1));
+  $('#summaryLabel').textContent=date===day()?'오늘 현장 보고':date===day(-1)?'전일 현장 보고':date+' 현장 보고';
+  clear();load();
+}
+const surface=$('#reports');
+surface.addEventListener('pointerdown',event=>{if(!event.isPrimary||event.button!==0||event.target.closest('select'))return;gesture={id:event.pointerId,x:event.clientX,y:event.clientY}});
+surface.addEventListener('pointerup',event=>{if(!gesture||event.pointerId!==gesture.id)return;const dx=event.clientX-gesture.x,dy=event.clientY-gesture.y;gesture=null;if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.4){suppressClickUntil=Date.now()+350;move(dx<0?1:-1)}});
+surface.addEventListener('pointercancel',()=>gesture=null);surface.addEventListener('pointerleave',()=>gesture=null);
+surface.addEventListener('click',event=>{if(Date.now()<suppressClickUntil){event.preventDefault();event.stopImmediatePropagation()}},true);
+surface.addEventListener('dragstart',event=>event.preventDefault());
+surface.addEventListener('keydown',event=>{if(event.target.closest('select'))return;if(event.key==='ArrowRight'||event.key==='ArrowLeft'){event.preventDefault();move(event.key==='ArrowRight'?1:-1)}});
+$('#prevSite').onclick=()=>move(-1);$('#nextSite').onclick=()=>move(1);
+$('#today').onclick=()=>select(day());$('#yesterday').onclick=()=>select(day(-1));
+$('#refresh').onclick=load;
+$('#closePhoto').onclick=closePhotos;
+$('#prevPhoto').onclick=()=>{if(photoIndex>0){photoIndex--;showPhoto()}};
+$('#nextPhoto').onclick=()=>{if(photoIndex<currentPhotos.length-1){photoIndex++;showPhoto()}};
+$('#zoomPhoto').onclick=()=>{$('.photo-stage').classList.toggle('zoomed');$('#zoomPhoto').textContent=$('.photo-stage').classList.contains('zoomed')?'축소 −':'확대 ＋'};
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});
+window.addEventListener('storage',event=>{if(event.key===SESSION_KEY){syncSeenScope();load()}else if(event.key===seenScope){seen=readSeen();updateUnread()}});
+setInterval(()=>{if(document.hidden)return;const today=day();if(today!==lastToday){const wasToday=selected===lastToday;lastToday=today;if(wasToday)return select(today)}load()},15000);
+window.addEventListener('minworks:plus-ready',load);
+select(selected);
+
+const photoStage=$('.photo-stage');
+photoStage.addEventListener('pointerdown',event=>{if(!event.isPrimary||event.button!==0||photoStage.classList.contains('zoomed'))return;photoGesture={id:event.pointerId,x:event.clientX,y:event.clientY};photoStage.setPointerCapture(event.pointerId)});
+photoStage.addEventListener('pointerup',event=>{if(!photoGesture||event.pointerId!==photoGesture.id)return;const dx=event.clientX-photoGesture.x,dy=event.clientY-photoGesture.y;photoGesture=null;if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.3){const next=photoIndex+(dx<0?1:-1);if(next>=0&&next<currentPhotos.length){photoIndex=next;showPhoto()}}});
+photoStage.addEventListener('pointercancel',()=>photoGesture=null);photoStage.addEventListener('dragstart',event=>event.preventDefault());
+$('#photoDialog').addEventListener('keydown',event=>{if(event.key==='ArrowRight'||event.key==='ArrowLeft'){event.preventDefault();const next=photoIndex+(event.key==='ArrowRight'?1:-1);if(next>=0&&next<currentPhotos.length){photoIndex=next;showPhoto()}}});
 if('serviceWorker' in navigator&&!['localhost','127.0.0.1'].includes(location.hostname))navigator.serviceWorker.register('./sw.js').catch(()=>{});
 })();
-

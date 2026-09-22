@@ -12,3 +12,71 @@ main{max-width:560px;padding-left:max(12px,env(safe-area-inset-left));padding-ri
 
 /* v61: MIN WORKS visual language and inline daily report */
 :root{color:#16181a;background:#f6f7f9;font-family:Inter,Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.plus-header{flex-wrap:nowrap;align-items:center;padding-bottom:5px}.plus-heading{width:auto;display:flex;flex-direction:column;align-items:flex-start;gap:5px;min-width:0}.plus-heading h1{font-size:17px;font-weight:800;letter-spacing:-.55px}.today-count{font-size:10px;color:#7c8373}.today-count b{font-size:15px;color:#568300}.reader-header-actions{gap:5px!important}.reader-header-actions button,#refresh{border-radius:12px!important;background:white;font-size:11px;color:#535b4e;border:1px solid #e2e5df;min-width:40px;width:40px;height:44px}#refresh{font-size:24px}nav button.selected{background:#17191a}.status-line{color:#818779;font-size:10px}.report{border-color:#e2e5df;border-radius:18px;padding:14px;gap:11px;overflow:hidden;box-shadow:0 4px 16px #11111103}.report h2{font-size:21px;line-height:1.3;letter-spacing:-.6px}.report time{font-size:10px;color:#959b8d}.site-progress{flex:none}.site-progress>div:first-child{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:#7a836f}.site-progress b{color:#4f720a;font-size:13px}.site-progress .progress{height:7px;border-radius:8px;margin-top:7px;background:#edf0e8}.site-progress .progress i{background:#9cc637;border-radius:8px}.process-list{flex:0 1 auto;max-height:32%;min-height:64px;overflow:auto;overscroll-behavior:contain;touch-action:pan-y}.process-list table{border-collapse:collapse;width:100%;table-layout:fixed;font-size:12px;text-align:left}.process-list th{font-size:10px;font-weight:600;color:#89917e;background:#f7f8f4;position:sticky;top:0}.process-list th,.process-list td{padding:8px 7px;border-bottom:1px solid #e9ece4;vertical-align:top;overflow-wrap:anywhere;white-space:pre-wrap;line-height:1.5}.process-list th:nth-child(1){width:21%}.process-list th:nth-child(2){width:16%}.process-list td:nth-child(2){white-space:nowrap}.process-list td:last-child{color:#49523e}.report-note{margin:8px 4px;font-size:11px;line-height:1.5;white-space:pre-wrap}.photos{min-height:85px}.meta{font-size:10px;color:#88917b}.report-bottom select{max-width:100%;width:100%;font-size:12px}.photo-stage{touch-action:pan-y pinch-zoom;height:calc(100dvh - 192px - env(safe-area-inset-top) - env(safe-area-inset-bottom))}.photo-stage.zoomed{touch-action:pan-x pan-y pinch-zoom}.photo-stage img{user-select:none;-webkit-user-drag:none}.photo-swipe-hint{text-align:center;font-size:11px;margin:4px 0;color:#a7b49f}.pager button{border-radius:13px}.pager small{color:#89917e}@media(max-width:360px){.plus-heading h1{font-size:15px}.reader-header-actions button,#refresh{width:36px;min-width:36px}.report h2{font-size:19px}.process-list table{font-size:11px}}@media(max-height:650px){.report{gap:7px;padding:11px}.report h2{font-size:18px}.process-list th,.process-list td{padding:5px 6px}.process-list{max-height:30%}.photos{min-height:65px}}
+
+/* Design test: one-hand MIN WORKS+ reader */
+:root{font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;color:#1d2520;background:#f6f8f5}
+main{max-width:560px;gap:9px;padding:13px max(14px,env(safe-area-inset-right)) max(9px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left))}
+.plus-header{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;padding:0 0 4px}
+.plus-heading{gap:2px;align-self:center}
+.plus-eyebrow{font-size:10px;line-height:1.3;font-weight:850;letter-spacing:.16em;color:#72914a}
+.plus-heading h1{display:flex;align-items:center;gap:3px;margin:0;color:#1f2822;font-size:24px;line-height:1.05;font-weight:850;letter-spacing:-1.15px;white-space:nowrap}
+.plus-mark{color:#91b83e;font-size:30px;line-height:.9;font-weight:750}
+.active-site-summary{display:inline-flex;align-items:baseline;gap:4px;min-width:0;min-height:29px;padding:5px 9px;border:1px solid #dfe9d7;border-radius:9px;background:#f0f6e9;color:#3f5b27;white-space:nowrap}
+.active-site-summary span{font-size:11px;font-weight:700}
+.active-site-summary strong{font-size:16px;line-height:1;font-weight:850;font-variant-numeric:tabular-nums}
+.active-site-summary small{font-size:11px;font-weight:700}
+.reader-header-actions{display:flex;flex-direction:column;align-items:flex-end;justify-self:end;gap:3px!important;margin:0}
+.reader-action-buttons{display:flex;align-items:center;gap:6px}
+.reader-header-actions #sync{display:block;width:100%;align-self:stretch;margin:0;color:#738070;font-size:10px;font-weight:650;text-align:right;white-space:nowrap}
+.reader-header-actions button,#refresh{height:34px!important;min-height:34px!important;min-width:40px;width:auto;padding:0 11px;border-radius:11px!important;border-color:#e1e7df;color:#5b6659;font-size:11px;font-weight:700;box-shadow:0 2px 5px #1f2d1f06}
+.reader-header-actions button{min-width:46px;width:46px;padding:0 5px;white-space:nowrap}
+.reader-header-actions #refresh{min-width:36px;width:36px;padding:0;font-size:22px}
+nav{gap:5px}
+nav button{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:45px;height:45px;padding:0 15px;background:#fff;border:1px solid #e0e7dd;border-radius:13px;color:#5c6957;font-size:14px;font-weight:800}
+nav button.selected{background:#1e2b22;border-color:#1e2b22;color:white}
+.unread-badge{display:inline-flex;align-items:center;justify-content:center;min-width:25px;height:20px;padding:0 5px;border-radius:20px;background:#a8cf59;color:#1e321d;font-size:10px;font-style:normal;font-weight:850;line-height:1;font-variant-numeric:tabular-nums}
+nav button.selected .unread-badge{background:#d1ed96}
+nav .active-site-summary{height:45px;min-height:45px;align-items:center;gap:3px;margin-left:0;padding:0 12px;border-color:#e0e7dd;border-radius:13px;background:#fff;color:#5c6957;font-size:14px;font-weight:800}
+nav .active-site-summary span{font-size:inherit;font-weight:inherit;color:inherit}
+nav .active-site-summary .site-count-badge{font-size:10px;font-weight:850;color:#1e321d;min-width:25px;height:20px;padding:0 5px}
+.status-line{align-items:center;font-size:11px;color:#687666;font-weight:650}
+.status-line #sync{margin-left:auto;white-space:nowrap}
+.visually-hidden{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+#reports{min-height:0}
+.report{height:100%;padding:16px;gap:11px;border:1px solid #e1e8df;border-radius:22px;background:#fff;box-shadow:0 7px 24px #1e35200a;overflow:auto}
+.report-top{gap:8px}
+.report-kicker{display:block;margin-bottom:4px;color:#85a254;font-size:9px;font-weight:850;letter-spacing:.13em}
+.report-kicker.swipe-guide{font-size:10px;letter-spacing:-.02em;color:#71865b;font-weight:700}
+.report h2{font-size:22px;line-height:1.22;letter-spacing:-.7px;color:#1d2520;font-weight:800}
+.report time{padding-top:2px;font-size:11px;color:#788474}
+.site-progress>div:first-child{justify-content:flex-start;gap:5px;font-size:12px;color:#61715e;font-weight:650}
+.site-progress .today-total{margin-left:auto;margin-right:0;white-space:nowrap;color:#536a43;font-size:11px}
+.site-progress .today-total strong{font-size:13px;color:#314d24;font-weight:850}
+.site-progress b{font-size:16px;color:#527c16}
+.site-progress .progress{height:8px;margin-top:7px;background:#edf1e9}
+.site-progress .progress i{background:#93bf39}
+.process-list{flex:none;min-height:0;max-height:none;overflow:visible;border:1px solid #e6ebe3;border-radius:14px;background:#fbfcfa}
+.process-head,.process-row{display:grid;grid-template-columns:minmax(35px,.55fr) minmax(0,1.6fr) 39px 39px;column-gap:5px;align-items:center;padding:0 9px}
+.process-head{min-height:25px;background:#f3f7ef;color:#687960;font-size:10px;font-weight:750}
+.process-head span:nth-last-child(-n+2){text-align:right}
+.process-row{width:100%;min-height:31px;padding-top:5px;padding-bottom:5px;border:0;border-top:1px solid #e7ece4;border-radius:0;background:transparent;color:#263028;text-align:left}
+.process-row:hover,.process-row:focus-visible{background:#f5f9f1}
+.process-row b{min-width:0;font-size:12px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.process-work{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#69756a;font-size:11px;line-height:1.25}
+.process-row strong{font-size:12px;font-weight:800;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.process-row strong small{font-size:9px;font-weight:650;margin-left:1px}
+.process-row .cumulative{color:#637c3e}
+.process-row[aria-expanded="true"] b{white-space:normal;overflow:visible;overflow-wrap:anywhere}
+.process-row[aria-expanded="true"] .process-work{white-space:normal;overflow:visible;overflow-wrap:anywhere}
+.process-empty{margin:0;padding:20px 10px;text-align:center;color:#7d887b;font-size:12px}
+.report-note{margin:0;padding:4px 9px;border-top:1px solid #e7ece4;font-size:10px;line-height:1.2;color:#5f6d5c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.report-note b{color:#3d5733}
+.photos{min-height:75px;gap:6px}
+.photos button{border-radius:13px;background:#e5ece6}
+.meta{font-size:11px;color:#758272;font-weight:650}
+.report-bottom select{width:100%;max-width:100%;font-size:12px}
+.pager button{height:48px;min-height:48px;width:60px;border-radius:15px;font-size:23px;color:#344333}
+.pager strong{font-size:13px;color:#253225;font-weight:800}
+.pager small{font-size:10px;color:#7a8876}
+@media(max-width:370px){.plus-heading h1{font-size:21px}.plus-mark{font-size:27px}nav button{padding:0 8px;font-size:12px}nav .active-site-summary{padding:0 6px;font-size:12px}.report{padding:13px;gap:9px}.process-head,.process-row{grid-template-columns:minmax(34px,.48fr) minmax(0,1.5fr) 36px 36px;column-gap:4px;padding-left:7px;padding-right:7px}}
+@media(max-height:730px){main{gap:6px}.plus-header{gap:5px 8px}.reader-header-actions button,#refresh{height:31px!important;min-height:31px!important}.report{padding:12px;gap:6px}.process-row{min-height:28px;padding-top:4px;padding-bottom:4px}.photos{min-height:70px}}
