@@ -10,6 +10,34 @@ const number=value=>Number.isFinite(Number(value))&&value!==null&&value!==''?Num
 let selected=day(),groups=[],siteIndex=0,reportIndex=0,busy=false,lastFingerprint='',lastToday=day();
 let currentPhotos=[],photoIndex=0,suppressClickUntil=0,readTimer=null;
 const dayReports=new Map();
+const previewUrls=new Map();
+const previewDb=new Promise(resolve=>{
+  if(!('indexedDB' in window))return resolve(null);
+  const request=indexedDB.open('minworks-plus-photo-previews-v1',1);
+  request.onupgradeneeded=()=>request.result.createObjectStore('photos');
+  request.onsuccess=()=>{const db=request.result;resolve(db);const cursor=db.transaction('photos','readwrite').objectStore('photos').openCursor();cursor.onsuccess=()=>{const row=cursor.result;if(!row)return;if(Date.now()-row.value.savedAt>3*86400000)row.delete();row.continue()}};request.onerror=()=>resolve(null);
+});
+async function cachedPreview(src){
+  if(previewUrls.has(src))return previewUrls.get(src);
+  const db=await previewDb;if(!db)return null;
+  return new Promise(resolve=>{const request=db.transaction('photos','readonly').objectStore('photos').get(src);request.onsuccess=()=>{const entry=request.result;if(!entry?.blob||Date.now()-entry.savedAt>3*86400000)return resolve(null);const url=URL.createObjectURL(entry.blob);previewUrls.set(src,url);resolve(url)};request.onerror=()=>resolve(null)});
+}
+async function cachePreview(src,image){
+  if(!image.naturalWidth||image.naturalWidth<=1080)return;
+  try{
+    const db=await previewDb;if(!db)return;
+    const scale=Math.min(1,1080/Math.max(image.naturalWidth,image.naturalHeight));
+    const canvas=document.createElement('canvas');canvas.width=Math.round(image.naturalWidth*scale);canvas.height=Math.round(image.naturalHeight*scale);
+    canvas.getContext('2d').drawImage(image,0,0,canvas.width,canvas.height);
+    const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',.68));if(!blob)return;
+    db.transaction('photos','readwrite').objectStore('photos').put({blob,savedAt:Date.now()},src);
+  }catch{} // Signed images without canvas permission still display normally.
+}
+async function hydrateThumb(image,src){
+  const cached=await cachedPreview(src);if(!image.isConnected)return;
+  image.crossOrigin='anonymous';image.src=cached||src;
+  if(!cached)image.addEventListener('load',()=>cachePreview(src,image),{once:true});
+}
 
 function scopeKey(){
   const token=localStorage.getItem(SESSION_KEY)||'guest';
@@ -76,7 +104,7 @@ function draw(direction=0){
     <div class="report-top"><div><span class="report-kicker ${groups.length>1?'swipe-guide':''}">${groups.length>1?'← 좌우로 스와이프해 다른 현장 보기 →':'DAILY REPORT'}</span><h2>${esc(report.site)}</h2></div><time>${esc(report.time||'')}</time></div>
     <div class="site-progress"><div><span>공정률</span><b>${progress}%</b><span class="today-total">금일 총인원 <strong>${number(report.totalPeople)??0}명</strong></span></div><div class="progress" role="progressbar" aria-label="현장 공정률" aria-valuenow="${progress}" aria-valuemin="0" aria-valuemax="100"><i style="width:${progress}%"></i></div></div>
     <div class="process-list" aria-label="공정별 작업내용과 인원"><div class="process-head"><span>공정</span><span>작업내용</span><span>금일</span><span>누계</span></div>${processRows(report.processes)}${report.note?`<p class="report-note"><b>특이사항</b> ${esc(report.note)}</p>`:''}</div>
-    <div class="photos" aria-label="현장사진">${photos.slice(0,3).map((photo,index)=>`<button data-photo="${index}" aria-label="${esc(report.site)} 사진 ${index+1} 보기"><img draggable="false" loading="${index?'lazy':'eager'}" decoding="async" ${index?'':'fetchpriority="high"'} src="${esc(safePhoto(photo.src))}" alt="현장사진 ${index+1}">${index===2&&photos.length>3?`<em>+${photos.length-2}</em>`:''}</button>`).join('')||'<small>등록된 사진 없음</small>'}</div>
+    <div class="photos" aria-label="현장사진">${photos.slice(0,3).map((photo,index)=>`<button data-photo="${index}" aria-label="${esc(report.site)} 사진 ${index+1} 보기"><img draggable="false" loading="${index?'lazy':'eager'}" decoding="async" ${index?'':'fetchpriority="high"'} data-source="${esc(safePhoto(photo.src))}" alt="현장사진 ${index+1}">${index===2&&photos.length>3?`<em>+${photos.length-2}</em>`:''}</button>`).join('')||'<small>등록된 사진 없음</small>'}</div>
     <div class="meta"><span>${esc(report.author||'작성자 미등록')}</span><span>${esc(report.reportDate||'—')}</span></div>
     ${group.reports.length>1?`<div class="report-bottom"><select id="reportSelect" aria-label="이 현장의 일보 선택">${group.reports.map((item,index)=>`<option value="${index}" ${index===reportIndex?'selected':''}>${index+1}번째 일보 · ${esc(item.author||item.time||'작성자 미등록')}</option>`).join('')}</select></div>`:''}
   </article>`;
@@ -88,6 +116,7 @@ function draw(direction=0){
   $('#reports').querySelectorAll('[data-photo]').forEach(button=>button.onclick=()=>{
     currentPhotos=photos;photoIndex=Number(button.dataset.photo);showPhoto();$('#photoDialog').showModal();
   });
+  $('#reports').querySelectorAll('.photos img').forEach(image=>hydrateThumb(image,image.dataset.source));
   markVisible();
 }
 function render(data){
@@ -108,10 +137,12 @@ function render(data){
   }
 }
 function move(delta){const next=siteIndex+delta;if(next<0||next>=groups.length)return;siteIndex=next;reportIndex=0;closePhotos();draw(delta)}
-function showPhoto(){
-  $('#largePhoto').src=safePhoto(currentPhotos[photoIndex]?.src||'');
+async function showPhoto(){
+  const src=safePhoto(currentPhotos[photoIndex]?.src||'');
+  $('#largePhoto').removeAttribute('src');
   $('#photoCount').textContent=`${photoIndex+1} / ${currentPhotos.length}`;
   $('#prevPhoto').disabled=photoIndex===0;$('#nextPhoto').disabled=photoIndex===currentPhotos.length-1;
+  const cached=await cachedPreview(src);if(currentPhotos[photoIndex]?.src===src&&$('#photoDialog').open)$('#largePhoto').src=cached||src;
 }
 async function fetchDay(date,token){
   const response=await fetch(API+'/daily-reader?date='+encodeURIComponent(date),{headers:{Authorization:'Bearer '+token},cache:'no-store'});
