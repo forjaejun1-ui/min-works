@@ -6,7 +6,7 @@
   const esc = v => String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   function init() {
     const nav=$('.mobile-nav');
-    const items=[['dashboard','home','홈'],['daily','edit_note','공사일보'],['risk','health_and_safety','위험성평가'],['documents','folder_open','현장서류'],['issues','report_problem','이슈관리']];
+    const items=[['dashboard','home','홈'],['daily','edit_note','공사일보'],['documents','folder_open','현장서류'],['issues','report_problem','이슈관리']];
     nav.innerHTML=items.map(([view,icon,label])=>`<button type="button" data-view="${view}"><span class="material-symbols-rounded">${icon}</span><b>${label}</b></button>`).join('');
     const sync=()=>nav.querySelectorAll('button').forEach(b=>b.classList.toggle('active',$('#'+b.dataset.view+'View')?.classList.contains('active')));
     nav.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{window.showView(b.dataset.view);window.MIN_WORKS_TEST_UNREAD?.clear(b.dataset.view);sync();}));
