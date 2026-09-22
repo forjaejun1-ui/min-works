@@ -34,6 +34,12 @@ async function cachePreview(src,image){
   }catch{} // Signed images without canvas permission still display normally.
 }
 async function hydrateThumb(image,src){
+  const tile=image.parentElement;
+  image.addEventListener('load',()=>{tile.classList.remove('is-loading','is-error')});
+  image.addEventListener('error',()=>{
+    if(image.src.startsWith('blob:')&&!image.dataset.fallback){image.dataset.fallback='1';image.src=src;return}
+    tile.classList.remove('is-loading');tile.classList.add('is-error');
+  });
   const cached=await cachedPreview(src);if(!image.isConnected)return;
   if(cached){image.src=cached;return}
   try{
@@ -110,7 +116,7 @@ function draw(direction=0){
     <div class="report-top"><div><span class="report-kicker ${groups.length>1?'swipe-guide':''}">${groups.length>1?'← 좌우로 스와이프해 다른 현장 보기 →':'DAILY REPORT'}</span><h2>${esc(report.site)}</h2></div><time>${esc(report.time||'')}</time></div>
     <div class="site-progress"><div><span>공정률</span><b>${progress}%</b><span class="today-total">금일 총인원 <strong>${number(report.totalPeople)??0}명</strong></span></div><div class="progress" role="progressbar" aria-label="현장 공정률" aria-valuenow="${progress}" aria-valuemin="0" aria-valuemax="100"><i style="width:${progress}%"></i></div></div>
     <div class="process-list" aria-label="공정별 작업내용과 인원"><div class="process-head"><span>공정</span><span>작업내용</span><span>금일</span><span>누계</span></div>${processRows(report.processes)}${report.note?`<p class="report-note"><b>특이사항</b> ${esc(report.note)}</p>`:''}</div>
-    <div class="photos" aria-label="현장사진">${photos.slice(0,3).map((photo,index)=>`<button data-photo="${index}" aria-label="${esc(report.site)} 사진 ${index+1} 보기"><img draggable="false" loading="${index?'lazy':'eager'}" decoding="async" ${index?'':'fetchpriority="high"'} data-source="${esc(safePhoto(photo.src))}" alt="현장사진 ${index+1}">${index===2&&photos.length>3?`<em>+${photos.length-2}</em>`:''}</button>`).join('')||'<small>등록된 사진 없음</small>'}</div>
+    <div class="photos" aria-label="현장사진">${photos.slice(0,3).map((photo,index)=>`<button class="is-loading" data-photo="${index}" aria-label="${esc(report.site)} 사진 ${index+1} 보기"><img draggable="false" loading="${index?'lazy':'eager'}" decoding="async" ${index?'':'fetchpriority="high"'} data-source="${esc(safePhoto(photo.src))}" alt="현장사진 ${index+1}">${index===2&&photos.length>3?`<em>+${photos.length-2}</em>`:''}</button>`).join('')||'<small>등록된 사진 없음</small>'}</div>
     <div class="meta"><span>${esc(report.author||'작성자 미등록')}</span><span>${esc(report.reportDate||'—')}</span></div>
     ${group.reports.length>1?`<div class="report-bottom"><select id="reportSelect" aria-label="이 현장의 일보 선택">${group.reports.map((item,index)=>`<option value="${index}" ${index===reportIndex?'selected':''}>${index+1}번째 일보 · ${esc(item.author||item.time||'작성자 미등록')}</option>`).join('')}</select></div>`:''}
   </article>`;
