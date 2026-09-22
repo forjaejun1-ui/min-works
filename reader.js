@@ -37,7 +37,7 @@ async function hydrateThumb(image,src){
   const cached=await cachedPreview(src);if(!image.isConnected)return;
   if(cached){image.src=cached;return}
   try{
-    const response=await fetch(src);if(!response.ok)throw Error('preview unavailable');
+    const response=await fetch(src,{cache:'no-store'});if(!response.ok)throw Error('preview unavailable');
     const blobUrl=URL.createObjectURL(await response.blob());
     if(!image.isConnected){URL.revokeObjectURL(blobUrl);return}
     image.addEventListener('load',()=>{cachePreview(src,image).finally(()=>setTimeout(()=>URL.revokeObjectURL(blobUrl),60000))},{once:true});
