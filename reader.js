@@ -35,8 +35,14 @@ async function cachePreview(src,image){
 }
 async function hydrateThumb(image,src){
   const cached=await cachedPreview(src);if(!image.isConnected)return;
-  image.crossOrigin='anonymous';image.src=cached||src;
-  if(!cached)image.addEventListener('load',()=>cachePreview(src,image),{once:true});
+  if(cached){image.src=cached;return}
+  try{
+    const response=await fetch(src);if(!response.ok)throw Error('preview unavailable');
+    const blobUrl=URL.createObjectURL(await response.blob());
+    if(!image.isConnected){URL.revokeObjectURL(blobUrl);return}
+    image.addEventListener('load',()=>{cachePreview(src,image).finally(()=>setTimeout(()=>URL.revokeObjectURL(blobUrl),60000))},{once:true});
+    image.src=blobUrl;
+  }catch{if(image.isConnected)image.src=src}
 }
 
 function scopeKey(){
