@@ -8,7 +8,7 @@ const safePhoto=src=>{try{const url=new URL(src,location.href);return /^data:ima
 const number=value=>Number.isFinite(Number(value))&&value!==null&&value!==''?Number(value):null;
 
 let selected=day(),groups=[],siteIndex=0,reportIndex=0,busy=false,lastFingerprint='',lastToday=day();
-let currentPhotos=[],photoIndex=0,photoGesture=null,gesture=null,suppressClickUntil=0,readTimer=null;
+let currentPhotos=[],photoIndex=0,suppressClickUntil=0,readTimer=null;
 const dayReports=new Map();
 
 function scopeKey(){
@@ -76,7 +76,7 @@ function draw(direction=0){
     <div class="report-top"><div><span class="report-kicker ${groups.length>1?'swipe-guide':''}">${groups.length>1?'← 좌우로 스와이프해 다른 현장 보기 →':'DAILY REPORT'}</span><h2>${esc(report.site)}</h2></div><time>${esc(report.time||'')}</time></div>
     <div class="site-progress"><div><span>공정률</span><b>${progress}%</b><span class="today-total">금일 총인원 <strong>${number(report.totalPeople)??0}명</strong></span></div><div class="progress" role="progressbar" aria-label="현장 공정률" aria-valuenow="${progress}" aria-valuemin="0" aria-valuemax="100"><i style="width:${progress}%"></i></div></div>
     <div class="process-list" aria-label="공정별 작업내용과 인원"><div class="process-head"><span>공정</span><span>작업내용</span><span>금일</span><span>누계</span></div>${processRows(report.processes)}${report.note?`<p class="report-note"><b>특이사항</b> ${esc(report.note)}</p>`:''}</div>
-    <div class="photos" aria-label="현장사진">${photos.slice(0,3).map((photo,index)=>`<button data-photo="${index}" aria-label="${esc(report.site)} 사진 ${index+1} 확대"><img draggable="false" src="${esc(safePhoto(photo.src))}" alt="현장사진 ${index+1}">${index===2&&photos.length>3?`<em>+${photos.length-2}</em>`:''}</button>`).join('')||'<small>등록된 사진 없음</small>'}</div>
+    <div class="photos" aria-label="현장사진">${photos.slice(0,3).map((photo,index)=>`<button data-photo="${index}" aria-label="${esc(report.site)} 사진 ${index+1} 보기"><img draggable="false" loading="${index?'lazy':'eager'}" decoding="async" ${index?'':'fetchpriority="high"'} src="${esc(safePhoto(photo.src))}" alt="현장사진 ${index+1}">${index===2&&photos.length>3?`<em>+${photos.length-2}</em>`:''}</button>`).join('')||'<small>등록된 사진 없음</small>'}</div>
     <div class="meta"><span>${esc(report.author||'작성자 미등록')}</span><span>${esc(report.reportDate||'—')}</span></div>
     ${group.reports.length>1?`<div class="report-bottom"><select id="reportSelect" aria-label="이 현장의 일보 선택">${group.reports.map((item,index)=>`<option value="${index}" ${index===reportIndex?'selected':''}>${index+1}번째 일보 · ${esc(item.author||item.time||'작성자 미등록')}</option>`).join('')}</select></div>`:''}
   </article>`;
@@ -111,7 +111,6 @@ function move(delta){const next=siteIndex+delta;if(next<0||next>=groups.length)r
 function showPhoto(){
   $('#largePhoto').src=safePhoto(currentPhotos[photoIndex]?.src||'');
   $('#photoCount').textContent=`${photoIndex+1} / ${currentPhotos.length}`;
-  $('.photo-stage').classList.remove('zoomed');$('#zoomPhoto').textContent='확대 ＋';
   $('#prevPhoto').disabled=photoIndex===0;$('#nextPhoto').disabled=photoIndex===currentPhotos.length-1;
 }
 async function fetchDay(date,token){
@@ -156,9 +155,23 @@ function select(date){
   clear();load();
 }
 const surface=$('#reports');
-surface.addEventListener('pointerdown',event=>{if(!event.isPrimary||event.button!==0||event.target.closest('select'))return;gesture={id:event.pointerId,x:event.clientX,y:event.clientY}});
-surface.addEventListener('pointerup',event=>{if(!gesture||event.pointerId!==gesture.id)return;const dx=event.clientX-gesture.x,dy=event.clientY-gesture.y;gesture=null;if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.4){suppressClickUntil=Date.now()+350;move(dx<0?1:-1)}});
-surface.addEventListener('pointercancel',()=>gesture=null);surface.addEventListener('pointerleave',()=>gesture=null);
+function attachSwipe(element,change,threshold){
+  let start=null;
+  const begin=(x,y)=>{start={x,y}};
+  const end=(x,y)=>{
+    if(!start)return;
+    const dx=x-start.x,dy=y-start.y;start=null;
+    if(Math.abs(dx)>=threshold&&Math.abs(dx)>Math.abs(dy)*1.25){suppressClickUntil=Date.now()+100;change(dx<0?1:-1)}
+  };
+  element.addEventListener('touchstart',event=>{if(event.touches.length!==1||event.target.closest('select'))return;begin(event.touches[0].clientX,event.touches[0].clientY)},{passive:true});
+  element.addEventListener('touchmove',event=>{if(!start||event.touches.length!==1)return;const dx=event.touches[0].clientX-start.x,dy=event.touches[0].clientY-start.y;if(Math.abs(dx)>15&&Math.abs(dx)>Math.abs(dy)*1.2)event.preventDefault()},{passive:false});
+  element.addEventListener('touchend',event=>{if(event.changedTouches.length)end(event.changedTouches[0].clientX,event.changedTouches[0].clientY)},{passive:true});
+  element.addEventListener('touchcancel',()=>start=null,{passive:true});
+  element.addEventListener('pointerdown',event=>{if(event.pointerType==='touch'||!event.isPrimary||event.button!==0||event.target.closest('select'))return;begin(event.clientX,event.clientY)});
+  element.addEventListener('pointerup',event=>{if(event.pointerType!=='touch')end(event.clientX,event.clientY)});
+  element.addEventListener('pointercancel',event=>{if(event.pointerType!=='touch')start=null});
+}
+attachSwipe(surface,delta=>move(delta),55);
 surface.addEventListener('click',event=>{if(Date.now()<suppressClickUntil){event.preventDefault();event.stopImmediatePropagation()}},true);
 surface.addEventListener('dragstart',event=>event.preventDefault());
 surface.addEventListener('keydown',event=>{if(event.target.closest('select'))return;if(event.key==='ArrowRight'||event.key==='ArrowLeft'){event.preventDefault();move(event.key==='ArrowRight'?1:-1)}});
@@ -168,7 +181,44 @@ $('#refresh').onclick=load;
 $('#closePhoto').onclick=closePhotos;
 $('#prevPhoto').onclick=()=>{if(photoIndex>0){photoIndex--;showPhoto()}};
 $('#nextPhoto').onclick=()=>{if(photoIndex<currentPhotos.length-1){photoIndex++;showPhoto()}};
-$('#zoomPhoto').onclick=()=>{$('.photo-stage').classList.toggle('zoomed');$('#zoomPhoto').textContent=$('.photo-stage').classList.contains('zoomed')?'축소 −':'확대 ＋'};
+const downloadDialog=$('#photoDownloadDialog'),downloadStatus=$('#downloadStatus');
+$('#downloadPhoto').onclick=()=>{downloadStatus.textContent='';downloadDialog.showModal()};
+$('#cancelDownload').onclick=()=>downloadDialog.close();
+const crcTable=Uint32Array.from({length:256},(_,index)=>{let value=index;for(let bit=0;bit<8;bit++)value=value&1?0xedb88320^(value>>>1):value>>>1;return value>>>0});
+function crc32(bytes){let crc=-1;for(const byte of bytes)crc=crcTable[(crc^byte)&255]^(crc>>>8);return(crc^-1)>>>0}
+function zipPhotos(files){
+  const encoder=new TextEncoder(),parts=[],directory=[];let offset=0;
+  for(const file of files){
+    const name=encoder.encode(file.name),data=file.data,crc=crc32(data),header=new Uint8Array(30+name.length),view=new DataView(header.buffer);
+    view.setUint32(0,0x04034b50,true);view.setUint16(4,20,true);view.setUint32(14,crc,true);view.setUint32(18,data.length,true);view.setUint32(22,data.length,true);view.setUint16(26,name.length,true);header.set(name,30);parts.push(header,data);
+    const entry=new Uint8Array(46+name.length),central=new DataView(entry.buffer);
+    central.setUint32(0,0x02014b50,true);central.setUint16(4,20,true);central.setUint16(6,20,true);central.setUint32(16,crc,true);central.setUint32(20,data.length,true);central.setUint32(24,data.length,true);central.setUint16(28,name.length,true);central.setUint32(42,offset,true);entry.set(name,46);directory.push(entry);offset+=header.length+data.length;
+  }
+  const end=new Uint8Array(22),view=new DataView(end.buffer);view.setUint32(0,0x06054b50,true);view.setUint16(8,files.length,true);view.setUint16(10,files.length,true);view.setUint32(12,directory.reduce((sum,entry)=>sum+entry.length,0),true);view.setUint32(16,offset,true);
+  return new Blob([...parts,...directory,end],{type:'application/zip'});
+}
+async function photoFile(photo,index){
+  const response=await fetch(safePhoto(photo.src),{cache:'no-store'});
+  if(!response.ok)throw Error(`사진 ${index+1}을 불러오지 못했어요.`);
+  const blob=await response.blob(),type=blob.type.split(';')[0],ext=type==='image/png'?'png':type==='image/webp'?'webp':type==='image/gif'?'gif':type==='image/svg+xml'?'svg':'jpg';
+  return{name:`현장사진_${String(index+1).padStart(2,'0')}.${ext}`,data:new Uint8Array(await blob.arrayBuffer()),blob};
+}
+function saveBlob(blob,name){const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=name;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000)}
+async function downloadPhotos(all){
+  const buttons=[$('#downloadCurrent'),$('#downloadAll')];buttons.forEach(button=>button.disabled=true);
+  try{
+    const indices=all?currentPhotos.map((_,index)=>index):[photoIndex];
+    if(!indices.length)throw Error('저장할 사진이 없어요.');
+    const files=[];
+    for(const index of indices){downloadStatus.textContent=`사진 ${files.length+1} / ${indices.length} 준비 중`;files.push(await photoFile(currentPhotos[index],index))}
+    if(all)saveBlob(zipPhotos(files),`민웍스_현장사진_${selected}.zip`);
+    else saveBlob(files[0].blob,files[0].name);
+    downloadDialog.close();
+  }catch(error){downloadStatus.textContent=error.message||'사진 저장에 실패했어요. 다시 시도해 주세요.'}
+  finally{buttons.forEach(button=>button.disabled=false)}
+}
+$('#downloadCurrent').onclick=()=>downloadPhotos(false);
+$('#downloadAll').onclick=()=>downloadPhotos(true);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});
 window.addEventListener('storage',event=>{if(event.key===SESSION_KEY){syncSeenScope();load()}else if(event.key===seenScope){seen=readSeen();updateUnread()}});
 setInterval(()=>{if(document.hidden)return;const today=day();if(today!==lastToday){const wasToday=selected===lastToday;lastToday=today;if(wasToday||![today,day(-1)].includes(selected))return select(today)}load()},15000);
@@ -176,9 +226,8 @@ window.addEventListener('minworks:plus-ready',load);
 select(selected);
 
 const photoStage=$('.photo-stage');
-photoStage.addEventListener('pointerdown',event=>{if(!event.isPrimary||event.button!==0||photoStage.classList.contains('zoomed'))return;photoGesture={id:event.pointerId,x:event.clientX,y:event.clientY};photoStage.setPointerCapture(event.pointerId)});
-photoStage.addEventListener('pointerup',event=>{if(!photoGesture||event.pointerId!==photoGesture.id)return;const dx=event.clientX-photoGesture.x,dy=event.clientY-photoGesture.y;photoGesture=null;if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.3){const next=photoIndex+(dx<0?1:-1);if(next>=0&&next<currentPhotos.length){photoIndex=next;showPhoto()}}});
-photoStage.addEventListener('pointercancel',()=>photoGesture=null);photoStage.addEventListener('dragstart',event=>event.preventDefault());
+attachSwipe(photoStage,delta=>{const next=photoIndex+delta;if(next>=0&&next<currentPhotos.length){photoIndex=next;showPhoto()}},45);
+photoStage.addEventListener('dragstart',event=>event.preventDefault());
 $('#photoDialog').addEventListener('keydown',event=>{if(event.key==='ArrowRight'||event.key==='ArrowLeft'){event.preventDefault();const next=photoIndex+(event.key==='ArrowRight'?1:-1);if(next>=0&&next<currentPhotos.length){photoIndex=next;showPhoto()}}});
 if('serviceWorker' in navigator&&!['localhost','127.0.0.1'].includes(location.hostname))navigator.serviceWorker.register('./sw.js').catch(()=>{});
 })();
