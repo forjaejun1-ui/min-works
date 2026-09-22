@@ -1,5 +1,6 @@
 /* One current, verified release list replaces accumulated sample-era entries. */
 (() => {
+  let canonical = [];
   const render = () => {
     const list = document.querySelector('#patchView .patch-list');
     if (!list) return;
@@ -10,7 +11,7 @@
       ['2026-09-22', 'MIN WORKS+', '공사일보 조회 개선', '민웍스+에서 현장과 사진을 좌우로 넘겨 보고, 사진 1장 또는 해당 일보의 사진 전체를 내려받을 수 있습니다.'],
       ['2026-09-21', '현장서류', '현장서류 본판 통합', 'TBM 일지, 사진대지PRO_V1, 위험성평가표, 교육서류, 작업허가서, 산업안전보건관리비를 현장서류에 연결했습니다. 현장정보 연동과 인쇄·PDF 화면을 정리했습니다.']
     ];
-    list.replaceChildren(...notes.map(([date, version, title, body], index) => {
+    canonical = notes.map(([date, version, title, body]) => {
       const article = document.createElement('article');
       article.className = 'patch-item';
       const time = document.createElement('time');
@@ -23,8 +24,16 @@
       content.append(badge, heading, paragraph);
       article.append(time, content);
       return article;
-    }));
+    });
+    list.replaceChildren(...canonical);
     document.querySelector('#patchView .patch-title small').textContent = '현재 적용된 주요 변경사항';
+    // Older modules still append their historical test notes during startup.
+    // Keep this release list authoritative even when they run after DOMContentLoaded.
+    new MutationObserver(() => {
+      if (list.children.length !== canonical.length || canonical.some((item, index) => list.children[index] !== item)) {
+        list.replaceChildren(...canonical);
+      }
+    }).observe(list, { childList: true });
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', render);
   else render();

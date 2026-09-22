@@ -465,7 +465,16 @@ const issueEscape=value=>{const span=document.createElement('span');span.textCon
 const issueDueLabel=document.createElement('label');issueDueLabel.innerHTML='완료 기한<input id="issueDue" type="date">';issueFormModal.querySelector('.issue-form-grid').appendChild(issueDueLabel);
 const issueFilterButtons=[...document.querySelectorAll('.issue-summary button')];['all','urgent','active','complete'].forEach((key,index)=>issueFilterButtons[index].dataset.issueFilter=key);
 function refreshIssueSummary(){const cards=[...document.querySelectorAll('.issue-detail-card')],counts=[cards.length,cards.filter(c=>c.dataset.urgency==='urgent').length,cards.filter(c=>c.dataset.status!=='complete').length,cards.filter(c=>c.dataset.status==='complete').length];issueFilterButtons.forEach((button,index)=>button.textContent=['전체 ','긴급 ','진행 중 ','완료 '][index]+counts[index]);}
-document.querySelectorAll('.issue-detail-card').forEach(card=>{card.dataset.urgency=card.classList.contains('urgent')?'urgent':'normal';card.dataset.status='active';card.dataset.comments=card.querySelector('.issue-meta span:last-child')?.textContent.match(/\d+/)?.[0]||'0';card.dataset.due=card.querySelector('.issue-meta span:nth-child(2)')?.textContent.trim()||'기한 미정';});
+function issueComments(card){try{const items=JSON.parse(card.dataset.issueComments||'[]');return Array.isArray(items)?items:[]}catch{return[]}}
+function issueCommentAuthor(){const user=window.MIN_WORKS_USER;return [user?.department,user?.name,user?.rank].filter(Boolean).join(' ')||currentUserTitle()}
+function renderIssueComments(card){
+  const comments=issueComments(card),list=document.getElementById('peekCommentList');
+  list.replaceChildren();
+  if(!comments.length){const empty=document.createElement('span');empty.className='empty-check';empty.textContent='등록된 댓글이 없습니다.';list.append(empty)}
+  comments.forEach(item=>{const line=document.createElement('p'),author=document.createElement('strong');author.textContent=item.author||'작성자';line.append(author,document.createTextNode(' '+(item.text||'')));list.append(line)});
+  document.getElementById('peekCommentCount').textContent=String(comments.length);
+}
+document.querySelectorAll('.issue-detail-card').forEach(card=>{card.dataset.urgency=card.classList.contains('urgent')?'urgent':'normal';card.dataset.status=card.dataset.status||'active';card.dataset.comments=String(issueComments(card).length||Number(card.querySelector('.issue-meta span:last-child')?.textContent.match(/\d+/)?.[0])||0);card.dataset.due=card.dataset.due||card.querySelector('.issue-meta span:nth-child(2)')?.textContent.trim()||'기한 미정';});
 issueFilterButtons.forEach(button=>button.addEventListener('click',()=>{issueFilterButtons.forEach(x=>x.classList.toggle('active',x===button));document.querySelectorAll('.issue-detail-card').forEach(card=>{const f=button.dataset.issueFilter;card.style.display=f==='all'||f===card.dataset.urgency||(f==='active'&&card.dataset.status==='active')||(f==='complete'&&card.dataset.status==='complete')?'block':'none';});}));
 const issueDetailActions=document.createElement('div');issueDetailActions.className='issue-detail-actions';issueDetailActions.innerHTML='<div class="issue-status-row"><span id="peekDue">기한 미정</span><div><button id="deleteIssue" class="record-delete-button"><span class="material-symbols-rounded">delete</span>이슈 삭제</button><button id="toggleIssueStatus">완료 처리</button></div></div><section class="issue-comments"><b>댓글 <em id="peekCommentCount">0</em></b><div id="peekCommentList"><span class="empty-check">등록된 댓글이 없습니다.</span></div><label><input id="issueCommentInput" placeholder="댓글을 입력하세요"><button id="addIssueComment">등록</button></label></section>';issuePeek.querySelector('section').appendChild(issueDetailActions);let activeIssueCard=null;
 document.getElementById('closeIssueForm').addEventListener('click',()=>issueFormModal.classList.remove('show'));
@@ -480,7 +489,7 @@ document.getElementById('saveIssue').addEventListener('click',()=>{
   const row=document.querySelector(`[data-site-row="${CSS.escape(site)}"]`);if(row){const cell=row.children[4];cell.innerHTML=`<button class="site-issue-alert" data-issue-site="${issueEscape(site)}"><span class="material-symbols-rounded">error</span>이슈 있음</button>`;attachSiteIssueAlert(cell.querySelector('button'))}
   issueFormModal.classList.remove('show');refreshIssueSummary();notify(site+' 현장에 이슈를 등록했습니다.');
 });
-function showIssuePeek(site,selectedCard){const card=selectedCard||document.querySelector(`[data-issue-card="${site}"]`);if(!card)return;activeIssueCard=card;document.getElementById('peekSite').textContent=site;document.getElementById('peekTitle').textContent=card.querySelector('h3').textContent;document.getElementById('peekDescription').textContent=card.querySelector('p').textContent;document.getElementById('peekOwner').textContent=card.querySelector('.issue-meta span').textContent.replace(/^person\s*/,'').trim();document.getElementById('peekUrgency').textContent=card.querySelector('.issue-label').textContent;document.getElementById('peekDue').textContent='완료 기한 '+card.dataset.due;document.getElementById('peekCommentCount').textContent=card.dataset.comments;document.getElementById('toggleIssueStatus').textContent=card.dataset.status==='complete'?'다시 진행':'완료 처리';issuePeek.classList.add('show')}
+function showIssuePeek(site,selectedCard){const card=selectedCard||document.querySelector(`[data-issue-card="${site}"]`);if(!card)return;activeIssueCard=card;document.getElementById('peekSite').textContent=site;document.getElementById('peekTitle').textContent=card.querySelector('h3').textContent;document.getElementById('peekDescription').textContent=card.querySelector('p').textContent;document.getElementById('peekOwner').textContent=card.querySelector('.issue-meta span').textContent.replace(/^person\s*/,'').trim();document.getElementById('peekUrgency').textContent=card.querySelector('.issue-label').textContent;document.getElementById('peekDue').textContent='완료 기한 '+card.dataset.due;renderIssueComments(card);document.getElementById('issueCommentInput').value='';document.getElementById('toggleIssueStatus').textContent=card.dataset.status==='complete'?'다시 진행':'완료 처리';issuePeek.classList.add('show')}
 function attachSiteIssueAlert(button){button.addEventListener('click',()=>showIssuePeek(button.dataset.issueSite))}
 function attachIssueCard(card){card.addEventListener('click',()=>showIssuePeek(card.dataset.issueCard,card))}
 document.querySelectorAll('.site-issue-alert').forEach(attachSiteIssueAlert);document.querySelectorAll('.issue-detail-card').forEach(attachIssueCard);
@@ -498,7 +507,26 @@ document.getElementById('deleteIssue').addEventListener('click',()=>{
   if(!remaining){const alert=[...document.querySelectorAll('[data-issue-site]')].find(item=>item.dataset.issueSite===site);if(alert)alert.closest('span').innerHTML='<em class="status ok">이슈 없음</em>'}
   refreshAfterRecordDelete();notify('현장 이슈를 삭제했습니다.');
 });
-document.getElementById('addIssueComment').addEventListener('click',()=>{const input=document.getElementById('issueCommentInput'),text=input.value.trim();if(!text||!activeIssueCard)return;const list=document.getElementById('peekCommentList');list.querySelector('.empty-check')?.remove();const comment=document.createElement('p'),author=document.createElement('strong');author.textContent=currentUserTitle();comment.append(author,document.createTextNode(' '+text));list.appendChild(comment);activeIssueCard.dataset.comments=String(Number(activeIssueCard.dataset.comments||0)+1);activeIssueCard.querySelector('.issue-meta span:last-child').innerHTML=`<i class="material-symbols-rounded">chat</i>댓글 ${activeIssueCard.dataset.comments}`;document.getElementById('peekCommentCount').textContent=activeIssueCard.dataset.comments;input.value='';notify('댓글을 등록했습니다.');});refreshIssueSummary();
+document.getElementById('addIssueComment').addEventListener('click',async()=>{
+  const input=document.getElementById('issueCommentInput'),button=document.getElementById('addIssueComment'),text=input.value.trim(),card=activeIssueCard;
+  if(!text||!card)return;
+  if(!window.MIN_WORKS_USER){notify('로그인 후 댓글을 등록해 주세요.');return}
+  const before=card.dataset.issueComments,previousCount=card.dataset.comments;
+  const next=[...issueComments(card),{id:crypto.randomUUID?.()||String(Date.now()),authorId:window.MIN_WORKS_USER.id||'',author:issueCommentAuthor(),text,createdAt:new Date().toISOString()}];
+  button.disabled=true;window.MIN_WORKS_TRANSACTION=true;
+  card.dataset.issueComments=JSON.stringify(next);card.dataset.comments=String(next.length);
+  card.querySelector('.issue-meta span:last-child').innerHTML=`<i class="material-symbols-rounded">chat</i>댓글 ${next.length}`;
+  renderIssueComments(card);
+  try{
+    if(!window.MIN_WORKS_TEST)await window.MIN_WORKS_CLOUD.saveNow();
+    input.value='';notify('댓글을 등록했습니다.');
+  }catch(error){
+    if(before===undefined)delete card.dataset.issueComments;else card.dataset.issueComments=before;
+    card.dataset.comments=previousCount;
+    card.querySelector('.issue-meta span:last-child').innerHTML=`<i class="material-symbols-rounded">chat</i>댓글 ${previousCount}`;
+    renderIssueComments(card);notify('댓글 저장 실패 · '+error.message);
+  }finally{window.MIN_WORKS_TRANSACTION=false;button.disabled=false}
+});refreshIssueSummary();
 
 // 삭제한 샘플은 새로고침해도 다시 나타나지 않습니다.
 (()=>{const saved=deletedRecords();document.querySelectorAll('.report-card').forEach(card=>{if(saved.reports.includes(recordId(card,'reports')))removeReportCard(card)});document.querySelectorAll('.issue-detail-card').forEach(card=>{if(saved.issues.includes(recordId(card,'issues')))card.remove()});refreshAfterRecordDelete()})();

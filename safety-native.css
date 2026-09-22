@@ -157,7 +157,8 @@
 .safety-doc-icon svg{display:block;width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .nav-submenu .safety-doc-icon{width:24px;height:24px;border-radius:7px;background:transparent;color:#8b9385}
 .nav-submenu .nav-subgroup.selected .safety-doc-icon{color:#557c13}
-.nav-parent[data-view="documents"] .safety-doc-icon{width:31px;height:31px;background:#17181a;color:#fff}
+.nav-parent[data-view="documents"] .safety-doc-icon{width:31px;height:31px;background:#f0f5e8;color:#648c20}
+.nav-parent[data-view="documents"].active .safety-doc-icon{background:#17181a;color:#fff}
 .ui-v54 .nav-cluster>.nav-parent[data-view="documents"]{padding:7px 10px!important;gap:10px}
 .nav-parent[data-view="documents"]>b{flex:1;min-width:0;overflow:visible;color:#20231f;font-size:13px;font-weight:750;letter-spacing:-.02em;text-overflow:clip;white-space:nowrap}
 .safety-nav-chevron{display:grid;width:20px;height:20px;place-items:center;margin-left:auto;color:#878c84;transition:transform .16s ease}
