@@ -1762,8 +1762,15 @@ window.MIN_WORKS_CONFIG = Object.freeze({
       picker.classList.toggle('active', active !== 'all');
     };
     const renderCards = () => {
-      document.querySelectorAll('.report-card').forEach(card => card.style.display = active === 'all' || card.dataset.site === active ? '' : 'none');
-      document.querySelectorAll('.date-group').forEach(group => group.hidden = ![...group.querySelectorAll('.report-card')].some(card => card.style.display !== 'none'));
+      document.querySelectorAll('.report-card').forEach(card => {
+        if (active === 'all' || card.dataset.site === active) card.style.removeProperty('display');
+        else card.style.setProperty('display', 'none', 'important');
+      });
+      document.querySelectorAll('.date-group').forEach(group => {
+        const visible = [...group.querySelectorAll('.report-card')].some(card => card.style.display !== 'none');
+        if (visible) group.style.removeProperty('display');
+        else group.style.setProperty('display', 'none', 'important');
+      });
     };
     const rebuild = () => {
       const names = [...new Set([...document.querySelectorAll('.site-table-row')].map(row => row.dataset.siteRow).filter(Boolean))].sort((a,b) => a.localeCompare(b,'ko'));

@@ -100,7 +100,6 @@ body{font-family:"Noto Sans KR",Pretendard,Arial,sans-serif;background:var(--lig
 .site-card.is-setting-hidden{display:none!important}
 .site-card:hover{transform:translateY(-1px)}
 .site-card:focus-visible{outline:3px solid color-mix(in srgb,var(--accent,#7fbc03) 35%,transparent);outline-offset:2px}
-.site-table-row.focused-site{outline:3px solid color-mix(in srgb,var(--accent,#7fbc03) 28%,transparent);background:#fbfff5}
 .recent-report-link{border:0;background:transparent;color:#557d0a;text-decoration:underline;text-underline-offset:3px;font:inherit;text-align:left;cursor:pointer;padding:6px 0}
 .recent-report-link:hover{color:#222}
 .money-pair{margin-top:14px}.money-pair label{margin-top:0}.money-help{font-size:9px;color:#81867c;margin:8px 0 0}
