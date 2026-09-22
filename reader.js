@@ -24,6 +24,13 @@ function syncSeenScope(){const next=scopeKey();if(next!==seenScope){seenScope=ne
 function reportKey(report){return [report.id||[report.site,report.reportDate,report.author,report.time].join(':'),report.createdAt||report.reportDate||''].join('|')}
 function saveSeen(){try{localStorage.setItem(seenScope,JSON.stringify([...seen].slice(-1500)))}catch{}}
 function unread(date){return (dayReports.get(date)||[]).filter(report=>!seen.has(reportKey(report))).length}
+function pruneHistory(){
+  const allowed=new Set([day(),day(-1)]);
+  for(const date of dayReports.keys())if(!allowed.has(date))dayReports.delete(date);
+  const visibleKeys=new Set([...dayReports.values()].flatMap(reports=>reports.map(reportKey)));
+  const retained=new Set([...seen].filter(key=>visibleKeys.has(key)));
+  if(retained.size!==seen.size){seen=retained;saveSeen()}
+}
 function updateUnread(){
   for(const [date,badge] of [[day(),'#todayUnread'],[day(-1),'#yesterdayUnread']]){
     const count=unread(date),node=$(badge);
@@ -128,6 +135,7 @@ async function load(){
     if(selected!==requested)return;
     const byDate=new Map(dates.map((date,index)=>[date,responses[index]]));
     for(const [date,data] of byDate)dayReports.set(date,data.reports||[]);
+    pruneHistory();
     const todayData=byDate.get(day());
     const active=number(todayData?.activeSiteCount);
     $('#activeSiteCount').textContent=active===null?'—':`+${active.toLocaleString('ko-KR')}`;
@@ -140,7 +148,8 @@ async function load(){
   finally{busy=false;$('#refresh').disabled=false;if(selected!==requested)load()}
 }
 function select(date){
-  selected=date;
+  selected=[day(),day(-1)].includes(date)?date:day();
+  date=selected;
   $('#today').classList.toggle('selected',date===day());
   $('#yesterday').classList.toggle('selected',date===day(-1));
   $('#summaryLabel').textContent=date===day()?'오늘 현장 보고':date===day(-1)?'전일 현장 보고':date+' 현장 보고';
@@ -162,7 +171,7 @@ $('#nextPhoto').onclick=()=>{if(photoIndex<currentPhotos.length-1){photoIndex++;
 $('#zoomPhoto').onclick=()=>{$('.photo-stage').classList.toggle('zoomed');$('#zoomPhoto').textContent=$('.photo-stage').classList.contains('zoomed')?'축소 −':'확대 ＋'};
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});
 window.addEventListener('storage',event=>{if(event.key===SESSION_KEY){syncSeenScope();load()}else if(event.key===seenScope){seen=readSeen();updateUnread()}});
-setInterval(()=>{if(document.hidden)return;const today=day();if(today!==lastToday){const wasToday=selected===lastToday;lastToday=today;if(wasToday)return select(today)}load()},15000);
+setInterval(()=>{if(document.hidden)return;const today=day();if(today!==lastToday){const wasToday=selected===lastToday;lastToday=today;if(wasToday||![today,day(-1)].includes(selected))return select(today)}load()},15000);
 window.addEventListener('minworks:plus-ready',load);
 select(selected);
 
