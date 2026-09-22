@@ -75,6 +75,7 @@ nav .active-site-summary .site-count-badge{font-size:10px;font-weight:850;color:
 .photos button{border-radius:13px;background:#e5ece6}
 .meta{font-size:11px;color:#758272;font-weight:650}
 .report-bottom select{width:100%;max-width:100%;font-size:12px}
+.photo-download-dialog{width:min(100vw,440px);height:auto;max-height:100dvh;min-height:0;margin:auto;border-radius:22px;background:#f8faf6;color:#1f2b21;padding:22px}.photo-download-dialog::backdrop{background:#101712a8}.photo-download-sheet h2{font-size:21px;margin:0 0 5px}.photo-download-sheet p{font-size:13px;color:#697667}.photo-download-sheet button{display:block;width:100%;min-height:49px;margin-top:9px;border:1px solid #dce5d6;border-radius:13px;background:white;color:#27392a;font-weight:750}.photo-download-sheet button:first-of-type{background:#1e2b22;color:white;border-color:#1e2b22}.photo-download-sheet button:last-of-type{background:transparent}.photo-download-sheet #downloadStatus{min-height:0;color:#a44d31}.photo-download-sheet #downloadStatus:empty{display:none}.photo-stage{touch-action:pan-y;overscroll-behavior:contain}.photo-stage img{pointer-events:none}html,body,#reports{overscroll-behavior-x:none}
 .pager button{height:48px;min-height:48px;width:60px;border-radius:15px;font-size:23px;color:#344333}
 .pager strong{font-size:13px;color:#253225;font-weight:800}
 .pager small{font-size:10px;color:#7a8876}
