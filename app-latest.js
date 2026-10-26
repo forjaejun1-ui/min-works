@@ -2326,6 +2326,8 @@ window.MIN_WORKS_CONFIG = Object.freeze({
     try {
       const result = await api('/admin/employees');
       if (!result.ok) throw new Error(result.error);
+      window.MIN_WORKS_EMPLOYEES = result.employees.map(({id,name,rank,status})=>({id,name,rank,status}));
+      window.dispatchEvent(new Event('minworks:employees-changed'));
       list.replaceChildren();
       if (!result.employees.length) {
         list.innerHTML = '<div class="admin-empty">아직 등록된 직원이 없습니다.</div>';

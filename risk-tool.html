@@ -4948,11 +4948,35 @@ function addTrade(){
 }
 
 
-const APPROVAL_PEOPLE=["유재준","김한일","이우성","임수범"];
+// Staff labels come from the signed-in account and the authorized live roster.
+let riskStaff=[];
+function staffLabel(person){return [person?.name,person?.rank].filter(Boolean).join(' ').trim()}
+function approvalPeople(){
+  let host=window;try{host=parent}catch(_){}
+  return [...new Set([host.MIN_WORKS_USER,...(host.MIN_WORKS_EMPLOYEES||[]),...riskStaff]
+    .filter(p=>p?.name && p.status!=='pending' && p.status!=='inactive')
+    .map(staffLabel).filter(Boolean))];
+}
+function staffList(){
+  let list=document.getElementById('riskStaffNames');
+  if(!list){list=document.createElement('datalist');list.id='riskStaffNames';document.body.append(list)}
+  list.replaceChildren(...approvalPeople().map(name=>new Option(name,name)));
+}
 function approvalSelect(field,current=""){
-  if(field==="authorName") return `<input type="text" class="approval-person-select" data-approval-field="authorName" aria-label="작성자 이름" maxlength="80" placeholder="이름 입력" value="${esc(current)}" oninput="updateApprovalField('authorName',this.value)">`;
-  const options=['<option value="">선택</option>',...APPROVAL_PEOPLE.map(n=>`<option value="${n}" ${current===n?"selected":""}>${n}</option>`)].join("");
-  return `<select class="approval-person-select" data-approval-field="${field}" onchange="updateApprovalField('${field}',this.value)">${options}</select>`;
+  return `<input type="text" class="approval-person-select" list="riskStaffNames" data-approval-field="${field}" aria-label="${field==='authorName'?'작성자':'담당자'} 이름과 직급" maxlength="80" placeholder="이름 · 직급" value="${esc(current)}" oninput="updateApprovalField('${field}',this.value)">`;
+}
+async function refreshRiskStaff(){
+  let host=window;try{host=parent}catch(_){}
+  const user=host.MIN_WORKS_USER;
+  if(user?.role==='admin' && !host.MIN_WORKS_TEST){
+    try{
+      const token=host.localStorage.getItem('minWorksSessionV1');
+      if(token){const response=await fetch('https://min-works-api.forjaejun.workers.dev/admin/employees',{headers:{Authorization:`Bearer ${token}`},cache:'no-store'});
+        if(response.ok){const data=await response.json();if(Array.isArray(data.employees))riskStaff=data.employees;}}
+    }catch(_){/* Current account and existing roster remain usable. */}
+  }
+  staffList();
+  if(user?.name && !state.fields.authorName){state.fields.authorName=staffLabel(user);updateApprovalField('authorName',state.fields.authorName)}
 }
 function updateCheckerName(value){
   state.fields.checkerName=value||"";
@@ -5651,8 +5675,7 @@ return chunks.map((chunk,ci)=>`<section class="sheet process-sheet" id="page-${t
  </section>`).join("");
 }
 function riskPersonSelect(tid,rid,key,current=""){
-  const options=['<option value="">선택</option>',...APPROVAL_PEOPLE.map(n=>`<option value="${n}" ${current===n?"selected":""}>${n}</option>`)].join("");
-  return `<select class="person-input risk-person-select" onchange="editRisk('${tid}','${rid}','${key}',this.value)">${options}</select>`;
+  return `<input type="text" class="person-input risk-person-select" list="riskStaffNames" aria-label="담당자 이름과 직급" maxlength="80" value="${esc(current)}" placeholder="이름 · 직급" onchange="editRisk('${tid}','${rid}','${key}',this.value)">`;
 }
 
 function displayRiskText(v){
@@ -6479,6 +6502,8 @@ window.MIN_WORKS_RISK_TOOL={
   applyContext(site){if(!site)return;state.fields=state.fields||{};Object.assign(state.fields,{projectName:site.name||'',clientName:site.client||'',workPeriodStart:site.start||'',workPeriodEnd:site.end||'',workPeriod:[site.start,site.end].filter(Boolean).join(' ~ '),managerName:site.manager||state.fields.managerName||'',checkerName:site.manager||state.fields.checkerName||''});clearTimeout(saveTimer);saveLocal();renderAll()}
 };
 window.MIN_WORKS_RISK_TOOL.applyContext(parent.MIN_WORKS_DOCUMENT_CONTEXT?.current?.());
+refreshRiskStaff();
+if(parent!==window){parent.document.addEventListener('minworks:user-ready',refreshRiskStaff);parent.addEventListener('minworks:employees-changed',refreshRiskStaff);window.addEventListener('pagehide',()=>{parent.document.removeEventListener('minworks:user-ready',refreshRiskStaff);parent.removeEventListener('minworks:employees-changed',refreshRiskStaff)},{once:true})}
 const minWorksResize=()=>{if(parent!==window)parent.postMessage({type:'minworks:risk-height',height:document.body.scrollHeight},location.origin==='null'?'*':location.origin)};
 new ResizeObserver(minWorksResize).observe(document.body);minWorksResize();
 </script></body>
