@@ -4950,6 +4950,7 @@ function addTrade(){
 
 const APPROVAL_PEOPLE=["유재준","김한일","이우성","임수범"];
 function approvalSelect(field,current=""){
+  if(field==="authorName") return `<input type="text" class="approval-person-select" data-approval-field="authorName" aria-label="작성자 이름" maxlength="80" placeholder="이름 입력" value="${esc(current)}" oninput="updateApprovalField('authorName',this.value)">`;
   const options=['<option value="">선택</option>',...APPROVAL_PEOPLE.map(n=>`<option value="${n}" ${current===n?"selected":""}>${n}</option>`)].join("");
   return `<select class="approval-person-select" data-approval-field="${field}" onchange="updateApprovalField('${field}',this.value)">${options}</select>`;
 }

@@ -3,6 +3,9 @@
   'use strict';
 
 
+  if (window.MIN_WORKS_EXPERIENCE_INITIALIZED) return;
+  window.MIN_WORKS_EXPERIENCE_INITIALIZED = true;
+
   const splash = document.getElementById('mwSplash');
   const openingPreferenceKey = 'minWorksOpeningEnabledV1';
   const openingToggle = document.getElementById('openingToggle');
@@ -32,7 +35,7 @@
     splash.classList.add('leaving');
     window.setTimeout(() => splash.remove(), 480);
   };
-  if (!openingEnabled) {
+  if (!openingEnabled || document.documentElement.dataset.skipOpening === 'true' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     splash?.remove();
   } else {
     const start = performance.now();

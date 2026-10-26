@@ -5,7 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="light" />
   <meta name="theme-color" content="#f5f6f8" />
-  <script>document.documentElement.dataset.theme='light';document.documentElement.style.colorScheme='light';</script>
+  <script>
+    document.documentElement.dataset.theme='light';
+    document.documentElement.style.colorScheme='light';
+    // Consume only the next reload initiated by company-data synchronization.
+    (() => {
+      const key='minWorksCompanyReloadV1';
+      try {
+        const pending=JSON.parse(sessionStorage.getItem(key)||'null');
+        sessionStorage.removeItem(key);
+        if ((pending?.url===location.href && Date.now()-pending.at>=0 && Date.now()-pending.at<30000) || localStorage.getItem('minWorksOpeningEnabledV1')==='false') document.documentElement.dataset.skipOpening='true';
+      } catch (_) {}
+      window.MIN_WORKS_RELOAD_COMPANY=() => {
+        try { sessionStorage.setItem(key,JSON.stringify({url:location.href,at:Date.now()})); } catch (_) {}
+        location.reload();
+      };
+    })();
+  </script>
+  <style>html[data-skip-opening="true"] #mwSplash{display:none!important}</style>
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -227,8 +244,8 @@
 <script src="navigation-refresh.js?v=issues26"></script>
 <link rel="stylesheet" href="qa-board.css?v=issues23" />
 <script src="qa-board.js?v=issues26" defer></script>
-<script src="app-latest.js?v=issues26"></script>
-<script src="ui-experience.js?v=57"></script>
-<script src="report-update.js?v=57"></script><script src="documents-update.js?v=issues22"></script><script src="safety-enhancements.js?v=docs20"></script><script src="safety-engine.js?v=docs20"></script><script src="safety-native.js?v=docs20"></script><script src="reader-admin.js?v=66"></script><script src="device-session.js?v=63"></script><script src="mobile-controls.js?v=66"></script><script src="issue-owner-sync.js?v=issues22"></script><script src="patch-notes-current.js?v=issues26"></script><script src="schedule-integration.js?v=schedule1"></script></body>
+<script src="app-latest.js?v=opening92"></script>
+<script src="ui-experience.js?v=opening92"></script>
+<script src="report-update.js?v=57"></script><script src="documents-update.js?v=issues22"></script><script src="safety-enhancements.js?v=docs20"></script><script src="safety-engine.js?v=author92"></script><script src="safety-native.js?v=docs20"></script><script src="reader-admin.js?v=66"></script><script src="device-session.js?v=63"></script><script src="mobile-controls.js?v=66"></script><script src="issue-owner-sync.js?v=issues22"></script><script src="patch-notes-current.js?v=issues26"></script><script src="schedule-integration.js?v=schedule1"></script></body>
 </html>
 
