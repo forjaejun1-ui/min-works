@@ -1322,7 +1322,7 @@ render=function(){
 
  if(currentId==='risk-assessment'){
   root.classList.add('risk-tool-editor');root.classList.remove('tbm-tool-editor');root.querySelector('[data-safety-id="pageTitle"]').textContent='위험성평가표';
-  paper.innerHTML='<iframe id="riskToolFrame" title="위험성평가표 작성" src="risk-tool.html?v=staff93" style="display:block;width:100%;height:1600px;border:0"></iframe>';
+  paper.innerHTML='<iframe id="riskToolFrame" title="위험성평가표 작성" src="risk-tool.html?v=staff94" style="display:block;width:100%;height:1600px;border:0"></iframe>';
   ['saveBtn','newBtn','printBtn'].forEach(id=>root.querySelector('[data-safety-id="'+id+'"]').hidden=false);
   ['excelBtn','pdfBtn','resetBtn','exportBtn'].forEach(id=>root.querySelector('[data-safety-id="'+id+'"]').hidden=true);
   root.querySelector('[data-safety-id="mode"]').textContent='위험성평가표 · 자동 임시저장';

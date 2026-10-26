@@ -4948,35 +4948,11 @@ function addTrade(){
 }
 
 
-// Staff labels come from the signed-in account and the authorized live roster.
-let riskStaff=[];
-function staffLabel(person){return [person?.name,person?.rank].filter(Boolean).join(' ').trim()}
-function approvalPeople(){
-  let host=window;try{host=parent}catch(_){}
-  return [...new Set([host.MIN_WORKS_USER,...(host.MIN_WORKS_EMPLOYEES||[]),...riskStaff]
-    .filter(p=>p?.name && p.status!=='pending' && p.status!=='inactive')
-    .map(staffLabel).filter(Boolean))];
-}
-function staffList(){
-  let list=document.getElementById('riskStaffNames');
-  if(!list){list=document.createElement('datalist');list.id='riskStaffNames';document.body.append(list)}
-  list.replaceChildren(...approvalPeople().map(name=>new Option(name,name)));
-}
+const APPROVAL_PEOPLE=["서범석 상무","진시운 부장","유재준 부장","김한일 과장","이우성 과장","임수범 대리","손주용 대리"];
 function approvalSelect(field,current=""){
-  return `<input type="text" class="approval-person-select" list="riskStaffNames" data-approval-field="${field}" aria-label="${field==='authorName'?'작성자':'담당자'} 이름과 직급" maxlength="80" placeholder="이름 · 직급" value="${esc(current)}" oninput="updateApprovalField('${field}',this.value)">`;
-}
-async function refreshRiskStaff(){
-  let host=window;try{host=parent}catch(_){}
-  const user=host.MIN_WORKS_USER;
-  if(user?.role==='admin' && !host.MIN_WORKS_TEST){
-    try{
-      const token=host.localStorage.getItem('minWorksSessionV1');
-      if(token){const response=await fetch('https://min-works-api.forjaejun.workers.dev/admin/employees',{headers:{Authorization:`Bearer ${token}`},cache:'no-store'});
-        if(response.ok){const data=await response.json();if(Array.isArray(data.employees))riskStaff=data.employees;}}
-    }catch(_){/* Current account and existing roster remain usable. */}
-  }
-  staffList();
-  if(user?.name && !state.fields.authorName){state.fields.authorName=staffLabel(user);updateApprovalField('authorName',state.fields.authorName)}
+  if(field==="approverName") return `<input type="text" class="approval-person-select" data-approval-field="approverName" aria-label="안전보건총괄책임자 이름" maxlength="80" placeholder="이름 입력" value="${esc(current)}" oninput="updateApprovalField('approverName',this.value)">`;
+  const options=['<option value="">선택</option>',...[...new Set([...APPROVAL_PEOPLE,...(current&&!APPROVAL_PEOPLE.includes(current)?[current]:[])])].map(n=>`<option value="${n}" ${current===n?"selected":""}>${n}</option>`)].join("");
+  return `<select class="approval-person-select" data-approval-field="${field}" onchange="updateApprovalField('${field}',this.value)">${options}</select>`;
 }
 function updateCheckerName(value){
   state.fields.checkerName=value||"";
@@ -5097,7 +5073,7 @@ function coverPage(){
     </table>
 
     <table class="cover-final-approval"><tr><td class="gray center bold">승 인</td>
-      <td class="center bold">안전보건총괄책임자&nbsp;&nbsp;&nbsp; 강신윤</td></tr></table>
+      <td class="center bold"><span>안전보건총괄책임자</span><span style="display:inline-block;width:40%;min-width:90px;margin-left:12px">${approvalSelect("approverName",f.approverName)}</span></td></tr></table>
   </div>
   <div class="pagewater">1 페이지</div>
  </section>`;
@@ -5675,7 +5651,8 @@ return chunks.map((chunk,ci)=>`<section class="sheet process-sheet" id="page-${t
  </section>`).join("");
 }
 function riskPersonSelect(tid,rid,key,current=""){
-  return `<input type="text" class="person-input risk-person-select" list="riskStaffNames" aria-label="담당자 이름과 직급" maxlength="80" value="${esc(current)}" placeholder="이름 · 직급" onchange="editRisk('${tid}','${rid}','${key}',this.value)">`;
+  const options=['<option value="">선택</option>',...[...new Set([...APPROVAL_PEOPLE,...(current&&!APPROVAL_PEOPLE.includes(current)?[current]:[])])].map(n=>`<option value="${n}" ${current===n?"selected":""}>${n}</option>`)].join("");
+  return `<select class="person-input risk-person-select" onchange="editRisk('${tid}','${rid}','${key}',this.value)">${options}</select>`;
 }
 
 function displayRiskText(v){
@@ -6499,11 +6476,9 @@ window.MIN_WORKS_RISK_TOOL={
   data(){captureFields();clearTimeout(saveTimer);saveLocal();return {...snapshot(),site:state.fields.projectName||'',writeDate:state.fields.writeDate||'',schema:'risk-tool-v8-16R5'}},
   print(){captureFields();saveLocal();renderAll();window.print()},
   validate(){const input=document.querySelector('[data-cover-field="projectName"]');if(input){input.required=true;return input.reportValidity()}return Boolean(String(state.fields.projectName||'').trim())},
-  applyContext(site){if(!site)return;state.fields=state.fields||{};Object.assign(state.fields,{projectName:site.name||'',clientName:site.client||'',workPeriodStart:site.start||'',workPeriodEnd:site.end||'',workPeriod:[site.start,site.end].filter(Boolean).join(' ~ '),managerName:site.manager||state.fields.managerName||'',checkerName:site.manager||state.fields.checkerName||''});clearTimeout(saveTimer);saveLocal();renderAll()}
+  applyContext(site){if(!site)return;state.fields=state.fields||{};Object.assign(state.fields,{projectName:site.name||'',clientName:site.client||'',workPeriodStart:site.start||'',workPeriodEnd:site.end||'',workPeriod:[site.start,site.end].filter(Boolean).join(' ~ '),checkerName:site.manager||state.fields.checkerName||''});clearTimeout(saveTimer);saveLocal();renderAll()}
 };
 window.MIN_WORKS_RISK_TOOL.applyContext(parent.MIN_WORKS_DOCUMENT_CONTEXT?.current?.());
-refreshRiskStaff();
-if(parent!==window){parent.document.addEventListener('minworks:user-ready',refreshRiskStaff);parent.addEventListener('minworks:employees-changed',refreshRiskStaff);window.addEventListener('pagehide',()=>{parent.document.removeEventListener('minworks:user-ready',refreshRiskStaff);parent.removeEventListener('minworks:employees-changed',refreshRiskStaff)},{once:true})}
 const minWorksResize=()=>{if(parent!==window)parent.postMessage({type:'minworks:risk-height',height:document.body.scrollHeight},location.origin==='null'?'*':location.origin)};
 new ResizeObserver(minWorksResize).observe(document.body);minWorksResize();
 </script></body>
