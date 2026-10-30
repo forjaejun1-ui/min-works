@@ -33,6 +33,7 @@
         <button class="nav-subgroup" type="button" data-doc-folder="newhire"><span class="material-symbols-rounded">person_add</span><b>신규채용자서류</b><i class="material-symbols-rounded">chevron_right</i></button>
       </div>
     </div>
+    <button class="nav-item" data-view="vendors"><span class="nav-icon material-symbols-rounded">group</span><b>협력업체</b></button>
     <button class="nav-item" data-view="issues"><span class="nav-icon material-symbols-rounded">report_problem</span><b>이슈 관리</b></button>
     <div class="nav-divider"></div>
     <button class="nav-item nav-utility" data-view="settings"><span class="nav-icon material-symbols-rounded">settings</span><b>설정</b></button>
