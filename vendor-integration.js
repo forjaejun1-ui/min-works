@@ -79,7 +79,7 @@
     }
     if(greeting){if(previousGreeting===null)previousGreeting=greeting.textContent;greeting.textContent='지역별 협력업체와 연락처를 한눈에 확인하세요.';}
     if (!user()) return;
-    if (!frame.getAttribute('src')) frame.src='vendor-directory.html?v=vendors99';
+    if (!frame.getAttribute('src')) frame.src='vendor-directory.html?v=vendors100';
     resizeFrame();
   }
   new MutationObserver(open).observe(view,{attributes:true,attributeFilter:['class']});
