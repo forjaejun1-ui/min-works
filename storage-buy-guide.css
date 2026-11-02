@@ -1,0 +1,46 @@
+#storageView .storage-buy-guide{margin-top:13px;border:1px solid #dce3d3;border-radius:14px;background:#fff;overflow:hidden;color:#242924}
+#storageView .storage-buy-guide>summary{display:flex;align-items:center;gap:12px;padding:16px 20px;cursor:pointer;list-style:none;background:#f7faef}
+#storageView .storage-buy-guide>summary::-webkit-details-marker{display:none}
+#storageView .storage-buy-guide>summary:focus-visible{outline:2px solid #77a915;outline-offset:-3px}
+.storage-buy-icon{display:grid;place-items:center;flex:0 0 32px;height:32px;background:#eaf4d6;border-radius:9px;color:#628d16;font-size:20px}
+.storage-buy-heading{min-width:0;flex:1}
+.storage-buy-heading strong{display:block;font-size:14px;font-weight:800}
+.storage-buy-heading small{display:block;margin-top:4px;color:#717a69;font-size:12px;line-height:1.5}
+.storage-buy-toggle{display:flex;align-items:center;gap:9px;font-size:12px;color:#52633c;white-space:nowrap}
+.storage-buy-toggle i{width:7px;height:7px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg);margin-top:-4px}
+.storage-buy-guide .when-open{display:none}
+.storage-buy-guide[open] .when-open{display:inline}
+.storage-buy-guide[open] .when-closed{display:none}
+.storage-buy-guide[open] .storage-buy-toggle i{transform:rotate(225deg);margin-top:4px}
+.storage-buy-content{padding:20px}
+.storage-buy-intro{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.storage-buy-intro b,.storage-buy-bottom b{font-size:13px}
+.storage-buy-intro p{margin:5px 0 0;font-size:13px;line-height:1.6;color:#58604f}
+.storage-buy-status{padding:6px 9px;border-radius:6px;background:#f0f2f5;color:#67717c;font-size:11px;white-space:nowrap}
+.storage-buy-estimate{margin:14px 0;color:#6c7368;font-size:12px;line-height:1.7}
+.storage-buy-estimate b{margin-right:6px;color:#4d5d3d}
+.storage-buy-table{width:100%;border-collapse:collapse;text-align:left;font-size:12px;line-height:1.5}
+.storage-buy-table caption{text-align:left;margin-bottom:9px;color:#7b8278;font-size:11px}
+.storage-buy-table th,.storage-buy-table td{padding:11px 12px;border-bottom:1px solid #e8eae5;vertical-align:middle}
+.storage-buy-table thead th{font-size:11px;color:#747b6e;background:#f5f6f3;font-weight:600}
+.storage-buy-table tbody th{font-size:12px;font-weight:700}
+.storage-buy-table small{display:block;font-size:11px;font-weight:400;color:#7c8278;margin-top:3px}
+.storage-buy-table .recommended{background:#f7fbef}
+.storage-buy-table a{display:inline-block;padding:5px 0;color:#577f14;font-size:12px;font-weight:700;text-decoration:underline;text-underline-offset:3px;white-space:nowrap}
+.storage-buy-bottom{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+.storage-buy-bottom p{font-size:12px;color:#697163;line-height:1.7;margin:5px 0 0}
+.storage-buy-footnote{font-size:11px;line-height:1.7;color:#868c82;border-top:1px solid #e8eae5;padding-top:12px;margin:16px 0 0}
+@media(max-width:1100px){.storage-buy-intro{align-items:flex-start;flex-direction:column}.storage-buy-table th,.storage-buy-table td{padding:10px 7px}}
+@media(max-width:700px){
+ #storageView .storage-buy-guide>summary{padding:14px;gap:9px}
+ .storage-buy-icon{display:none}.storage-buy-heading strong{font-size:13px}.storage-buy-heading small{font-size:11px}.storage-buy-toggle{font-size:11px;gap:6px}
+ .storage-buy-content{padding:14px}.storage-buy-table thead{display:none}
+ .storage-buy-table,.storage-buy-table tbody{display:block}
+ .storage-buy-table caption{display:block}
+ .storage-buy-table tr{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px;margin-bottom:9px;border:1px solid #e5e9df;border-radius:10px}
+ .storage-buy-table th,.storage-buy-table td{display:block;border:0;padding:0;min-width:0}
+ .storage-buy-table th,.storage-buy-table td[data-label="용도"],.storage-buy-table td:last-child{grid-column:1/-1}
+ .storage-buy-table td[data-label]::before{content:attr(data-label);display:block;font-size:10px;color:#858c7f;margin-bottom:3px}
+ .storage-buy-table a{min-height:36px;display:inline-flex;align-items:center}
+ .storage-buy-bottom{grid-template-columns:1fr;gap:12px}
+}

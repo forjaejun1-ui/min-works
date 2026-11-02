@@ -47,7 +47,8 @@
 <link rel="stylesheet" href="ui-foundation.css?v=57" />
 <link rel="stylesheet" href="ui-modern.css?v=57" />
 <link rel="stylesheet" href="ui-linear.css?v=57" />
-<link rel="stylesheet" href="report-update.css?v=57"><link rel="stylesheet" href="documents-update.css?v=57"><link rel="stylesheet" href="safety-forms.css?v=docs20"><link rel="stylesheet" href="safety-native.css?v=docs21"><link rel="stylesheet" href="mobile-update.css?v=66"></head>
+<link rel="stylesheet" href="report-update.css?v=57"><link rel="stylesheet" href="documents-update.css?v=57"><link rel="stylesheet" href="safety-forms.css?v=docs20"><link rel="stylesheet" href="safety-native.css?v=docs21"><link rel="stylesheet" href="mobile-update.css?v=66"><link rel="stylesheet" href="storage-buy-guide.css?v=storage101" />
+</head>
 <body class="ui-v54">
   <div class="mw-splash" id="mwSplash" role="status" aria-label="MIN WORKS 불러오는 중">
     <div class="mw-splash-brand">
@@ -207,6 +208,22 @@
       <section class="view" id="storageView">
         <div class="section-title storage-title"><div><p class="eyebrow">STORAGE MANAGER</p><h2>사용량과 자료 정리</h2><small>회사 클라우드에 저장된 문서와 사진 사용량을 확인하고 현장별로 내보냅니다.</small></div><button class="storage-refresh" id="storageRefresh"><span class="material-symbols-rounded">refresh</span>다시 계산</button></div>
         <section class="storage-overview panel"><div class="storage-total"><div><span>사용 중</span><b id="storageUsed">계산 중</b><small id="storageQuota">전체 용량 확인 중</small></div><strong id="storagePercent">0%</strong></div><div class="storage-main-bar"><i id="storageMainBar"></i></div><div class="storage-types"><article><span class="material-symbols-rounded">photo_library</span><div><small>현장 사진</small><b id="storagePhotos">0 B</b></div></article><article><span class="material-symbols-rounded">description</span><div><small>일보·문서</small><b id="storageDocuments">0 B</b></div></article><article><span class="material-symbols-rounded">database</span><div><small>앱·기타 데이터</small><b id="storageOther">0 B</b></div></article></div></section>
+        <details class="storage-buy-guide" id="storageBuyGuide">
+          <summary><span class="storage-buy-icon" aria-hidden="true">↗</span><span class="storage-buy-heading"><strong>저장소 구매·자동 보관 가이드</strong><small>3년 예상 200~340GB · 일시 구매 NAS 추천</small></span><span class="storage-buy-toggle"><span class="when-closed">비교 보기</span><span class="when-open">접기</span><i aria-hidden="true"></i></span></summary>
+          <div class="storage-buy-content">
+            <div class="storage-buy-intro"><div><b>추천 구성</b><p>NAS 2TB 약 <strong>83.3만 원</strong> · 외장하드 4TB 백업까지 약 <strong>110.2만 원</strong></p></div><span class="storage-buy-status">도입 계획 · 자동 전송 미연결</span></div>
+            <p class="storage-buy-estimate"><b>용량 산정</b> 현장 3~5곳 × 하루 사진 최대 13장 × 월 26일 × 3년. 원본 평균 4MB, 일보·미리보기 하루 8MB, 여유분 20% 가정이며 영상은 제외했습니다. 원본 평균 8MB라면 약 380~630GB로 늘어납니다.</p>
+            <table class="storage-buy-table"><caption>월 구독 없는 저장소 비교 · 2026.11.02 확인 가격</caption><thead><tr><th scope="col">구성</th><th scope="col">사용 용량</th><th scope="col">초기 구매비</th><th scope="col">용도·확인 사항</th><th scope="col">링크</th></tr></thead><tbody>
+              <tr class="recommended"><th scope="row">시놀로지 DS225+<small>2TB 하드 × 2 · 추천</small></th><td data-label="사용 용량">약 2TB<small>미러링 구성</small></td><td data-label="초기 구매비"><b>833,000원</b></td><td data-label="용도">민웍스 주 저장소 · 상시 전원·인터넷 필요</td><td><a href="https://www.ssg.com/item/itemView.ssg?itemId=1000718885878" target="_blank" rel="noopener noreferrer">판매 페이지 ↗</a></td></tr>
+              <tr><th scope="row">시놀로지 DS225+<small>4TB 하드 × 2</small></th><td data-label="사용 용량">약 4TB<small>미러링 구성</small></td><td data-label="초기 구매비"><b>1,207,000원</b></td><td data-label="용도">다른 회사 자료까지 넉넉히 보관</td><td><a href="https://platform.drsoft.co.kr/sub/synology-package.php?code=home-225-4t2" target="_blank" rel="noopener noreferrer">구성·가격 ↗</a></td></tr>
+              <tr><th scope="row">WD My Passport<small>외장하드 4TB</small></th><td data-label="사용 용량">약 4TB</td><td data-label="초기 구매비"><b>269,000원</b></td><td data-label="용도">별도 백업용 · 자동 저장에는 PC 또는 NAS 필요</td><td><a href="https://www.ssg.com/item/itemView.ssg?itemId=1000585703290" target="_blank" rel="noopener noreferrer">판매 페이지 ↗</a></td></tr>
+              <tr><th scope="row">pCloud Lifetime<small>500GB 이용권</small></th><td data-label="사용 용량">500GB</td><td data-label="초기 구매비"><b>€219 · 약 35만 원</b></td><td data-label="용도">장비 관리 없음 · 회사 공용 사용·API 연동 검토 필요</td><td><a href="https://www.pcloud.com/cloud-storage-pricing-plans.html?period=lifetime" target="_blank" rel="noopener noreferrer">공식 요금 ↗</a></td></tr>
+              <tr><th scope="row">pCloud Lifetime<small>2TB 이용권</small></th><td data-label="사용 용량">2TB</td><td data-label="초기 구매비"><b>€499 · 약 80만 원</b></td><td data-label="용도">장비 없이 여유 용량 · Business 평생 결제 미지원</td><td><a href="https://help.pcloud.com/article/payment-methods-billing-cycles" target="_blank" rel="noopener noreferrer">이용 조건 ↗</a></td></tr>
+            </tbody></table>
+            <div class="storage-buy-bottom"><div><b>연결 후 자동화 계획</b><p>일보·사진·TBM 등록 → 현장·종류·날짜별 저장 → 전송 검증 → 별도 백업. 이 탭에서 완료·대기·실패와 재전송 상태를 확인하도록 구성합니다.</p></div><div><b>보관·운영 기준</b><p>원본 3년 보관, 민웍스+에는 가벼운 미리보기 제공. NAS 미러링과 별도 백업은 함께 구성하며 전기료·고장 시 교체비가 발생합니다.</p></div></div>
+            <p class="storage-buy-footnote">가격은 확인일 기준 참고용이며 구매 시 달라질 수 있습니다. 유로 가격의 원화 환산은 €1=1,600원 가정으로, 결제 통화·환율·수수료에 따라 달라집니다. 설치·민웍스 연결 개발·추가 백업 비용은 별도입니다. 현재는 안내만 제공하며 기존 저장·내보내기·삭제 방식은 그대로입니다.</p>
+          </div>
+        </details>
         <section class="storage-policy panel"><span class="material-symbols-rounded">verified_user</span><div><b>안전한 보관 기준</b><p>진행 중 현장은 자동 삭제하지 않습니다. 완료 현장은 내보낸 뒤 30일 보관을 권장하며, 삭제 자료는 휴지통에서 7일간 복구할 수 있습니다.</p></div></section>
         <section class="storage-sites panel"><div class="panel-head"><div><p class="eyebrow">BY SITE</p><h2>현장별 자료</h2></div><small>ZIP · PDF 내보내기</small></div><div id="storageSiteList"></div></section>
         <section class="storage-trash panel"><div><span class="material-symbols-rounded">delete_sweep</span><div><b>휴지통</b><small id="storageTrashCount">0개 자료 · 7일 후 영구 삭제</small></div></div><div><button id="restoreStorageTrash">전체 복구</button><button class="danger" id="emptyStorageTrash">휴지통 비우기</button></div></section>
@@ -248,6 +265,6 @@
 <link rel="stylesheet" href="guide-current.css?v=guide96" />
 <script src="app-latest.js?v=vendors95"></script><script src="vendor-integration.js?v=vendors100"></script>
 <script src="ui-experience.js?v=staff94"></script>
-<script src="report-update.js?v=57"></script><script src="documents-update.js?v=issues22"></script><script src="safety-enhancements.js?v=docs20"></script><script src="safety-engine.js?v=staff94"></script><script src="safety-native.js?v=docs20"></script><script src="reader-admin.js?v=66"></script><script src="device-session.js?v=63"></script><script src="mobile-controls.js?v=66"></script><script src="issue-owner-sync.js?v=issues22"></script><script src="patch-notes-current.js?v=vendors100"></script><script src="schedule-integration.js?v=schedule1"></script><script src="guide-current.js?v=qa97"></script><link rel="stylesheet" href="qa-assistant.css?v=qa97" /><script src="qa-assistant.js?v=qa97"></script></body>
+<script src="report-update.js?v=57"></script><script src="documents-update.js?v=issues22"></script><script src="safety-enhancements.js?v=docs20"></script><script src="safety-engine.js?v=staff94"></script><script src="safety-native.js?v=docs20"></script><script src="reader-admin.js?v=66"></script><script src="device-session.js?v=63"></script><script src="mobile-controls.js?v=66"></script><script src="issue-owner-sync.js?v=issues22"></script><script src="patch-notes-current.js?v=storage101"></script><script src="schedule-integration.js?v=schedule1"></script><script src="guide-current.js?v=qa97"></script><link rel="stylesheet" href="qa-assistant.css?v=qa97" /><script src="qa-assistant.js?v=qa97"></script></body>
 </html>
 
