@@ -56,9 +56,11 @@
         const height = Math.ceil(shell.getBoundingClientRect().height) + 4;
         if (height > 4 && frame.style.height !== height+'px') frame.style.height = height+'px';
         const rect = frame.getBoundingClientRect();
+        const mobileNav = document.querySelector('.mobile-nav')?.getBoundingClientRect();
+        const visibleBottom = mobileNav?.height > 0 ? Math.min(innerHeight,mobileNav.top) : innerHeight;
         // Dialogs and notifications stay within the visible part of this tall frame.
         doc.documentElement.style.setProperty('--vendor-overlay-top', Math.max(0,-rect.top)+'px');
-        doc.documentElement.style.setProperty('--vendor-viewport-height', Math.max(160,Math.min(innerHeight,rect.bottom)-Math.max(0,rect.top))+'px');
+        doc.documentElement.style.setProperty('--vendor-viewport-height', Math.max(160,Math.min(visibleBottom,rect.bottom)-Math.max(0,rect.top))+'px');
       });
     };
     const observer = new ResizeObserver(resizeFrame);
@@ -77,7 +79,7 @@
     }
     if(greeting){if(previousGreeting===null)previousGreeting=greeting.textContent;greeting.textContent='지역별 협력업체와 연락처를 한눈에 확인하세요.';}
     if (!user()) return;
-    if (!frame.getAttribute('src')) frame.src='vendor-directory.html?v=vendors98';
+    if (!frame.getAttribute('src')) frame.src='vendor-directory.html?v=vendors99';
     resizeFrame();
   }
   new MutationObserver(open).observe(view,{attributes:true,attributeFilter:['class']});
