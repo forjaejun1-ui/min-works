@@ -1,0 +1,38 @@
+/* Keep guide content out of fixed icon columns, including narrow mobile views. */
+#helpView .help-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+#helpView .help-card.static { display:grid; grid-template-columns:40px minmax(0,1fr); align-items:start; gap:16px; padding:24px; min-width:0; }
+#helpView .help-card.static > span { width:40px; height:40px; }
+#helpView .help-card.static > div { min-width:0; width:100%; }
+#helpView .help-card h3 { font-size:17px; line-height:1.5; margin:3px 0 8px; }
+#helpView .help-card p, #helpView .help-details details p { font-size:14px; line-height:1.8; color:#626b65; word-break:keep-all; overflow-wrap:anywhere; }
+#helpView .help-card small { font-size:12px; }
+#helpView .guide-open, #patchPlanned button { display:inline-flex; align-items:center; min-height:40px; margin-top:12px; padding:6px 0; border:0; background:transparent; color:#527900; font:inherit; font-size:13px; font-weight:700; text-decoration:none; cursor:pointer; }
+#helpView .guide-open:focus-visible, #patchPlanned button:focus-visible { outline:2px solid #7fbc03; outline-offset:4px; border-radius:4px; }
+#helpView .help-hero h2 + p, #helpView .help-start p, #helpView .help-tip p { font-size:14px; line-height:1.75; word-break:keep-all; overflow-wrap:anywhere; }
+#helpView .help-start > div { min-width:0; }
+#helpView .help-start > div > div { min-width:0; }
+#helpView .help-details summary { font-size:15px; line-height:1.6; }
+#helpView .help-details summary > span { flex:0 0 27px; }
+#helpView .help-details summary b { min-width:0; word-break:keep-all; overflow-wrap:anywhere; }
+#helpView .help-details summary i { flex-shrink:0; }
+#helpView .help-details details p + p { margin-top:10px; }
+#patchView .patch-item { grid-template-columns:110px minmax(0,1fr); gap:24px; }
+#patchView .patch-item > div { min-width:0; }
+#patchView .patch-item h3 { font-size:18px; line-height:1.5; word-break:keep-all; overflow-wrap:anywhere; }
+#patchView .patch-item p { font-size:14px; line-height:1.85; word-break:keep-all; overflow-wrap:anywhere; }
+#patchView .patch-item time { font-size:12px; }
+#patchView .patch-item div > span { font-size:12px; }
+#patchPlanned { margin-top:20px; padding:24px; border:1px solid #e2e5df; border-radius:16px; background:#f8f9f6; }
+#patchPlanned > span { font-size:12px; font-weight:700; color:#72786d; }
+#patchPlanned h3 { margin:10px 0; font-size:17px; }
+#patchPlanned p { margin:0; color:#626b65; font-size:14px; line-height:1.8; }
+@media(max-width:1000px) { #helpView .help-grid { grid-template-columns:minmax(0,1fr); } }
+@media(max-width:700px) {
+  #helpView .help-card.static { padding:18px; gap:12px; grid-template-columns:32px minmax(0,1fr); }
+  #helpView .help-card.static > span { width:32px; height:32px; font-size:22px; }
+  #helpView .help-hero > span { display:none; }
+  #helpView .help-details { padding:18px; }
+  #patchView .patch-item { grid-template-columns:minmax(0,1fr); gap:8px; }
+  #patchView .patch-title { flex-wrap:wrap; }
+  #patchPlanned { padding:20px; }
+}
