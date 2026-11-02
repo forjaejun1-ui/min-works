@@ -6,6 +6,7 @@
   const esc = safeText;
   const form = $('#dailyForm');
   const draftStorage = 'minWorksDailyDraftV3';
+  let pendingNewCard = null;
   let editing = null, dirty = false, draftSaved = false, saving = false, restoring = false, refreshTimer, draftRevision = 0;
   const today = () => {
     const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).map(p=>[p.type,p.value]));
@@ -117,12 +118,13 @@
     return Promise.all($$('#tbmPreview .uploaded-photo,#progressPreview .uploaded-photo').map(async node=>{
       let src=node.dataset.photoSrc;
       if(forCloud&&node.photoFile instanceof File)return {src,type:node.dataset.photoType||"현장사진",size:node.photoFile.size,file:node.photoFile};
-      if(forCloud&&src?.startsWith('data:')){const blob=await fetch(src).then(r=>r.blob());return {src,type:node.dataset.photoType||'현장사진',size:blob.size,file:new File([blob],'report-photo.jpg',{type:blob.type||'image/jpeg'})};}
+      if(forCloud&&src?.startsWith('data:')){const blob=await fetch(src).then(r=>r.blob());node.photoFile=new File([blob],'report-photo.jpg',{type:blob.type||'image/jpeg'});return {src,type:node.dataset.photoType||'현장사진',size:blob.size,file:node.photoFile};}
       if(node.photoFile instanceof Blob)src=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(Error('사진을 읽지 못했습니다.'));reader.readAsDataURL(node.photoFile);});
       else if(src?.startsWith('blob:')){const blob=await fetch(src).then(r=>r.blob());src=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(blob);});}
       return {src,type:node.dataset.photoType||'현장사진',size:Number(node.dataset.photoSize)||0};
     }));
   }
+  window.addEventListener('minworks:save-progress',event=>{if(saving)$('#reportSubmit').textContent=event.detail.text;});
   async function persist(){if(!window.MIN_WORKS_CLOUD)throw Error("회사 자료 연결을 확인해 주세요.");await window.MIN_WORKS_CLOUD.saveNow();}
   async function submit() {
     if(saving)return;
@@ -133,26 +135,27 @@
     if(processes.some(p=>p.today<0||!Number.isInteger(p.today)))return notify('인원은 0 이상의 정수로 입력해주세요.');
     if(processes.some(p=>!p.today&&!p.work))return notify('입력한 공정의 인원 또는 작업내용을 입력해주세요.');
     saving=true;const submitButton=$('#reportSubmit');submitButton.disabled=true;submitButton.textContent='저장 중…';
-    const card=editing||document.createElement('button'),isNew=!editing;
+    const card=editing||(pendingNewCard ||= document.createElement('button')),isNew=!editing;
+    let committed=false;
     const backup=isNew?null:{html:card.innerHTML,data:{...card.dataset},processes:card.reportProcesses,photos:card.reportPhotos};
     try {
       if(!window.MIN_WORKS_USER)throw Error("로그인이 필요합니다.");if(editing&&!canDeleteReport(editing))throw Error("수정 권한이 없습니다.");
-      const photos=await photoData(true);window.MIN_WORKS_TRANSACTION=true;
+      window.MIN_WORKS_TRANSACTION=true;submitButton.textContent='작성 내용 확인 중…';const photos=await photoData(true);
       card.className='report-card';card.type='button';card.dataset.site=site;card.dataset.reportDate=date;card.dataset.note=form.querySelector('textarea').value.trim();
-      if(isNew){card.dataset.author=currentUser||'관리자';card.dataset.authorTitle=currentUserTitle();card.dataset.createdAt=new Date().toISOString();card.dataset.recordId=crypto.randomUUID();}
+      if(isNew&&!card.dataset.recordId){card.dataset.author=currentUser||'관리자';card.dataset.authorTitle=currentUserTitle();card.dataset.createdAt=new Date().toISOString();card.dataset.recordId=crypto.randomUUID();}
       card.dataset.updatedAt=new Date().toISOString();card.dataset.checks='[]';
       const author=card.dataset.authorTitle||card.querySelector('.report-author b')?.textContent||card.dataset.author;
       card.dataset.authorTitle=author;card.reportProcesses=processes;card.reportPhotos=photos;card.dataset.cloudPhotos=JSON.stringify(photos);
       const total=processes.reduce((sum,p)=>sum+p.today,0);
       card.innerHTML=`<span class="report-file-icon"><span class="material-symbols-rounded">description</span></span><div><small>${esc(site)}</small><b>${Number(date.slice(5,7))}월 ${Number(date.slice(8,10))}일 공사일보</b><p>${processes.map(p=>esc(p.name)+' '+p.today+'명').join(' · ')} · 총출력 ${total}명 · 사진 ${photos.length}장</p></div><div class="report-author"><span>작성자</span><b>${esc(author)}</b><em class="owner-mark">${card.dataset.author===currentUser?'내 일보':''}</em></div><span class="report-status">작성 완료</span>`;
       if(isNew){$('#todayReports').appendChild(card);attachReportCard(card);}
-      recalculate();await persist();
+      recalculate();await persist();committed=true;
       dirty=false;draftRevision++;clearTimeout(window.minWorksDraftTimer);localStorage.removeItem(draftStorage);localStorage.removeItem('minWorksDailyDraftV2');
-      editing=null;closeDailyEditor();form.reset();fillRows([]);resetPhotos();updateCumulative();refresh();
+      editing=null;pendingNewCard=null;closeDailyEditor();showView('daily');form.reset();fillRows([]);resetPhotos();updateCumulative();refresh();
       window.dispatchEvent(new Event('minworks:reports-changed'));
       window.dispatchEvent(new CustomEvent('minworks:new-content',{detail:{view:'daily'}}));
       notify(isNew?'공사일보를 저장했습니다.':'공사일보 수정 내용을 저장했습니다.');
-      if(userSettings.openAfterSubmit)card.click();
+      // Successful registration returns to the daily-report list.
     } catch(error) {
       if(isNew)card.remove();else{card.innerHTML=backup.html;Object.keys(card.dataset).forEach(key=>delete card.dataset[key]);Object.assign(card.dataset,backup.data);card.reportProcesses=backup.processes;card.reportPhotos=backup.photos;}
       recalculate();notify('저장하지 못했습니다. 입력 내용은 유지됩니다. '+(error.message||'연결을 확인해주세요.'));console.warn('Report save failed',error);
