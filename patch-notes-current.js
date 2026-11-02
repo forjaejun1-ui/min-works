@@ -5,6 +5,7 @@
     const list = document.querySelector('#patchView .patch-list');
     if (!list) return;
     const notes = [
+      ['2026-11-02', 'Q&A', 'Gemini 자동답변 연결', '버그·개선 Q&A에 사용법과 업데이트 계획을 묻는 자동답변창을 추가했습니다. 의견 등록 후 AI 답변 받기를 선택할 수 있으며 AI 답변과 개발자 답변을 구분합니다. 관리자 계획과 직접 답변을 보호하고, 이용 한도·응답 실패 시 다시 요청할 수 있도록 안내합니다. 패치노트 하단의 Gemini 예정 안내는 제거했습니다.'],
       ['2026-11-02', '사용법', '사용법 화면 오류 수정·안내 최신화', 'MIN WORKS+ 안내가 좁은 칸에 갇혀 세로로 깨지던 오류를 수정했습니다. PC·모바일의 글자 크기와 카드 너비를 정리하고 현장서류·공정표·협력업체·Q&A 및 기기 연결 안내를 현재 메뉴에 맞췄습니다. 패치노트는 적용 내역을 최신순으로 정리하고 예정 기능을 별도로 표시합니다.'],
       ['2026-10-30', '협력업체', '지역별 협력업체 연락망', '이슈 관리 위에 협력업체 메뉴를 추가했습니다. 지도·공종·업체명으로 연락처를 찾고, 로그인한 직원이 업체 정보를 등록·수정할 수 있습니다. PC·태블릿·휴대폰 화면에 맞춰 배치하고 직원 공용 자료로 저장합니다.'],
       ['2026-10-26', '현장서류', '공정표 작성·위험성평가 인원 정보 개선', '현장서류의 TBM 일지 아래에 공정표 작성을 연결했습니다. 주요공정과 일정 구간의 작업명을 작성하고 A3·A4로 출력할 수 있습니다. 위험성평가 작성자·직급과 결재 인원 표시를 정리하고 작성자 직접 입력을 지원합니다.'],
@@ -33,13 +34,6 @@
     list.replaceChildren(...canonical);
     const caption = document.querySelector('#patchView .patch-title small');
     if (caption) caption.textContent = '본판 적용 내역 · 최신순 · 2026. 11. 02 기준';
-    if (!document.getElementById('patchPlanned')) {
-      const planned = document.createElement('aside');
-      planned.id = 'patchPlanned';
-      planned.innerHTML = '<span>패치 예정 · 미적용</span><h3>Gemini AI 자동 답변</h3><p>버그·개선 Q&A의 AI 자동 답변은 준비 중입니다. 현재는 직원 의견 등록, 개발자 답변과 관리자 업데이트 계획을 이용할 수 있습니다.</p><button type="button">버그·개선 Q&A 열기 →</button>';
-      planned.querySelector('button').addEventListener('click', () => window.showView('qa'));
-      list.after(planned);
-    }
     // Older modules still append their historical test notes during startup.
     // Keep this release list authoritative even when they run after DOMContentLoaded.
     new MutationObserver(() => {

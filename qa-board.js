@@ -22,7 +22,6 @@
     const data = read();
     update(data);
     localStorage.setItem(KEY, JSON.stringify(data));
-    render();
     if (!window.MIN_WORKS_TEST) {
       try {
         if (!window.MIN_WORKS_CLOUD?.saveNow) throw Error('회사 자료 연결을 확인해 주세요.');
@@ -30,18 +29,18 @@
       } catch (error) {
         if (before == null) localStorage.removeItem(KEY);
         else localStorage.setItem(KEY, before);
-        render();
         alert(`Q&A를 공유 저장하지 못했습니다. ${error.message}`);
         return false;
       }
     }
+    render();
     return true;
   };
   const render = () => {
     const data = read();
     board.replaceChildren();
     const intro = el('div','qa-intro');
-    intro.append(el('p','', '사용 중 발견한 오류나 개선 의견을 남겨 주세요. 답변은 직원들과 공유됩니다.'),el('p','qa-muted','Gemini AI 자동 답변은 다음 패치 예정입니다. 지금은 개발자 답변으로 안내합니다.'));
+    intro.append(el('h3','', '버그·개선 의견 접수'),el('p','', '사용 중 발견한 오류나 개선 의견을 남겨 주세요. 등록한 의견과 개발자 답변은 직원들과 공유됩니다.'));
     board.append(intro);
     const form = el('form','qa-form');
     const kind = el('select');
@@ -50,19 +49,25 @@
     const title = el('input'); title.name='title'; title.maxLength=100; title.required=true; title.placeholder='제목을 적어 주세요';
     const detail = el('textarea'); detail.name='detail'; detail.maxLength=1500; detail.required=true; detail.placeholder='어떤 화면에서 무엇이 일어났는지 적어 주세요';
     const submit = el('button','', '등록하기'); submit.type='submit';
-    form.append(el('label','', '종류'),kind,el('label','', '제목'),title,el('label','', '상세 내용'),detail,submit);
+    const aiOption=el('label','qa-ai-option');
+    const aiCheck=el('input');aiCheck.type='checkbox';aiCheck.checked=true;
+    aiOption.append(aiCheck,document.createTextNode('등록 후 Gemini 자동답변 받기'));
+    form.append(el('label','', '종류'),kind,el('label','', '제목'),title,el('label','', '상세 내용'),detail,aiOption,el('p','qa-muted','선택하면 제목·상세 내용과 업데이트 계획을 Google Gemini로 전송합니다. 개인정보·기밀은 입력하지 마세요.'),submit);
     form.addEventListener('submit', async event => {
       event.preventDefault();
       if (!form.reportValidity()) return;
       submit.disabled = true;
+      const wantsAi=aiCheck.checked;
       const id = crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`;
       const ok = await mutate(next => next.posts.unshift({id,kind:kind.value,title:title.value.trim(),detail:detail.value.trim(),authorId:user().id||'',author:user().name||'직원',createdAt:new Date().toISOString()}));
-      if (ok) render();
+      if (ok) {if(wantsAi)await window.MIN_WORKS_QA_AI?.answerPost(id);}
+      else submit.disabled=false;
     });
     board.append(form);
     if (admin()) {
       const section = el('section','qa-admin');
       section.append(el('h3','', '다음 업데이트·수정 계획'));
+      section.append(el('p','qa-muted','Gemini 답변의 참고 자료입니다. 직원에게 공개할 기능명·상태·안내만 입력하세요. 개인정보나 계약 내용은 입력하지 마세요.'));
       const planForm = el('form','qa-form');
       const planTitle=el('input'); planTitle.required=true; planTitle.maxLength=100; planTitle.placeholder='예: 사진 갱신 속도 개선';
       const planStatus=el('select');
@@ -83,13 +88,14 @@
     if (!data.posts.length) posts.append(el('p','', '아직 등록된 의견이 없습니다.'));
     data.posts.forEach(post=>{
       const item=el('article','qa-item');
+      item.dataset.questionId=post.id;
       const head=el('div','qa-item-head');
       const heading=el('div');
       heading.append(el('span','qa-kind',({bug:'버그',request:'개선',question:'질문'})[post.kind]||'의견'),el('b','',post.title));
       head.append(heading,el('small','',`${post.author||'직원'} · ${String(post.createdAt||'').slice(0,10)}`));
       item.append(head,el('p','',post.detail));
-      if(post.aiAnswer?.text){const answer=el('div','qa-answer');answer.append(el('b','', 'AI 답변입니다 · 계획은 변경될 수 있습니다'),el('p','',post.aiAnswer.text));item.append(answer)}
-      else if(!post.developerAnswer?.text)item.append(el('p','qa-muted','개발자 답변 대기 중'));
+      const aiReply=el('div','qa-ai-reply');item.append(aiReply);
+      updateAiReply(aiReply,post);
       if(post.developerAnswer?.text){const answer=el('div','qa-answer developer');answer.append(el('b','', '개발자 답변'),el('p','',post.developerAnswer.text));item.append(answer)}
       if(admin()){
         const answer=el('textarea','qa-answer-input');answer.placeholder='개발자 답변을 직접 입력';answer.value=post.developerAnswer?.text||'';
@@ -101,6 +107,28 @@
     });
     board.append(posts);
   };
+  function updateAiReply(host,post) {
+    host.replaceChildren();
+    const service=window.MIN_WORKS_QA_AI;
+    const answer=service?.state.answers[post.id];
+    if(answer?.text){const box=el('div','qa-answer');box.append(el('b','','AI 답변입니다 · Gemini · 계획은 변경될 수 있습니다'),el('p','',answer.text));host.append(box);}
+    if(service?.state.pending.has(post.id)){host.append(el('p','qa-muted','Gemini가 사용법과 업데이트 계획을 확인하고 있어요…'));return;}
+    if(service?.state.errors[post.id])host.append(el('p','qa-muted',service.state.errors[post.id]));
+    if(!answer?.text&&!post.developerAnswer?.text){
+      host.append(el('p','qa-muted','개발자 답변 대기 중'));
+      if(admin()||String(post.authorId)===String(user().id)){
+        const retry=el('button','qa-ai-retry','Gemini 답변 요청');retry.type='button';
+        retry.addEventListener('click',()=>service?.answerPost(post.id));host.append(retry);
+      }
+    }
+  }
+  document.addEventListener('minworks:qa-ai',()=>{
+    const data=read();
+    board.querySelectorAll('.qa-item[data-question-id]').forEach(item=>{
+      const post=data.posts.find(p=>p.id===item.dataset.questionId);
+      if(post)updateAiReply(item.querySelector('.qa-ai-reply'),post);
+    });
+  });
   document.addEventListener('minworks:user-ready',render);
   render();
 })();
