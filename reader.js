@@ -7,7 +7,10 @@ const day=(offset=0)=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',yea
 const safePhoto=src=>{try{const url=new URL(src,location.href);return /^data:image\/(png|jpeg|webp|gif);/i.test(src)||url.protocol==='https:'||url.origin===location.origin?src:''}catch{return''}};
 const number=value=>Number.isFinite(Number(value))&&value!==null&&value!==''?Number(value):null;
 
-let selected=day(),groups=[],siteIndex=0,reportIndex=0,busy=false,lastFingerprint='',lastToday=day();
+const pushParams=new URL(location.href).searchParams;
+let requestedReport=pushParams.get('report')||'';
+const requestedDate=pushParams.get('date');
+let selected=requestedReport&&[day(),day(-1)].includes(requestedDate)?requestedDate:day(),groups=[],siteIndex=0,reportIndex=0,busy=false,lastFingerprint='',lastToday=day();
 let currentPhotos=[],photoIndex=0,suppressClickUntil=0,readTimer=null;
 const dayReports=new Map();
 const previewUrls=new Map();
@@ -137,6 +140,8 @@ function render(data){
   groups=[...bySite.values()];
   siteIndex=Math.max(0,groups.findIndex(group=>group.key===oldSite));
   reportIndex=Math.max(0,groups[siteIndex]?.reports.findIndex(report=>report.id===oldId)??0);
+  if(requestedReport){const index=groups.findIndex(g=>g.reports.some(r=>r.id===requestedReport));if(index>=0){siteIndex=index;reportIndex=groups[index].reports.findIndex(r=>r.id===requestedReport)}else $('#notice').textContent='이 일보는 삭제되었거나 오늘·전일 조회 범위를 벗어났어요.';requestedReport='';const u=new URL(location.href);u.searchParams.delete('report');u.searchParams.delete('date');history.replaceState(null,'',u)}
+  $('#today').classList.toggle('selected',selected===day());$('#yesterday').classList.toggle('selected',selected===day(-1));
   draw();
   if($('#photoDialog').open){
     if(current()?.id!==oldId)closePhotos();
@@ -183,8 +188,8 @@ async function load(){
     $('#activeSiteCount').textContent=active===null?'—':`+${active.toLocaleString('ko-KR')}`;
     updateUnread();
     const data=byDate.get(requested),fingerprint=JSON.stringify(data);
-    if(fingerprint!==lastFingerprint){render(data);lastFingerprint=fingerprint}
     $('#notice').textContent='';
+    if(fingerprint!==lastFingerprint){render(data);lastFingerprint=fingerprint}
     $('#sync').textContent=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})+' 갱신';
   }catch(error){$('#notice').textContent=error.message;$('#sync').textContent='연결 확인 필요'}
   finally{busy=false;$('#refresh').disabled=false;if(selected!==requested)load()}
@@ -272,5 +277,5 @@ const photoStage=$('.photo-stage');
 attachSwipe(photoStage,delta=>{const next=photoIndex+delta;if(next>=0&&next<currentPhotos.length){photoIndex=next;showPhoto()}},45);
 photoStage.addEventListener('dragstart',event=>event.preventDefault());
 $('#photoDialog').addEventListener('keydown',event=>{if(event.key==='ArrowRight'||event.key==='ArrowLeft'){event.preventDefault();const next=photoIndex+(event.key==='ArrowRight'?1:-1);if(next>=0&&next<currentPhotos.length){photoIndex=next;showPhoto()}}});
-if('serviceWorker' in navigator&&!['localhost','127.0.0.1'].includes(location.hostname))navigator.serviceWorker.register('./sw.js').catch(()=>{});
+if('serviceWorker' in navigator&&!['localhost','127.0.0.1'].includes(location.hostname))navigator.serviceWorker.register(location.pathname.startsWith('/min-works-plus/')?'/min-works-plus/sw.js':'/min-works/sw.js').catch(()=>{});
 })();
