@@ -40,6 +40,34 @@
   window.MIN_WORKS_VENDORS = Object.freeze({read, save, canImport:()=>user()?.role==='admin', userId:()=>user()?.id || user()?.name || 'admin'});
   const view = document.getElementById('vendorsView');
   const frame = document.getElementById('vendorFrame');
+  let resizeFrame = () => {};
+  frame.setAttribute('scrolling','no');
+  frame.addEventListener('load', () => {
+    const doc = frame.contentDocument;
+    const shell = doc?.querySelector('.shell');
+    if (!shell) return;
+    let queued = false;
+    resizeFrame = () => {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(() => {
+        queued = false;
+        if (!view.classList.contains('active')) return;
+        const height = Math.ceil(shell.getBoundingClientRect().height) + 4;
+        if (height > 4 && frame.style.height !== height+'px') frame.style.height = height+'px';
+        const rect = frame.getBoundingClientRect();
+        // Dialogs and notifications stay within the visible part of this tall frame.
+        doc.documentElement.style.setProperty('--vendor-overlay-top', Math.max(0,-rect.top)+'px');
+        doc.documentElement.style.setProperty('--vendor-viewport-height', Math.max(160,Math.min(innerHeight,rect.bottom)-Math.max(0,rect.top))+'px');
+      });
+    };
+    const observer = new ResizeObserver(resizeFrame);
+    observer.observe(shell);
+    doc.fonts.ready.then(resizeFrame);
+    resizeFrame();
+  });
+  window.addEventListener('resize', () => resizeFrame());
+  window.addEventListener('scroll', () => resizeFrame(), {passive:true});
   let previousGreeting=null;
   function open() {
     const greeting=document.getElementById('greetingMessage');
@@ -49,7 +77,8 @@
     }
     if(greeting){if(previousGreeting===null)previousGreeting=greeting.textContent;greeting.textContent='지역별 협력업체와 연락처를 한눈에 확인하세요.';}
     if (!user()) return;
-    if (!frame.getAttribute('src')) frame.src='vendor-directory.html?v=vendors95';
+    if (!frame.getAttribute('src')) frame.src='vendor-directory.html?v=vendors98';
+    resizeFrame();
   }
   new MutationObserver(open).observe(view,{attributes:true,attributeFilter:['class']});
   document.addEventListener('minworks:user-ready',open);

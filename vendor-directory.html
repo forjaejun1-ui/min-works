@@ -211,14 +211,16 @@
       .search,.filter-row select,.form-grid input,.form-grid textarea{font-size:16px}
     }
 
-    html,body{background:transparent}
+    html,body{background:transparent;overflow:hidden}
     .shell{display:block;min-height:0;background:transparent}
     .main{padding:2px 2px 22px!important}
     .top>div:first-child{display:none}
     .top{justify-content:flex-end;margin-bottom:12px}
     .map-panel{position:static}
-    .modal-backdrop{align-items:flex-start;padding-top:20px}
-    .modal{max-height:calc(100dvh - 40px)}
+    .vendor-list{height:auto;min-height:0;overflow:visible;scrollbar-gutter:auto;overscroll-behavior:auto}
+    .modal-backdrop{inset:var(--vendor-overlay-top,0px) 0 auto;height:var(--vendor-viewport-height,100dvh);align-items:flex-start;padding-top:20px}
+    .modal{max-height:calc(var(--vendor-viewport-height,100dvh) - 40px)}
+    .toast{bottom:auto;top:calc(var(--vendor-overlay-top,0px) + var(--vendor-viewport-height,100dvh) - 20px);transform:translate(-50%,-100%)}
     .top .actions{width:auto}
     @media(max-width:599px){.top .actions{width:100%}.main{padding-bottom:26px!important}}
 </style>
@@ -237,6 +239,6 @@
   <div class="modal-backdrop" id="modal"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><header><h2 id="modalTitle">업체 등록</h2><button id="closeModal" aria-label="닫기">×</button></header><form id="vendorForm"><div class="form-grid"><label>업체명 *<input name="name" required maxlength="100"></label><label>공종 *<input name="trade" required maxlength="60" list="trades"><datalist id="trades"></datalist></label><label>지역 *<input name="regionRaw" required maxlength="50" placeholder="서울, 경기, 인천, 수도권 등"></label><label>담당자 · 직급<input name="person" maxlength="100"></label><label>휴대폰<input name="mobile" type="tel" maxlength="40"></label><label>유선<input name="landline" type="tel" maxlength="40"></label><label>팩스<input name="fax" type="tel" maxlength="40"></label><label>이메일<input name="email" type="email" maxlength="120"></label><label>거래담당자<input name="owner" maxlength="100"></label><label class="wide">비고<textarea name="note" maxlength="800"></textarea></label></div><div class="form-actions"><button type="button" id="cancelModal">취소</button><button type="submit" class="primary">저장</button></div></form></div></div>
   <div class="toast" id="toast" hidden></div>
   <script id="seed-data" type="application/json">[]</script>
-  <script src="vendor-directory.js?v=vendors95"></script>
+  <script src="vendor-directory.js?v=vendors98"></script>
 </body>
 </html>
