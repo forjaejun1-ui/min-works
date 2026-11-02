@@ -47,7 +47,7 @@
   }
   async function writeSnapshot(payload,baseVersion){
     saveProgress('일보 저장 중…');
-    try{return await request('/company-state',{method:'PUT',json:{baseVersion,payload}})}catch(error){
+    try{const result=await request('/company-state',{method:'PUT',json:{baseVersion,payload}});if(result.response.status>=500||(result.response.ok&&!Number.isFinite(result.data.version)))throw new Error(result.data.error||'서버 저장 결과를 확인하지 못했습니다.');return result}catch(error){
       // A lost response does not mean the write failed. Confirm before allowing a retry.
       saveProgress('저장 결과 확인 중…');
       try{const check=await request('/company-state');if(check.response.ok&&check.data.payload?.savedAt===payload.savedAt)return {response:check.response,data:{ok:true,version:check.data.version}}}catch{}
