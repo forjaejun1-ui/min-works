@@ -2178,23 +2178,24 @@ window.MIN_WORKS_CONFIG = Object.freeze({
 
     content.innerHTML = `
       <h1>회사 계정으로 시작</h1>
-      <p class="auth-copy">직원 등록과 승인은 한 번이면 됩니다. 이미 등록했다면 PC·모바일에서 기존 직원 기기 연결을 선택하세요.</p>
-      <div class="auth-tabs"><button class="active" data-auth-tab="employee">직원 최초 등록</button><button data-auth-tab="connect">기존 직원 기기 연결</button><button data-auth-tab="admin">관리자 로그인</button></div>
-      <form class="auth-form" id="employeeRegisterForm">
+      <p class="auth-copy">직원번호와 개인 비밀번호로 로그인하세요. 본판·플러스에서 같은 계정을 사용합니다.</p>
+      <div class="auth-tabs"><button class="active" data-auth-tab="login">직원 로그인</button><button data-auth-tab="employee">직원 최초 등록</button><button data-auth-tab="connect">처음 설정·복구</button><button data-auth-tab="admin">관리자 로그인</button></div><form class="auth-form" id="employeeLoginForm"><label>직원번호<input name="loginId" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="min001" maxlength="13" required></label><label>개인 비밀번호<input name="password" type="password" autocomplete="current-password" maxlength="128" required></label><button class="auth-submit">로그인</button></form>
+      <form class="auth-form" id="employeeRegisterForm" hidden>
         <label>6자리 접속코드<input name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required placeholder="000000"></label>
         <label>이름(실명)<input name="name" autocomplete="name" minlength="2" maxlength="30" required placeholder="홍길동"></label>
         <label>부서명<select name="department" required><option value="">선택</option><option>임원</option><option>공무팀</option><option>관리팀</option><option>사인팀</option><option>시공팀</option><option>설계팀</option></select></label>
         <label>직급<select name="rank" required><option value="">선택</option><option>대표이사</option><option>상무이사</option><option>실장</option><option>부장</option><option>차장</option><option>과장</option><option>대리</option><option>주임</option><option>사원</option></select></label>
         <button class="auth-submit">이 기기 등록 신청</button>
       </form>
-      <form class="auth-form" id="employeeConnectForm" hidden><p class="auth-copy">관리자가 직원관리에서 발급한 본인의 8자리 기기 연결코드를 입력하세요. 기존 이름과 승인 권한을 그대로 사용합니다.</p><label>8자리 기기 연결코드<input name="code" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" autocomplete="one-time-code" placeholder="8자리 코드" required></label><button class="auth-submit">기존 계정으로 연결</button></form><form class="auth-form" id="adminLoginForm" hidden>
+      <form class="auth-form" id="employeeConnectForm" hidden><p class="auth-copy">이미 로그인된 기기가 있다면 계정에서 비밀번호를 설정하세요. 기기가 없거나 비밀번호를 잊었다면 관리자에게 본인 확인 후 초기화·8자리 연결코드를 요청하세요. 연결 후 개인 비밀번호를 설정합니다.</p><label>8자리 기기 연결코드<input name="code" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" autocomplete="one-time-code" placeholder="8자리 코드" required></label><button class="auth-submit">기존 계정으로 연결</button></form><form class="auth-form" id="adminLoginForm" hidden>
         <label>관리자 이메일<input name="email" type="email" autocomplete="username" required></label>
         <label>비밀번호<input name="password" type="password" autocomplete="current-password" required></label>
         <button class="auth-submit">관리자로 로그인</button>
       </form>
       <p class="auth-message" id="authMessage"></p>
-      <p class="auth-note">접속코드는 5분 후 자동 만료됩니다. 이미 등록한 직원은 새 코드가 없어도 계속 사용할 수 있습니다.</p>`;
+      <p class="auth-note">비밀번호 설정 후에는 기기를 바꿔도 직원번호와 비밀번호로 로그인합니다. 최초 등록·복구용 코드는 5분간 유효합니다.</p>`;
     content.querySelectorAll('[data-auth-tab]').forEach(button => button.addEventListener('click', switchAuthTab));
+    document.getElementById('employeeLoginForm').addEventListener('submit', loginEmployee);
     document.getElementById('employeeRegisterForm').addEventListener('submit', registerEmployee);
     document.getElementById('employeeConnectForm').addEventListener('submit',connectEmployeeDevice);
     document.getElementById('adminLoginForm').addEventListener('submit', loginAdmin);
@@ -2202,6 +2203,7 @@ window.MIN_WORKS_CONFIG = Object.freeze({
 
   function switchAuthTab(event) {
     const tab = event.currentTarget.dataset.authTab;
+    document.getElementById('employeeLoginForm').hidden = tab !== 'login';
     document.querySelectorAll('[data-auth-tab]').forEach(button => button.classList.toggle('active', button.dataset.authTab === tab));
     document.getElementById('employeeRegisterForm').hidden = tab !== 'employee';
     document.getElementById('adminLoginForm').hidden = tab !== 'admin';
@@ -2209,6 +2211,10 @@ window.MIN_WORKS_CONFIG = Object.freeze({
     setMessage('');
   }
 
+  async function loginEmployee(event){
+    event.preventDefault();const form=event.currentTarget,button=form.querySelector('button');setBusy(button,true);setMessage('');
+    try{const result=await api('/employee/login',{method:'POST',auth:false,body:{...Object.fromEntries(new FormData(form)),app:'main'}});if(!result.ok)throw Error(result.error||'로그인하지 못했습니다.');saveToken(result.token);form.reset();unlock(result.user)}catch(error){setMessage(error.message)}finally{setBusy(button,false)}
+  }
   async function setupAdmin(event) {
     event.preventDefault();
     await submitAuth(event.currentTarget, '/admin/setup');
@@ -2277,7 +2283,7 @@ window.MIN_WORKS_CONFIG = Object.freeze({
     button.id = 'securityUserButton';
     button.className = `security-user-button ${user.role === 'admin' ? 'admin' : ''}`;
     button.innerHTML = `<span class="material-symbols-rounded">${user.role === 'admin' ? 'admin_panel_settings' : 'account_circle'}</span><span>${user.role === 'admin' ? '직원 관리' : user.name}</span>`;
-    button.addEventListener('click', () => user.role === 'admin' ? openAdminPanel() : confirmLogout());
+    button.addEventListener('click', () => user.role === 'admin' ? openAdminPanel() : window.MIN_WORKS_EMPLOYEE_ACCOUNT?.open({logout:confirmLogout}));
     actions.appendChild(button);
   }
 
@@ -2375,7 +2381,7 @@ window.MIN_WORKS_CONFIG = Object.freeze({
     name.textContent = `${employee.department||'부서 미지정'} ${employee.name} ${employee.rank}`;
     detail.textContent = `민웍스 : ${employee.main_enabled?'승인':'미승인'} · MIN+ : ${employee.reader_enabled?'승인':'미승인'}`;
     detail.style.cssText='display:block;line-height:1.6;margin-top:5px;white-space:normal';
-    info.append(name, detail);
+    info.append(name, detail);const login=document.createElement('small');login.textContent=(employee.login_id||'직원번호 확인 중')+' · '+(employee.has_password?'비밀번호 설정됨':'비밀번호 미설정');login.style.cssText='display:block;margin-top:5px;font-weight:700';info.append(login);
     const devices=document.createElement('small');devices.className='employee-device-list';devices.textContent='기기 : '+(employee.devices?.length?employee.devices.map(d=>d.type).join(' · '):'확인 대기');devices.title=(employee.devices||[]).map(d=>d.type+' 최근 접속 '+new Date(d.lastSeen*1000).toLocaleString('ko-KR')).join(' / ');devices.style.cssText='display:block;line-height:1.6;margin-top:2px';info.append(devices);
     const actions = document.createElement('div');
     actions.className = 'employee-actions';
@@ -2397,18 +2403,23 @@ window.MIN_WORKS_CONFIG = Object.freeze({
     remove.textContent = '퇴사자 삭제';
     remove.addEventListener('click', () => employeeAction(employee, 'delete'));
     if (!employee.main_enabled) actions.append(toggle);
-    actions.append(plus, device, edit, remove);
+    const reset=document.createElement('button');reset.textContent='비밀번호 초기화';reset.addEventListener('click',()=>resetEmployeeLogin(employee));
+    actions.append(plus, device, reset, edit, remove);
     row.append(info, actions);
     return row;
   }
 
+  async function resetEmployeeLogin(employee){
+    if(!confirm(employee.name+' · '+employee.login_id+'\n\n본인 요청을 확인했나요? 비밀번호를 초기화하고 모든 기기에서 로그아웃합니다. 직원번호와 앱 승인은 유지됩니다.'))return;
+    try{const result=await api('/admin/employees/'+encodeURIComponent(employee.id)+'/password-reset',{method:'POST'});if(!result.ok)throw Error(result.error);await loadEmployees();alert('초기화 완료. 이 직원의 기기 연결코드를 발급해 본인에게 전달하세요. 연결 후 새 비밀번호를 설정합니다.')}catch(error){alert(error.message)}
+  }
   async function changeAppAccess(employee, app, enabled) {
     const title=app==='plus'?'민웍스+':'민웍스';
     if(!confirm(employee.name+' '+employee.rank+'\n\n'+title+' 이용을 '+(enabled?'승인':'해제')+'할까요? 다른 앱의 승인은 유지됩니다.'))return;
     try {const result=await api('/admin/employees/'+encodeURIComponent(employee.id)+'/app-access',{method:'PUT',body:{app,enabled}});if(!result.ok)throw Error(result.error);await loadEmployees();}catch(error){alert(error.message||'권한을 변경하지 못했습니다.');}
   }
   async function createEmployeeDeviceCode(employee) {
-    try {const result=await api('/admin/employees/'+encodeURIComponent(employee.id)+'/device-code',{method:'POST'});if(!result.ok)throw Error(result.error);alert(employee.name+' '+employee.rank+' 전용 기기 연결코드\n\n'+result.code+'\n\n5분 동안 1회만 사용할 수 있습니다. 이 직원 본인에게만 전달하세요. 민웍스 또는 민웍스+ → 기존 직원 기기 연결에서 입력하세요. 새로 가입하거나 다시 승인받을 필요가 없습니다.');}catch(error){alert(error.message||'연결코드를 만들지 못했습니다.');}
+    try {const result=await api('/admin/employees/'+encodeURIComponent(employee.id)+'/device-code',{method:'POST'});if(!result.ok)throw Error(result.error);alert(employee.name+' '+employee.rank+' 전용 기기 연결코드\n\n'+result.code+'\n\n5분 동안 1회만 사용할 수 있습니다. 이 직원 본인에게만 전달하세요. 민웍스 또는 민웍스+ → 처음 설정·복구에서 입력하세요. 연결 후 계정에서 개인 비밀번호를 설정하세요. 새로 가입하거나 다시 승인받을 필요가 없습니다.');}catch(error){alert(error.message||'연결코드를 만들지 못했습니다.');}
   }
 
   async function employeeAction(employee, action) {
@@ -2431,7 +2442,7 @@ window.MIN_WORKS_CONFIG = Object.freeze({
   }
 
   function confirmLogout() {
-    if (confirm('이 기기에서 로그아웃할까요? 다시 로그인하려면 새 접속코드가 필요합니다.')) logout();
+    if (confirm('이 기기에서 로그아웃할까요? 설정한 직원번호와 개인 비밀번호로 다시 로그인할 수 있습니다. 아직 비밀번호를 설정하지 않았다면 먼저 계정에서 설정하세요.')) logout();
   }
 
   async function logout() {
