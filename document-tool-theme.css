@@ -1,6 +1,6 @@
 /* Shared MIN WORKS document theme. Controls are screen-only; form geometry stays printable. */
 :root{--mw-ink:#191d18;--mw-muted:#7a8275;--mw-line:#dfe4d8;--mw-green:#789b2f;--mw-soft:#eff5df}
-body,input,select,textarea,button{font-family:Inter,Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR","Malgun Gothic",sans-serif!important}
+body,input,select,textarea,button{font-family:Mattone,"Hakgyoansim Chulseokbu",Inter,Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR","Malgun Gothic",sans-serif!important}
 @media screen{
 html,body{background:#f7f8f5!important;color:var(--mw-ink)!important}
 .app,.wrap{display:block!important;width:100%!important;max-width:none!important;padding:8px 0!important;margin:0!important;height:auto!important;min-height:0!important}

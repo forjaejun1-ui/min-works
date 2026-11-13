@@ -1,7 +1,7 @@
 
   (()=>{'use strict';
     const bridge=window.parent!==window ? window.parent.MIN_WORKS_VENDORS : null;
-    if(!bridge){document.body.innerHTML='<main style="padding:32px;font-family:sans-serif"><h2>MIN WORKS 협력업체</h2><p>민웍스에 로그인한 뒤 협력업체 메뉴를 열어주세요.</p><a href="./#vendors" target="_top">민웍스 열기</a></main>';return}
+    if(!bridge){document.body.innerHTML='<main style="padding:32px;font-family:Mattone,&#34;Hakgyoansim Chulseokbu&#34;,sans-serif"><h2>MIN WORKS 협력업체</h2><p>민웍스에 로그인한 뒤 협력업체 메뉴를 열어주세요.</p><a href="./#vendors" target="_top">민웍스 열기</a></main>';return}
     const FAVORITES='minWorksVendorFavoritesV1:'+bridge.userId();
     let favorites;try{favorites=new Set(JSON.parse(localStorage.getItem(FAVORITES)||'[]'))}catch{favorites=new Set()}
     let revision='',busy=false;

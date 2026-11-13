@@ -1484,31 +1484,32 @@ applyExtendedSettings();
     });
 
     async function downloadReportsJpg(cards) {
+      await Promise.allSettled([document.fonts.load('400 22px Mattone','MIN WORKS'),document.fonts.load('400 22px "Hakgyoansim Chulseokbu"','공사일보 MIN WORKS'),document.fonts.load('700 38px "Hakgyoansim Chulseokbu"','공사일보 MIN WORKS')]);
       let completed=0;
       for (const card of cards) {
         const photos=getPhotos(card),processes=cardProcessEntries(card),canvas=document.createElement('canvas');
-        canvas.width=1240;let context=canvas.getContext('2d');context.font='22px "Malgun Gothic",Arial,sans-serif';
+        canvas.width=1240;let context=canvas.getContext('2d');context.font='22px Mattone,"Hakgyoansim Chulseokbu","Malgun Gothic",Arial,sans-serif';
         const lines=(value,width)=>String(value||'—').split('\n').flatMap(part=>{const result=[];let line='';for(const ch of part){if(line&&context.measureText(line+ch).width>width){result.push(line);line='';}line+=ch;}result.push(line);return result;});
         const rows=processes.map(p=>({p,name:lines(p.name,170),work:lines(p.work,570)}));
         rows.forEach(r=>r.height=Math.max(60,Math.max(r.name.length,r.work.length)*32+24));
         const note=lines(card.dataset.note||'특이사항 없음',1060),tableHeight=rows.reduce((s,r)=>s+r.height,0),noteY=390+tableHeight,photoStart=noteY+95+note.length*32;
         canvas.height=photoStart+Math.ceil(photos.length/2)*390+100;context=canvas.getContext('2d');
         context.fillStyle='#fff';context.fillRect(0,0,canvas.width,canvas.height);context.fillStyle='#151619';context.fillRect(70,60,1100,5);
-        context.font='bold 38px "Malgun Gothic",Arial,sans-serif';context.fillText('공사일보',70,130);
-        context.font='bold 25px "Malgun Gothic",Arial,sans-serif';context.fillText(card.dataset.site||'현장 미기록',70,185);
-        context.font='22px "Malgun Gothic",Arial,sans-serif';context.fillText('작업일 '+(card.dataset.reportDate||'미기록'),70,235);
-        context.fillText('작성자 '+(card.querySelector('.report-author b')?.textContent||card.dataset.author||'미기록'),440,235);
+        context.font='bold 38px Mattone,"Hakgyoansim Chulseokbu","Malgun Gothic",Arial,sans-serif';context.fillText('공사일보',70,130);
+        context.font='bold 25px Mattone,"Hakgyoansim Chulseokbu","Malgun Gothic",Arial,sans-serif';context.fillText(card.dataset.site||'현장 미기록',70,185,1100);
+        context.font='22px Mattone,"Hakgyoansim Chulseokbu","Malgun Gothic",Arial,sans-serif';context.fillText('작업일 '+(card.dataset.reportDate||'미기록'),70,235);
+        context.fillText('작성자 '+(card.querySelector('.report-author b')?.textContent||card.dataset.author||'미기록'),440,235,495);
         context.fillText('총인원 '+(card.dataset.totalPeople||'0')+'명',970,235);
         context.fillStyle='#f3f4f6';context.fillRect(70,275,1100,60);context.fillStyle='#151619';
         ['공정','금일인원','누계인원','작업내용'].forEach((label,i)=>context.fillText(label,[85,285,425,575][i],314));
-        let y=335;context.font='22px "Malgun Gothic",Arial,sans-serif';
+        let y=335;context.font='22px Mattone,"Hakgyoansim Chulseokbu","Malgun Gothic",Arial,sans-serif';
         for(const row of rows){const {p,name,work}=row;context.fillStyle='#151619';name.forEach((line,i)=>context.fillText(line,85,y+35+i*32));context.fillText((Number(p.today)||0)+'명',285,y+35);context.fillText((Number(p.cumulative)||0)+'명',425,y+35);work.forEach((line,i)=>context.fillText(line,575,y+35+i*32));y+=row.height;context.strokeStyle='#e2e4e8';context.beginPath();context.moveTo(70,y);context.lineTo(1170,y);context.stroke();}
-        context.fillStyle='#151619';context.font='bold 24px "Malgun Gothic",Arial,sans-serif';context.fillText('특이사항 및 요청',70,noteY);
-        context.font='22px "Malgun Gothic",Arial,sans-serif';note.forEach((line,i)=>context.fillText(line,70,noteY+40+i*32));
-        context.font='bold 24px "Malgun Gothic",Arial,sans-serif';context.fillText('현장사진 '+photos.length+'장',70,photoStart-20);
+        context.fillStyle='#151619';context.font='bold 24px Mattone,"Hakgyoansim Chulseokbu","Malgun Gothic",Arial,sans-serif';context.fillText('특이사항 및 요청',70,noteY);
+        context.font='22px Mattone,"Hakgyoansim Chulseokbu","Malgun Gothic",Arial,sans-serif';note.forEach((line,i)=>context.fillText(line,70,noteY+40+i*32));
+        context.font='bold 24px Mattone,"Hakgyoansim Chulseokbu","Malgun Gothic",Arial,sans-serif';context.fillText('현장사진 '+photos.length+'장',70,photoStart-20);
         let failed=0;
-        for(let i=0;i<photos.length;i++){const x=70+(i%2)*555,y=photoStart+Math.floor(i/2)*390;context.fillStyle='#f3f4f6';context.fillRect(x,y,525,330);try{const image=await loadCanvasImage(photos[i].src);drawContainedImage(context,image,x,y,525,300);}catch{failed++;context.fillStyle='#71757d';context.font='20px "Malgun Gothic",Arial,sans-serif';context.fillText('사진을 불러오지 못했습니다.',x+90,y+150);}context.fillStyle='#555';context.font='20px "Malgun Gothic",Arial,sans-serif';context.fillText((photos[i].type||'현장사진')+' '+(i+1),x+10,y+323);}
-        context.fillStyle='#71757d';context.font='18px Arial,sans-serif';context.fillText('MIN WORKS',70,canvas.height-35);
+        for(let i=0;i<photos.length;i++){const x=70+(i%2)*555,y=photoStart+Math.floor(i/2)*390;context.fillStyle='#f3f4f6';context.fillRect(x,y,525,330);try{const image=await loadCanvasImage(photos[i].src);drawContainedImage(context,image,x,y,525,300);}catch{failed++;context.fillStyle='#71757d';context.font='20px Mattone,"Hakgyoansim Chulseokbu","Malgun Gothic",Arial,sans-serif';context.fillText('사진을 불러오지 못했습니다.',x+90,y+150);}context.fillStyle='#555';context.font='20px Mattone,"Hakgyoansim Chulseokbu","Malgun Gothic",Arial,sans-serif';context.fillText((photos[i].type||'현장사진')+' '+(i+1),x+10,y+323);}
+        context.fillStyle='#71757d';context.font='18px Mattone,"Hakgyoansim Chulseokbu",Arial,sans-serif';context.fillText('MIN WORKS',70,canvas.height-35);
         const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',.92));if(!blob)throw new Error('이미지를 만들지 못했습니다.');
         const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=safeFileName(card.dataset.site)+'_'+safeFileName(card.dataset.reportDate||'공사일보')+'.jpg';link.click();setTimeout(()=>URL.revokeObjectURL(link.href),3000);completed++;
         if(failed)notify('사진 '+failed+'장을 불러오지 못했습니다. 원본 사진을 확인해주세요.');
@@ -1534,7 +1535,7 @@ applyExtendedSettings();
     async function printReports(cards, includePhotos) {
       const popup = window.open('', '_blank');
       if (!popup) { notify('팝업을 허용한 뒤 다시 시도해주세요.'); return; }
-      popup.document.write('<!doctype html><html lang="ko"><meta charset="utf-8"><body style="font-family:sans-serif;padding:32px">사진과 공사일보를 준비하고 있습니다…</body></html>');
+      popup.document.write('<!doctype html><html lang="ko"><meta charset="utf-8"><body style="font-family:Mattone,&#34;Hakgyoansim Chulseokbu&#34;,sans-serif;padding:32px">사진과 공사일보를 준비하고 있습니다…</body></html>');
       const reports = (await Promise.all(cards.map(async card => {
         const site = escapeText(card.dataset.site);
         const title = escapeText(card.querySelector('div>b')?.textContent || '공사일보');
@@ -1547,7 +1548,7 @@ applyExtendedSettings();
         return `<article class="pdf-report"><header><p>MIN WORKS</p><h1>${site}</h1><h2>${title}</h2></header><dl><div><dt>작성자</dt><dd>${author}</dd></div><div><dt>금일인원 및 작업내용</dt><dd>${processes.length}개 공정</dd></div><div><dt>확인 기록</dt><dd>앱 등록 기록 기준</dd></div></dl><section><h3>금일인원 및 작업내용</h3><table><thead><tr><th>공정</th><th>금일인원</th><th>누계인원</th><th>작업내용</th></tr></thead><tbody>${processRows}</tbody></table></section><section><h3>작업일 · 특이사항</h3><p>${escapeText(card.dataset.reportDate||'')}</p><p style="white-space:pre-wrap">${escapeText(card.dataset.note||'특이사항 없음')}</p></section>${includePhotos ? `<section class="pdf-photos"><h3>현장사진 ${photos.length}장</h3>${photos.length ? `<div>${photos.map((photo,index) => `<figure><img src="${photo.src}" alt="현장사진 ${index+1}"><figcaption>${escapeText(photo.type || '현장사진')} ${index+1}</figcaption></figure>`).join('')}</div>` : '<p>이 일보에 저장된 사진 원본이 없습니다.</p>'}</section>` : ''}</article>`;
       }))).join('');
       popup.document.open();
-      popup.document.write(`<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>MIN WORKS 공사일보</title><style>@page{size:A4 portrait;margin:12mm}*{box-sizing:border-box}html,body{margin:0;padding:0;color:#181818;background:#fff;font-family:"Noto Sans KR","Malgun Gothic",Arial,sans-serif}.pdf-report{width:100%;page-break-after:always}.pdf-report:last-child{page-break-after:auto}header{border-top:5px solid #7fbc03;padding:14px 0 10px}header p{margin:0;color:#689900;font-weight:800;font-size:11px}h1{margin:7px 0 2px;font-size:23px;overflow-wrap:anywhere}h2{margin:0;color:#666;font-size:14px}dl{display:grid;grid-template-columns:1fr 2fr 1fr;margin:12px 0;border:1px solid #ddd}dl div{min-width:0;padding:10px;border-right:1px solid #ddd}dl div:last-child{border:0}dt{color:#777;font-size:10px}dd{margin:4px 0 0;font-size:12px;font-weight:700;overflow-wrap:anywhere}h3{margin:16px 0 8px;font-size:14px}table{width:100%;table-layout:fixed;border-collapse:collapse}th,td{padding:9px;border:1px solid #ddd;font-size:11px;text-align:left;overflow-wrap:anywhere}th{background:#f4f6f1}.pdf-photos>div{display:grid;grid-template-columns:1fr 1fr;gap:8mm}.pdf-photos figure{min-width:0;margin:0;page-break-inside:avoid;break-inside:avoid;text-align:center}.pdf-photos img{display:block;width:100%;height:92mm;margin:0 auto;object-fit:contain;background:#f2f2f2}.pdf-photos figcaption{padding:6px;color:#666;font-size:10px;text-align:center}</style></head><body>${reports}<script>window.addEventListener('load',async()=>{await Promise.all([...document.images].map(img=>img.complete?Promise.resolve():new Promise(resolve=>{img.onload=img.onerror=resolve})));setTimeout(()=>window.print(),250)});<\/script></body></html>`);
+      popup.document.write(`<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>MIN WORKS 공사일보</title><link rel="stylesheet" href="${escapeText(new URL('assets/chulseokbu.css?v=1',location.href).href)}"><style>@page{size:A4 portrait;margin:12mm}*{box-sizing:border-box}html,body{margin:0;padding:0;color:#181818;background:#fff;font-family:Mattone,"Hakgyoansim Chulseokbu","Noto Sans KR","Malgun Gothic",Arial,sans-serif}.pdf-report{width:100%;page-break-after:always}.pdf-report:last-child{page-break-after:auto}header{border-top:5px solid #7fbc03;padding:14px 0 10px}header p{margin:0;color:#689900;font-weight:800;font-size:11px}h1{margin:7px 0 2px;font-size:23px;overflow-wrap:anywhere}h2{margin:0;color:#666;font-size:14px}dl{display:grid;grid-template-columns:1fr 2fr 1fr;margin:12px 0;border:1px solid #ddd}dl div{min-width:0;padding:10px;border-right:1px solid #ddd}dl div:last-child{border:0}dt{color:#777;font-size:10px}dd{margin:4px 0 0;font-size:12px;font-weight:700;overflow-wrap:anywhere}h3{margin:16px 0 8px;font-size:14px}table{width:100%;table-layout:fixed;border-collapse:collapse}th,td{padding:9px;border:1px solid #ddd;font-size:11px;text-align:left;overflow-wrap:anywhere}th{background:#f4f6f1}.pdf-photos>div{display:grid;grid-template-columns:1fr 1fr;gap:8mm}.pdf-photos figure{min-width:0;margin:0;page-break-inside:avoid;break-inside:avoid;text-align:center}.pdf-photos img{display:block;width:100%;height:92mm;margin:0 auto;object-fit:contain;background:#f2f2f2}.pdf-photos figcaption{padding:6px;color:#666;font-size:10px;text-align:center}</style></head><body>${reports}<script>window.addEventListener('load',async()=>{await document.fonts.ready;await Promise.all([...document.images].map(img=>img.complete?Promise.resolve():new Promise(resolve=>{img.onload=img.onerror=resolve})));setTimeout(()=>window.print(),250)});<\/script></body></html>`);
       popup.document.close();
       document.dispatchEvent(new CustomEvent('minworks:exported',{detail:{site:cards[0]?.dataset.site||'',type:'PDF'}}));
     }
