@@ -101,6 +101,7 @@
     font-weight: 700;
     color: #496328;
   }
+  .site-picker span { white-space: nowrap; }
   .site-picker[hidden] { display: none; }
   .site-picker select {
     width: min(300px, 100%);

@@ -1332,7 +1332,7 @@ render=function(){
  if(currentId==='photo-ledger-pro-v1'){
   root.classList.remove('new-hire-print-editor','risk-tool-editor','tbm-tool-editor','document-form-editor');
   root.querySelector('[data-safety-id="pageTitle"]').textContent='사진대지 작성';
-  paper.innerHTML='<iframe id="photoLedgerFrame" title="사진대지 작성" scrolling="no" src="photo-ledger-pro-v1.html?v=photo106" style="display:block;width:100%;height:1900px;border:0"></iframe>';
+  paper.innerHTML='<iframe id="photoLedgerFrame" title="사진대지 작성" scrolling="no" src="photo-ledger-pro-v1.html?v=photo107" style="display:block;width:100%;height:1900px;border:0"></iframe>';
   ['saveBtn','newBtn','printBtn','excelBtn','pdfBtn','resetBtn','exportBtn'].forEach(id=>root.querySelector('[data-safety-id="'+id+'"]').hidden=true);
   root.querySelector('[data-safety-id="mode"]').textContent='사진 등록 · 사진대지 편집 · PDF 출력';
   root.dispatchEvent(new CustomEvent('safety-render',{detail:{id:currentId,preview:false}}));return;
