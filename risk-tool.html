@@ -4479,7 +4479,21 @@ html{scroll-behavior:auto!important}
 }
 
 </style>
-<link rel="stylesheet" href="document-tool-theme.css?v=docs20"></head>
+<link rel="stylesheet" href="document-tool-theme.css?v=docs20">
+<style>
+@media print{
+  #pages .sheet{padding:12mm!important}
+  #pages .sheet::after{
+    content:"";
+    position:absolute;
+    inset:10mm;
+    border:1px solid #20251f;
+    box-sizing:border-box;
+    pointer-events:none;
+    z-index:100;
+  }
+}
+</style></head>
 <body>
 <div class="topbar topbar-minimal noprint ui-actionbar">
   <div class="top-settings-row">

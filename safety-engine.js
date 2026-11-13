@@ -1301,11 +1301,11 @@ render=function(){
  root.classList.remove('new-hire-print-editor','risk-tool-editor','tbm-tool-editor');
  const editable=formIds.includes(currentId);
  root.querySelector('[data-safety-id="pageTitle"]').textContent=DOC_MAP[currentId].title;
- paper.innerHTML=editable?'<iframe id="documentFormFrame" title="안전서류 작성" src="document-forms.html?doc='+currentId+'&v=docs20" style="display:block;width:100%;height:1200px;border:0"></iframe>':'<iframe title="출력용 서류" src="'+printFiles[currentId]+'?v=docs20" style="display:block;width:100%;height:1140px;border:0"></iframe>';
+ paper.innerHTML=editable?'<iframe id="documentFormFrame" title="안전서류 작성" src="document-forms.html?doc='+currentId+'&v=field109" style="display:block;width:100%;height:1200px;border:0"></iframe>':'<iframe title="출력용 서류" src="'+printFiles[currentId]+'?v=field109" style="display:block;width:100%;height:1140px;border:0"></iframe>';
  ['saveBtn','newBtn'].forEach(id=>root.querySelector('[data-safety-id="'+id+'"]').hidden=!editable);
  ['excelBtn','pdfBtn','resetBtn','exportBtn'].forEach(id=>root.querySelector('[data-safety-id="'+id+'"]').hidden=true);
  root.querySelector('[data-safety-id="printBtn"]').hidden=false;
- root.querySelector('[data-safety-id="mode"]').textContent=editable?'직접 작성 · 서류 저장 · 인쇄 / PDF':'A4 한 장 · 출력 후 직접 작성';
+ root.querySelector('[data-safety-id="mode"]').textContent=editable?'직접 작성 · 서류 저장 · 인쇄 / PDF':'현장 담당자 입력 · A4 인쇄';
  root.dispatchEvent(new CustomEvent('safety-render',{detail:{id:currentId,preview:!editable}}));return;
  }
 
@@ -1313,16 +1313,16 @@ render=function(){
  if(currentId==='new-hire-training'){
  root.classList.remove('risk-tool-editor','tbm-tool-editor');
  root.querySelector('[data-safety-id="pageTitle"]').textContent='신규채용자 교육';
- paper.innerHTML='<iframe title="신규채용자 교육 출력 양식" src="new-hire-print.html?v=docs20" style="display:block;width:100%;height:1120px;border:0"></iframe>';
+ paper.innerHTML='<iframe title="신규채용자 교육 출력 양식" src="new-hire-print.html?v=field109" style="display:block;width:100%;height:1120px;border:0"></iframe>';
  ['saveBtn','newBtn','excelBtn','pdfBtn','resetBtn','exportBtn'].forEach(id=>root.querySelector('[data-safety-id="'+id+'"]').hidden=true);
  root.querySelector('[data-safety-id="printBtn"]').hidden=false;
- root.querySelector('[data-safety-id="mode"]').textContent='A4 한 장 · 출력 후 근로자 직접 작성';
+ root.querySelector('[data-safety-id="mode"]').textContent='현장 담당자 입력 · A4 인쇄';
  root.dispatchEvent(new CustomEvent('safety-render',{detail:{id:currentId,preview:true}}));return;
  }
 
  if(currentId==='risk-assessment'){
   root.classList.add('risk-tool-editor');root.classList.remove('tbm-tool-editor');root.querySelector('[data-safety-id="pageTitle"]').textContent='위험성평가표';
-  paper.innerHTML='<iframe id="riskToolFrame" title="위험성평가표 작성" src="risk-tool.html?v=staff94" style="display:block;width:100%;height:1600px;border:0"></iframe>';
+  paper.innerHTML='<iframe id="riskToolFrame" title="위험성평가표 작성" src="risk-tool.html?v=field109" style="display:block;width:100%;height:1600px;border:0"></iframe>';
   ['saveBtn','newBtn','printBtn'].forEach(id=>root.querySelector('[data-safety-id="'+id+'"]').hidden=false);
   ['excelBtn','pdfBtn','resetBtn','exportBtn'].forEach(id=>root.querySelector('[data-safety-id="'+id+'"]').hidden=true);
   root.querySelector('[data-safety-id="mode"]').textContent='위험성평가표 · 자동 임시저장';

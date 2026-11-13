@@ -45,9 +45,19 @@ if(id==='msds-education-result'){
  body+='<div class="notes">미흡항목은 조치·재확인 후 작업합니다. 추락방지 조치 없이 작업하지 않으며, 작업조건 변경·악천후·장비 이상 시 중지하고 재검토합니다. 본 양식은 현장 관리용이며 작업계획서·위험성평가 등 필요한 서류를 대체하지 않습니다.</div><table><tr><th>종료일시</th><td>'+field('closeTime','작업 종료일시','datetime-local')+'</td><th>종료 확인자</th><td>'+sign('closer')+'</td></tr></table>';
  }
 }
-document.title=titles[id];document.querySelector('#form').innerHTML=`<article class="sheet ${id==='msds-education-result'?'msds':'compact'}"><header><h1>${titles[id]}</h1><p>${id==='msds-education-result'?'교육정보 · 사용물질 · 참석자 · 교육사진':'작업조건 · 안전점검 · 검토 및 승인'}</p></header>${body}${safetyFooter}</article>`;
+document.title=titles[id];document.querySelector('#form').innerHTML=`<article data-document-type="${id}" class="sheet ${id==='msds-education-result'?'msds':'compact'}"><header><h1>${titles[id]}</h1><p>${id==='msds-education-result'?'교육정보 · 사용물질 · 참석자 · 교육사진':'작업조건 · 안전점검 · 검토 및 승인'}</p></header>${body}${safetyFooter}</article>`;
 if(id==='height-work-permit')document.querySelector('#form').insertAdjacentHTML('beforeend','<div class="source">작성 참고: <a target="_blank" rel="noopener" href="https://www.law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1028063341">산업안전보건기준에 관한 규칙 제42~44조</a> · <a target="_blank" rel="noopener" href="https://www.goe.go.kr/resource/old/BBSMSTR_000000030111/BBS_202402060446298010.pdf">경기도교육청 고소작업 점검표</a> · <a target="_blank" rel="noopener" href="https://oshri.kosha.or.kr/kosha/report/notice.do?articleNo=455685&attachNo=262320&mode=download">안전보건공단 고소작업대 자료</a></div>');
 const root=document.querySelector('#form');
+function fitHotWork() {
+  if (id!=='hot-work-permit') return;
+  const sheet=root.querySelector('.sheet');
+  sheet.style.removeProperty('--permit-print-scale');
+  const height=sheet.offsetHeight;
+  // A4 height minus two 10 mm page margins, with room for pixel rounding.
+  const available=1044;
+  const scale=Math.min(1,available/Math.max(1,height));
+  if(scale>=.78) sheet.style.setProperty('--permit-print-scale',String(scale));
+}
 function mirrors(){root.querySelectorAll('[data-key]').forEach(el=>{const span=el.nextElementSibling;if(span?.classList.contains('print-value'))span.textContent=el.value;if(el.tagName==='TEXTAREA'){el.style.height='auto';el.style.height=Math.max(30,el.scrollHeight)+'px'}})}
 function data(){const v={schema:'document-form06',photos};root.querySelectorAll('[data-key]').forEach(el=>v[el.dataset.key]=el.value);return v;}
 function persist(){try{localStorage.setItem(key,JSON.stringify(data()));document.querySelector('#notice').textContent='';return true}catch{document.querySelector('#notice').textContent='저장공간이 부족합니다. 사진 수 또는 크기를 줄인 후 다시 저장해 주세요.';return false}}
@@ -58,10 +68,10 @@ root.addEventListener('change',async e=>{const input=e.target;if(!input.matches(
 root.addEventListener('click',e=>{const b=e.target.closest('[data-remove-photo]');if(!b)return;delete photos[b.dataset.removePhoto];showPhotos();persist();parent.dispatchEvent(new Event('minworks:form-input'))});
 const context=parent.MIN_WORKS_DOCUMENT_CONTEXT;for(const [listId,values] of [['sites',(context?.sites?.()||[]).map(site=>site.name)],['people',context?.people?.()||(parent.MIN_WORKS_EMPLOYEES||[]).map(p=>[p.name,p.rank].filter(Boolean).join(' '))]]){const list=document.createElement('datalist');list.id=listId;[...new Set(values)].filter(Boolean).forEach(v=>{const opt=document.createElement('option');opt.value=v;list.append(opt)});root.append(list)}
 mirrors();showPhotos();
-document.querySelector('#previewToggle').addEventListener('click',()=>{const on=document.body.classList.toggle('print-preview');mirrors();document.querySelector('#previewToggle').textContent=on?'작성 화면으로':'출력 미리보기';document.querySelector('#pageHint').textContent=on?'A4 세로 · 여백 10mm · 입력량에 따라 다음 장으로 이어집니다.':'';});
+document.querySelector('#previewToggle').addEventListener('click',()=>{const on=document.body.classList.toggle('print-preview');mirrors();if(on)fitHotWork();document.querySelector('#previewToggle').textContent=on?'작성 화면으로':'출력 미리보기';document.querySelector('#pageHint').textContent=on?'A4 세로 · 여백 10mm · 내용이 많으면 다음 장으로 이어질 수 있습니다.':'';});
 function applyContext(site){if(!site)return;const values={site:site.name,siteManager:site.manager||'',client:site.client||'',projectStart:site.start||'',projectEnd:site.end||'',projectAmount:site.amount||'',company:site.company||'(주)민커뮤니케이션'};Object.entries(values).forEach(([key,value])=>{const el=root.querySelector('[data-key="'+key+'"]');if(el)el.value=value});mirrors();persist()}
 root.querySelector('[data-key="site"]')?.addEventListener('change',event=>{const site=(context?.sites?.()||[]).find(item=>item.name===event.target.value);if(site){context.select(site.name);applyContext(site)}});
 window.MIN_WORKS_FORM_TOOL={data(){if(pendingImages)throw Error('사진을 처리 중입니다. 잠시 후 저장해 주세요.');if(!persist())throw Error('브라우저 저장공간이 부족합니다.');return data()},validate(){return root.querySelector('[data-key="site"]').reportValidity()},print(){if(pendingImages){document.querySelector('#notice').textContent='사진 처리가 끝난 뒤 인쇄해 주세요.';return}mirrors();window.print()},applyContext};
 applyContext(context?.current?.());
-window.addEventListener('beforeprint',mirrors);new ResizeObserver(()=>parent.postMessage({type:'minworks:form-height',height:document.body.scrollHeight},location.origin==='null'?'*':location.origin)).observe(document.body);
+window.addEventListener('beforeprint',()=>{mirrors();fitHotWork()});new ResizeObserver(()=>parent.postMessage({type:'minworks:form-height',height:document.body.scrollHeight},location.origin==='null'?'*':location.origin)).observe(document.body);
 })();

@@ -23,7 +23,7 @@
       document.querySelector('.nav-parent[data-view="documents"]')?.setAttribute('aria-expanded', 'true');
       document.querySelectorAll('[data-safety-doc]').forEach(b => b.classList.remove('selected'));
       document.querySelectorAll('[data-schedule-open]').forEach(b => b.classList.add('selected'));
-      if (!frame.getAttribute('src')) frame.src = 'schedule-tool.html?v=schedule1';
+      if (!frame.getAttribute('src')) frame.src = 'schedule-tool.html?v=field109';
     }
     const nav = document.querySelector('.safety-primary-nav [data-safety-doc="tbm-minutes"]');
     const card = document.querySelector('.safety-document-grid [data-safety-doc="tbm-minutes"]');

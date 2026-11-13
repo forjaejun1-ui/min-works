@@ -6,3 +6,8 @@
 .print-preview .sheet h2{margin:7px 0 4px}.print-preview .sheet header{padding:7px 0}.print-preview .sheet th,.print-preview .sheet td{height:23px;padding:2px 5px}.print-preview .checks td{height:24px}.print-preview .sign-table td{height:29px}.print-preview .notes{margin:4px 0}.print-preview .signcell .print-value{flex:1}.print-preview .sheet{padding-bottom:0}
 @media print{.sheet h2{margin:7px 0 4px}.sheet header{padding:7px 0}.sheet th,.sheet td{height:23px;padding:2px 5px}.checks td{height:24px}.sign-table td{height:29px}.notes{margin:4px 0}.signcell .print-value{flex:1}}
 th{word-break:keep-all}.attendees th:first-child{font-size:9px;white-space:nowrap;padding:2px}.msds table th:first-child{word-break:keep-all}
+
+.print-preview [data-document-type="hot-work-permit"]{zoom:var(--permit-print-scale,1)}
+@media print{
+  .sheet[data-document-type="hot-work-permit"]{zoom:var(--permit-print-scale,1);margin-inline:auto}
+}

@@ -13,7 +13,16 @@ body,input,select,textarea,button{font-family:Inter,Pretendard,-apple-system,Bli
 body{background:#f7f8f5}header{padding:16px 24px}.tag{background:#eff5df;letter-spacing:.08em}main{padding:24px;max-width:none}h1{font-size:25px;letter-spacing:-.04em}.eyebrow{font-size:10px;letter-spacing:.14em}.logo{border-radius:9px}.panel,.metric{border-radius:16px}.metric strong{font-size:20px;font-variant-numeric:tabular-nums}button{border-radius:9px;min-height:38px;font-size:13px}button.primary:hover{background:#658626}button:focus-visible,input:focus-visible,select:focus-visible{outline-color:#adc779}.notebox{background:#eff5df;border-color:#dfe8cb}.paper-control{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px}.paper-control select{border:1px solid var(--line);border-radius:9px;background:white;padding:9px;color:var(--ink)}.taskLabel{border-radius:0}.foot{flex-wrap:wrap}.intro>div:first-child{min-width:0}h1{overflow-wrap:anywhere}.companyBox select{min-width:0}
 @media(max-width:600px){header{padding:12px 16px}main{padding:20px 12px}.summary{grid-template-columns:1fr}.metric{padding:12px 16px}.companyBox{gap:10px}.companyIdentity{min-width:0}.companyIdentity img{max-width:120px}.intro .actions{gap:6px}.intro .actions button{flex:1}.seg{grid-template-columns:1fr 1fr}.two{grid-template-columns:1fr}.toolbar{padding:12px}.foot{line-height:1.8}}
 @media print{html,body{background:#fff}main{padding:0}.printCompany{margin:0 0 6px}.printCompany img{max-height:32px}.printTitle{font-size:18px;margin:0 0 8px}.taskLabel{min-height:0;border-radius:0}.taskLabel,.bar{min-height:0}.printTitle{overflow-wrap:anywhere}.monthRow,.dayRow,.taskRow{break-inside:avoid}.notebox{break-inside:avoid}.scroll{border-top:0}.barLabel{max-width:100%}.taskLabel b{overflow-wrap:anywhere}.taskLabel small{white-space:normal}.chartHead{position:static}.panel{border-radius:0}}
-</style><style id="printPage">@page{size:A3 landscape;margin:10mm}</style></head><body>
+</style><style id="printPage">@page{size:A3 landscape;margin:10mm}</style><style>
+.track{align-items:stretch}
+.barLabel{position:relative;top:auto;min-width:0;max-width:none;padding:41px 6px 8px 0;white-space:normal;overflow-wrap:anywhere}
+.task-note{color:#344941;white-space:pre-wrap;margin-top:2px}
+.unscheduled{align-self:center}
+@media print{
+  .barLabel{top:auto;padding-top:21px;padding-bottom:3px;line-height:1.22}
+  .task-note{color:#26342d;font-size:9px}
+}
+</style></head><body>
 <header><div class="brand"><span class="logo">▥</span>공정표 작성 <span class="tag">MIN WORKS</span></div><div class="companyBox"><label>작성 법인<select id="companySelect" aria-label="작성 법인"><option value="min">민커뮤니케이션</option><option value="gonggam">공감에스디</option></select></label><div class="companyIdentity"><img id="companyLogo" alt="" hidden><span id="companyName"></span></div><button type="button" id="logoSettings">법인 로고 등록</button></div></header>
 <main><section class="intro"><div><div class="eyebrow">CONSTRUCTION SCHEDULE</div><h1 id="projectTitle"></h1><p class="sub">일정 막대 또는 공종명을 클릭해 작업 기간과 내용을 수정하세요.</p></div><div class="actions"><button id="settings">공사 설정</button><label class="paper-control">출력 용지 <select id="paperSize" aria-label="출력 용지"><option value="A3">A3 가로</option><option value="A4">A4 가로</option></select></label><button id="print" class="primary">인쇄 / PDF</button></div></section>
 <section class="summary"><div class="metric"><span>표시 기간</span><strong id="period"></strong></div><div class="metric"><span>등록 공종</span><strong id="count"></strong></div><div class="metric"><span>일정 구간</span><strong id="segmentsCount"></strong><small>발주 · 제작 · 시공</small></div></section>
@@ -54,7 +63,12 @@ function render(){renderCompany();
  const shades=dates.map((d,i)=>[0,6].includes(d.getUTCDay())?'<span class="shade" style="left:'+i/n*100+'%"></span>':'').join('');
  model.tasks.forEach((t,i)=>{let visible=t.segments.filter(s=>day(s.end)>=start&&day(s.start)<=end);html+='<div class="taskRow"><button class="taskLabel" data-task="'+i+'" aria-label="'+esc(t.name)+' 편집"><span class="num">'+String(i+1).padStart(2,'0')+'</span><span><b>'+esc(t.name)+'</b><small>'+esc(t.group||'공사')+'</small></span></button><div class="track">'+shades;
  visible.forEach(s=>{let a=Math.max(0,(day(s.start)-start)/DAY),b=Math.min(n,(day(s.end)-start)/DAY+1);html+='<button class="bar '+(s.label.includes('대기')?'wait':'')+'" data-task="'+i+'" style="left:'+a/n*100+'%;width:'+(b-a)/n*100+'%;background-color:'+esc(s.color)+'" title="'+esc(t.name+' / '+s.label+' / '+s.start+' ~ '+s.end)+'" aria-label="'+esc(t.name+' '+s.label+' '+short(s.start)+'~'+short(s.end)+' 편집')+'"></button>'});
- html+=visible.length?'<span class="barLabel" style="left:'+Math.max(0,(day(visible[0].start)-start)/DAY)/n*100+'%">'+esc(visible.map(s=>s.label).join(' / '))+'</span>':'<span class="unscheduled">'+(t.segments.length?'표시 기간 밖의 일정':'일정 미입력 · 클릭해서 등록')+'</span>';
+ if(visible.length){
+   const offset=Math.min(65,Math.max(0,(day(visible[0].start)-start)/DAY)/n*100);
+   html+='<div class="barLabel" style="margin-left:'+offset+'%"><span>'+esc(visible.map(s=>s.label).join(' / '))+'</span>'+(t.note?.trim()?'<div class="task-note">'+esc(t.note)+'</div>':'')+'</div>';
+ }else{
+   html+='<span class="unscheduled">'+(t.segments.length?'표시 기간 밖의 일정':'일정 미입력 · 클릭해서 등록')+'</span>';
+ }
  html+='</div></div>'});
  $('chart').innerHTML=html+(model.tasks.length?'':'<div class="empty">공종 추가 버튼으로 첫 일정을 등록하세요.</div>');
 }
