@@ -15,7 +15,7 @@ body.ui-v54{
     radial-gradient(circle at 70% -10%,rgba(120,105,255,.065),transparent 34rem),
     linear-gradient(180deg,#f9fafb 0,#f5f6f8 42%,#f3f4f6 100%);
   color:var(--mw-ink);
-  font-family:Mattone,"Hakgyoansim Chulseokbu",Inter,Pretendard,"Noto Sans KR",Arial,sans-serif;
+  font-family:Inter,Pretendard,"Noto Sans KR",Arial,sans-serif;
   letter-spacing:-.015em;
 }
 

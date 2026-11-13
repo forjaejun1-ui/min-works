@@ -1,12 +1,12 @@
 <!doctype html>
 <html lang="ko">
-<head><link rel="stylesheet" href="assets/chulseokbu.css?v=1">
+<head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="color-scheme" content="light">
   <title>MIN WORKS | 협력업체 연락망</title>
   <style>
-    @font-face{font-family:Mattone,"Hakgyoansim Chulseokbu",Pretendard;src:url(assets/PretendardVariable.woff2) format("woff2");font-style:normal;font-weight:100 900;font-display:swap}
+    @font-face{font-family:Pretendard;src:url(assets/PretendardVariable.woff2) format("woff2");font-style:normal;font-weight:100 900;font-display:swap}
     .nav.active:before{content:"";position:absolute;left:-1px;top:50%;transform:translateY(-50%);width:2px;height:21px;background:var(--lime);border-radius:2px}
     .ui-icon{display:block;width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
     .detail-actions .ui-icon{width:15px;height:15px}
@@ -15,7 +15,7 @@
 
     :root{--ink:#111214;--sub:#71757d;--line:#e2e4e8;--mint:#eaf7d4;--lime:#8bd20a;--bg:#f5f6f8;--white:#fff;--danger:#bc4545;--shadow:0 1px 2px rgba(17,18,20,.03),0 14px 36px rgba(17,18,20,.045)}
     *{box-sizing:border-box}
-    html{font-family:Mattone,"Hakgyoansim Chulseokbu",Pretendard,Inter,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR","Malgun Gothic",sans-serif;color:var(--ink);background:var(--bg);letter-spacing:-.015em;-webkit-font-smoothing:antialiased}
+    html{font-family:Pretendard,Inter,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR","Malgun Gothic",sans-serif;color:var(--ink);background:var(--bg);letter-spacing:-.015em;-webkit-font-smoothing:antialiased}
     body{margin:0;background:radial-gradient(circle at 70% -10%,rgba(120,105,255,.065),transparent 34rem),linear-gradient(180deg,#f9fafb 0,#f5f6f8 42%,#f3f4f6 100%)}
     button,input,select,textarea{font:inherit}
     button{cursor:pointer}
@@ -283,6 +283,6 @@
   <div class="modal-backdrop" id="modal"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><header><h2 id="modalTitle">업체 등록</h2><button id="closeModal" aria-label="닫기">×</button></header><form id="vendorForm"><div class="form-grid"><label>업체명 *<input name="name" required maxlength="100"></label><label>공종 *<input name="trade" required maxlength="60" list="trades"><datalist id="trades"></datalist></label><label>지역 *<input name="regionRaw" required maxlength="50" placeholder="서울, 경기, 인천, 수도권 등"></label><label>담당자 · 직급<input name="person" maxlength="100"></label><label>휴대폰<input name="mobile" type="tel" maxlength="40"></label><label>유선<input name="landline" type="tel" maxlength="40"></label><label>팩스<input name="fax" type="tel" maxlength="40"></label><label>이메일<input name="email" type="email" maxlength="120"></label><label>거래담당자<input name="owner" maxlength="100"></label><label class="wide">비고<textarea name="note" maxlength="800"></textarea></label></div><div class="form-actions"><button type="button" id="cancelModal">취소</button><button type="submit" class="primary">저장</button></div></form></div></div>
   <div class="toast" id="toast" hidden></div>
   <script id="seed-data" type="application/json">[]</script>
-  <script src="vendor-directory.js?v=vendors100-chulseokbu"></script>
+  <script src="vendor-directory.js?v=vendors100"></script>
 </body>
 </html>

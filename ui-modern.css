@@ -304,7 +304,7 @@ body.ui-v54{
   display:flex;
   align-items:center;
   color:#f5f5f2;
-  font-family:Mattone,"Hakgyoansim Chulseokbu",'Michroma','Bahnschrift SemiCondensed','Bahnschrift',Arial,sans-serif;
+  font-family:'Michroma','Bahnschrift SemiCondensed','Bahnschrift',Arial,sans-serif;
   font-size:clamp(16px,3.35vw,40px);
   font-weight:400;
   font-style:normal;
