@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>사진대지PRO_V1</title>
+<title>사진대지 작성</title>
 <style>
 :root{
   --navy:#102a43;
@@ -651,32 +651,17 @@ body{padding-left:228px;padding-top:76px}
   .dropzone.compact .drop-actions{margin-left:0}
 }
 </style>
-<style id="minWorksEmbedTheme">
-:root{--navy:#171b15;--navy-dark:#10130e;--blue:#75a719;--cyan:#9acb35;--bg:#f6f7f4;--text:#171b15;--muted:#747b6d;--line:#dfe4d8;--good:#75a719}
-body{padding-left:0;padding-top:122px}
-.topbar{left:0;height:72px;padding:0 22px;background:rgba(255,255,255,.97)}
-.topbar .brand{font-size:19px;color:#171b15;letter-spacing:-.03em}
-.topbar .version{color:#567b13;background:#eff6e5;border-color:#d9e8c2}
-.tabs{left:0;top:72px;bottom:auto;width:100%;height:50px;flex-direction:row;align-items:center;padding:5px 20px;border-right:0;border-bottom:1px solid var(--line);box-shadow:none;overflow-x:auto}
-.side-brand,.side-label,.side-tip{display:none!important}
-.tab{min-width:max-content;padding:9px 15px;margin:0 3px}
-.tab.active{color:#4e7412;background:#eff6e5;box-shadow:inset 0 0 0 1px #d6e7ba}
-.workspace{padding:18px 22px 60px}
-.btn.primary{background:#171b15;box-shadow:none}
-@media(max-width:720px){body{padding-top:112px}.topbar{height:66px;padding:0 12px}.topbar .brand{font-size:15px}.topbar .save-pill,.topbar .version,#restoreLatestBtn,#undoBtn,#redoBtn{display:none}.tabs{top:66px;height:46px;padding:4px 8px}.workspace{padding:12px}.topbar .btn{padding:8px 9px;font-size:11px}}
-</style>
+<link rel="stylesheet" href="photo-ledger-theme.css?v=photo106">
 <style id="dynamicPrintStyle">@page{size:A4 landscape;margin:0}</style>
 <link rel="stylesheet" href="document-tool-theme.css?v=docs20"></head>
 <body>
 <header class="topbar">
  <div class="page-heading">
-  <div class="brand">사진대지PRO_V1</div>
-  <span class="version">MIN WORKS</span>
+  <h1 class="brand">사진대지 작성</h1>
   <span class="save-pill"><i></i><span class="save-state" id="saveState">새 프로젝트</span></span>
  </div>
  <div class="grow"></div>
  <button class="btn ghost-soft" id="restoreLatestBtn" title="최근 자동저장 프로젝트 복구">자동저장 복구</button>
- <button class="btn ghost-soft" id="quickAddBtn" title="사진 빠르게 추가">＋ 사진 추가</button>
  <button class="btn iconbtn soft" id="undoBtn" title="실행 취소 (Ctrl+Z)">↶</button>
  <button class="btn iconbtn soft" id="redoBtn" title="다시 실행 (Ctrl+Y)">↷</button>
  <button class="btn soft" id="newProjectBtn">새 프로젝트</button>
@@ -689,7 +674,7 @@ body{padding-left:0;padding-top:122px}
 <nav class="tabs">
  <div class="side-brand">
   <div class="brand-mark">J</div>
-  <div><b>사진대지PRO_V1</b><small>PHOTO REPORT TOOL</small></div>
+  <div><b>사진대지 작성</b><small>PHOTO REPORT TOOL</small></div>
  </div>
  <div class="side-label">WORKSPACE</div>
  <button class="tab active" data-view="projectView">
@@ -722,6 +707,7 @@ body{padding-left:0;padding-top:122px}
  <div class="panel">
   <div class="section-head">
    <h2 class="section-title">프로젝트 기본정보</h2>
+   <label class="site-picker" hidden><span>현장 불러오기</span><select id="linkedSite"><option value="">현장 선택</option></select></label>
   </div>
   <div class="project-fields">
    <div class="field"><label>공사명 <span class="req">*</span></label><input id="siteName" placeholder="예: 과천문원중학교 통합 시설개선 공사"></div>
@@ -1172,7 +1158,14 @@ function syncProjectFields(){
   state.project.spaceSeparate=false;
   state.project.printOrientation=state.project.printOrientation==='portrait'?'portrait':'landscape';
   state.project.defaultLayout=state.project.printOrientation==='portrait'?6:4;
-  if(!['(주)민커뮤니케이션','(주)공감에스디'].includes(state.project.contractor))state.project.contractor='(주)민커뮤니케이션';
+  const contractor=$('contractor');
+  state.project.contractor=state.project.contractor||'(주)민커뮤니케이션';
+  contractor.querySelector('[data-linked-company]')?.remove();
+  if (![...contractor.options].some(option=>option.value===state.project.contractor)) {
+    const option=new Option(state.project.contractor,state.project.contractor);
+    option.dataset.linkedCompany='';
+    contractor.add(option);
+  }
   for(const id of projectFields){
     const el=$(id),v=state.project[id];
     if(!el)continue;
@@ -2460,7 +2453,7 @@ function fitPreview(){
     if(!page)return;
     const center=$('.preview-center');
     if(!center)return;
-    const max=Math.max(560,center.clientWidth-30);
+    const max=Math.max(1,center.clientWidth-24);
     const portrait=state.project.printOrientation==='portrait';
     const pageW=portrait?210:297;
     const pageH=portrait?297:209.5;
@@ -2990,7 +2983,6 @@ function updateUX(){
 
 $$('[data-go]').forEach(b=>b.onclick=()=>openView(b.dataset.go));
 if($('workflowNextBtn'))$('workflowNextBtn').onclick=()=>openView($('workflowNextBtn').dataset.target||'projectView');
-$('quickAddBtn').onclick=()=>{openView('projectView');setTimeout(()=>{$('photosViewPanel').scrollIntoView({behavior:'smooth',block:'start'});$('addPhotosBtn').click();},100);};
 $$('[data-dock-stage]').forEach(b=>b.onclick=()=>{
   $('bulkStage').value=b.dataset.dockStage;
   $('bulkSpace').value='';
@@ -3012,14 +3004,46 @@ init();
 </script>
 <script>
 (() => {
-  const context=parent.MIN_WORKS_DOCUMENT_CONTEXT;
-  const list=document.createElement('datalist');list.id='photoLedgerSites';for(const site of context?.sites?.()||[]){const option=document.createElement('option');option.value=site.name;list.append(option)}document.body.append(list);document.getElementById('siteName')?.setAttribute('list',list.id);
-  const applyContext=site=>{if(!site)return;Object.assign(state.project,{siteName:site.name||'',locationName:site.name||'',contractor:site.company||'(주)민커뮤니케이션',siteManager:site.manager||'',clientName:site.client||'',startDate:site.start||'',endDate:site.end||'',projectAmount:site.amount||''});syncProjectFields();markDirty();rebuildPages();};
-  window.MIN_WORKS_PHOTO_LEDGER={applyContext};
-  document.getElementById('siteName')?.addEventListener('change',event=>{const site=(context?.sites?.()||[]).find(item=>item.name===event.target.value);if(site){context.select(site.name);applyContext(site)}});
-  applyContext(context?.current?.());
-  const reportHeight=()=>parent.postMessage({type:'minworks:photo-ledger-height',height:document.documentElement.scrollHeight},location.origin==='null'?'*':location.origin);
-  addEventListener('load',reportHeight);
+  if (parent === window) return;
+  const context = parent.MIN_WORKS_DOCUMENT_CONTEXT;
+  const picker = document.getElementById('linkedSite');
+
+  const refreshSites = () => {
+    const sites = context?.sites?.() || [];
+    const selected = picker.value;
+    picker.replaceChildren(new Option('현장 선택', ''), ...sites.map(site => new Option(site.name, site.name)));
+    picker.value = sites.some(site => site.name === selected) ? selected : '';
+    picker.closest('label').hidden = !sites.length;
+  };
+  const applySite = site => {
+    Object.assign(state.project, {
+      siteName: site.name, locationName: site.name,
+      contractor: site.company || '(주)민커뮤니케이션',
+      siteManager: site.manager || '', clientName: site.client || '',
+      startDate: site.start || '', endDate: site.end || '', projectAmount: site.amount || '',
+    });
+    syncProjectFields();
+    rebuildPages();
+  };
+  refreshSites();
+  picker.addEventListener('focus', refreshSites);
+  picker.addEventListener('change', () => {
+    const site = context?.sites?.().find(item => item.name === picker.value);
+    if (!site) return;
+    pushHistory();
+    applySite(site);
+    context.select(site.name);
+    markDirty();
+    picker.value = '';
+  });
+  const current = context?.current?.();
+  if (current && !state.project.siteName) applySite(current);
+
+  const reportHeight = () => parent.postMessage({
+    type: 'minworks:photo-ledger-height',
+    height: Math.ceil(document.body.getBoundingClientRect().height),
+  }, location.origin === 'null' ? '*' : location.origin);
+  addEventListener('load', reportHeight);
   new ResizeObserver(reportHeight).observe(document.body);
   document.addEventListener('input',()=>parent.dispatchEvent(new CustomEvent('minworks:photo-ledger-input')));
   document.addEventListener('change',()=>parent.dispatchEvent(new CustomEvent('minworks:photo-ledger-input')));
