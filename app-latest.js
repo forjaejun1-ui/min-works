@@ -126,9 +126,9 @@ function openDailyEditor(){dailyListScreen.hidden=true;dailyEditor.hidden=false;
 function closeDailyEditor(){window.MIN_WORKS_BATCH?.saveDraft();dailyEditor.hidden=true;dailyListScreen.hidden=false;document.getElementById('openDailyEditor').style.display='flex';window.scrollTo({top:0,behavior:'smooth'})}
 document.getElementById('openDailyEditor').addEventListener('click',openDailyEditor);
 document.getElementById('closeDailyEditor').addEventListener('click',closeDailyEditor);
-const workProcessOptions=['철거','제작가구','경량','금속','샷시','수장','도장','목공','석공','습식','미장','방수','준공청소','청소','용역','유리','인조석','조경(생화)','조경(조화)','큐비클','타일','필름','사인','전기','통신','전기통신','소방전기','소방','기계설비','위생설비','공조설비','에어컨','가설','폐기물','이동식가구','매트','건축','토목','잡철물','어닝','디지털사이니지','방송','영상','DID','살균','조형','DP'];
+const workProcessOptions=['철거','제작가구','경량공사','금속','샷시','수장','도장','목공','석공','습식','미장','방수','준공청소','청소','용역','유리','인조석','조경(생화)','조경(조화)','큐비클','타일','필름','사인','전기','통신','전기통신','소방전기','소방','기계설비','위생설비','공조설비','에어컨','가설','폐기물','이동식가구','매트','건축','토목','잡철물','어닝','디지털사이니지','방송','영상','DID','살균','조형','DP'];
 function createProcessSelect(value=''){
-  const input=document.createElement('input');input.className='process-name';input.setAttribute('aria-label','공정 선택 또는 직접 입력');input.setAttribute('list','workProcessSuggestions');input.placeholder='공정 선택 또는 직접 입력';input.autocomplete='off';input.value=value;return input;
+  const input=document.createElement('input');input.className='process-name';input.setAttribute('aria-label','공정 선택 또는 직접 입력');input.setAttribute('role','combobox');input.setAttribute('aria-autocomplete','list');input.setAttribute('aria-expanded','false');input.setAttribute('aria-controls','workProcessSuggestions');input.placeholder='공정 선택 또는 직접 입력';input.autocomplete='off';input.value=value;return input;
 }
 function addCumulativeField(row){
   if(row.querySelector('.cumulative-people'))return;
@@ -138,7 +138,7 @@ function addCumulativeField(row){
 function cardProcessEntries(card){
   if(Array.isArray(card.reportProcesses))return card.reportProcesses;
   const summary=card.querySelector('p')?.textContent||'';const entries=[];
-  summary.replace(/([^·]+?)\s+(\d+)명/g,(_,name,count)=>{const clean=name.trim();if(workProcessOptions.includes(clean))entries.push({name:clean,today:Number(count)||0})});
+  summary.replace(/([^·]+?)\s+(\d+)명/g,(_,name,count)=>{const clean=name.trim();if(workProcessOptions.includes(clean)||clean==="경량")entries.push({name:clean,today:Number(count)||0})});
   return entries;
 }
 function updateCumulativePeople(){if(window.MIN_WORKS_BATCH)return window.MIN_WORKS_BATCH.updateCumulative();
@@ -356,7 +356,7 @@ document.querySelectorAll('.photo-categories button').forEach(b=>b.addEventListe
 }));
 
 // 공정 입력줄 추가
-document.getElementById('addProcess').addEventListener('click',()=>{
+function addProcessRow(){
   const rows=document.getElementById('processRows');
   const number=rows.children.length+1;
   const row=document.createElement('div');
@@ -365,8 +365,12 @@ document.getElementById('addProcess').addEventListener('click',()=>{
   row.querySelector('label:first-child').appendChild(createProcessSelect());
   addCumulativeField(row);
   rows.appendChild(row);
+  return row;
+}
+document.getElementById('addProcess').addEventListener('click',()=>{
+  const row=addProcessRow();
   row.querySelector('.process-name').focus();
-  notify(`공정 ${number} 입력줄을 추가했습니다.`);
+  notify(`공정 ${row.parentElement.children.length} 입력줄을 추가했습니다.`);
 });
 
 // 완료된 공사일보: 작성자만 수정, 그 외 사용자는 열람 전용
@@ -544,8 +548,10 @@ document.getElementById('newCalendarEvent').addEventListener('click',()=>notify(
 
 // 사용자 설정: 기기별 자동 저장 및 즉시 반영
 const settingsKey='minWorksUserSettings';
-const settingDefaults={theme:'light',fontSize:'normal',density:'comfortable',accent:'lime',contrast:false,displayMode:'pc',startView:'dashboard',siteCount:'4',financeSummary:true,calendarSummary:true,processRows:'5',photoQuality:'고화질',autosave:true,openAfterSubmit:false,hideMoney:false,retention:'1년',wifiOnly:false};
+const settingDefaults={theme:'light',fontSize:'normal',density:'comfortable',accent:'lime',contrast:false,displayMode:'pc',startView:'dashboard',siteCount:'4',financeSummary:true,calendarSummary:true,processRows:'1',photoQuality:'고화질',autosave:true,openAfterSubmit:false,hideMoney:false,retention:'1년',wifiOnly:false};
 let userSettings={...settingDefaults,...JSON.parse(localStorage.getItem(settingsKey)||'{}')};
+// Older versions stored five rows even when the user never selected a preference.
+if(userSettings.processRows==='5'&&!userSettings.customProcessRows)userSettings.processRows='1';
 userSettings.theme='light';
 if(['galaxy','fold','iphone'].includes(userSettings.displayMode))userSettings.displayMode='mobile';
 const accentColors={lime:'#7fbc03',blue:'#327ae8',orange:'#ef8d23',charcoal:'#252525'};
@@ -561,7 +567,7 @@ function applyUserSettings(){
 function syncSettingsUI(){document.querySelectorAll('[data-setting]').forEach(g=>g.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.value===String(userSettings[g.dataset.setting]))));document.querySelectorAll('[data-toggle-setting]').forEach(i=>i.checked=!!userSettings[i.dataset.toggleSetting]);document.querySelectorAll('[data-select-setting]').forEach(i=>i.value=userSettings[i.dataset.selectSetting]??i.value);document.querySelectorAll('[data-input-setting]').forEach(i=>i.value=userSettings[i.dataset.inputSetting]??i.value);}
 document.querySelectorAll('[data-settings-group]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-settings-group]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('[data-settings-panel]').forEach(x=>x.classList.toggle('active',x.dataset.settingsPanel===b.dataset.settingsGroup));}));
 document.querySelectorAll('[data-setting] button').forEach(b=>b.addEventListener('click',()=>{userSettings[b.parentElement.dataset.setting]=b.dataset.value;syncSettingsUI();saveUserSettings();}));
-document.querySelectorAll('[data-toggle-setting]').forEach(i=>i.addEventListener('change',()=>{userSettings[i.dataset.toggleSetting]=i.checked;saveUserSettings();}));document.querySelectorAll('[data-select-setting]').forEach(i=>i.addEventListener('change',()=>{userSettings[i.dataset.selectSetting]=i.value;saveUserSettings();}));document.querySelectorAll('[data-input-setting]').forEach(i=>i.addEventListener('change',()=>{userSettings[i.dataset.inputSetting]=i.value;saveUserSettings();}));
+document.querySelectorAll('[data-toggle-setting]').forEach(i=>i.addEventListener('change',()=>{userSettings[i.dataset.toggleSetting]=i.checked;saveUserSettings();}));document.querySelectorAll('[data-select-setting]').forEach(i=>i.addEventListener('change',()=>{userSettings[i.dataset.selectSetting]=i.value;if(i.dataset.selectSetting==='processRows')userSettings.customProcessRows=true;saveUserSettings();}));document.querySelectorAll('[data-input-setting]').forEach(i=>i.addEventListener('change',()=>{userSettings[i.dataset.inputSetting]=i.value;saveUserSettings();}));
 document.getElementById('resetSettings').addEventListener('click',()=>{userSettings={...settingDefaults};syncSettingsUI();saveUserSettings();});
 syncSettingsUI();applyUserSettings();
 
@@ -709,10 +715,14 @@ function updateRecentReportLinks(){if(window.MIN_WORKS_BATCH)return window.MIN_W
 function attachRecentReportLink(link){link.addEventListener('click',()=>{if(window.MIN_WORKS_BATCH)return window.MIN_WORKS_BATCH.openRecent(link);const card=[...document.querySelectorAll('.report-card')].find(report=>report.dataset.site===link.dataset.reportSite);if(!card){notify('등록된 공사일보가 없습니다.');return}showView('daily');card.click();});}
 document.querySelectorAll('.recent-report-link').forEach(attachRecentReportLink);updateSiteManagersFromReports();updateRecentReportLinks();
 
-function applyProcessRowCount(){if(window.MIN_WORKS_BATCH?.hasDraft())return;
-  const rows=document.getElementById('processRows'),wanted=Number(userSettings.processRows)||5;
-  while(rows.children.length<wanted)document.getElementById('addProcess').click();
+function resizeProcessRows(wanted){
+  const rows=document.getElementById('processRows');
+  while(rows.children.length<wanted)addProcessRow();
   while(rows.children.length>wanted&&rows.children.length>1)rows.lastElementChild.remove();
+}
+function applyProcessRowCount(){
+  if(window.MIN_WORKS_BATCH?.hasDraft())return;
+  resizeProcessRows(Number(userSettings.processRows)||1);
 }
 function applyDisplayMode(){
   const physicalMobile=window.matchMedia('(pointer: coarse)').matches&&window.innerWidth<=1100;

@@ -15,9 +15,10 @@
   const cards = () => $$('.report-card');
   const entries = card => cardProcessEntries(card).map(p=>({...p,name:String(p.name||'').trim(),today:Math.max(0,Number(p.today)||0),work:String(p.work||'')}));
   const sorted = site => cards().filter(c=>c.dataset.site===site).sort((a,b)=>(b.dataset.reportDate||'').localeCompare(a.dataset.reportDate||'')||(b.dataset.createdAt||'').localeCompare(a.dataset.createdAt||''));
+  const processKey=name=>name==='경량'?'경량공사':name;
   function cumulative(site,date,name,exclude=null) {
     return cards().filter(c=>c!==exclude&&c.dataset.site===site&&c.dataset.reportDate&&c.dataset.reportDate<=date)
-      .reduce((sum,c)=>sum+entries(c).filter(p=>p.name===name).reduce((n,p)=>n+p.today,0),0);
+      .reduce((sum,c)=>sum+entries(c).filter(p=>processKey(p.name)===processKey(name)).reduce((n,p)=>n+p.today,0),0);
   }
   function readRows() {
     return $$('#processRows .process-row').map(row=>({name:row.querySelector('.process-name').value.trim(),today:Number(row.querySelector('input[type=number]:not(.cumulative-people)').value)||0,work:row.querySelector('input[placeholder="세부 작업내용"]')?.value.trim()||''}));
@@ -25,7 +26,7 @@
   function updateCumulative() {
     const rows=readRows(), site=form.querySelector('select').value, date=form.querySelector('[type=date]').value;
     $$('#processRows .process-row').forEach((row,i)=>{
-      const p=rows[i];row.querySelector('.cumulative-people').value=p.name?cumulative(site,date,p.name,editing)+rows.filter(v=>v.name===p.name).reduce((s,v)=>s+v.today,0):0;
+      const p=rows[i];row.querySelector('.cumulative-people').value=p.name?cumulative(site,date,p.name,editing)+rows.filter(v=>processKey(v.name)===processKey(p.name)).reduce((s,v)=>s+v.today,0):0;
     });
     $('#dailyTotalPeople').textContent=rows.filter(p=>p.name).reduce((sum,p)=>sum+p.today,0)+'명';
   }
@@ -95,11 +96,111 @@
     updateSuggestions();
   }
   function queueRefresh(){clearTimeout(refreshTimer);refreshTimer=setTimeout(refresh,40);}
+  const processRows=$('#processRows');
+  const processList=document.createElement('div');
+  processList.id='workProcessSuggestions';
+  processList.className='report-process-list';
+  processList.setAttribute('role','listbox');
+  processList.setAttribute('aria-label','공정 목록');
+  processList.hidden=true;
+  document.body.appendChild(processList);
+  let processField=null,processNames=[],activeOption=-1;
+
   function updateSuggestions(){
-    const names=[...new Set([...workProcessOptions,...cards().flatMap(c=>entries(c).map(p=>p.name))])].filter(Boolean);
-    let list=$('#workProcessSuggestions');if(!list){list=document.createElement('datalist');list.id='workProcessSuggestions';document.body.appendChild(list);}
-    list.replaceChildren(...names.map(name=>{const option=document.createElement('option');option.value=name;return option;}));
+    processNames=[...new Set([...workProcessOptions,...cards().flatMap(c=>entries(c).map(p=>p.name))])].filter(Boolean);
   }
+  function closeProcessList(){
+    processField?.setAttribute('aria-expanded','false');
+    processField?.removeAttribute('aria-activedescendant');
+    processField=null;activeOption=-1;processList.hidden=true;
+  }
+  function positionProcessList(){
+    if(!processField)return;
+    const rect=processField.getBoundingClientRect();
+    const viewport=window.visualViewport;
+    const top=viewport?.offsetTop||0,bottom=top+(viewport?.height||innerHeight);
+    const visible=rect.width>0&&rect.bottom>top&&rect.top<bottom;
+    processList.style.visibility=visible?'visible':'hidden';
+    processField.setAttribute('aria-expanded',String(visible));
+    if(!visible)return;
+    const below=bottom-rect.bottom-8,above=rect.top-top-8;
+    processList.style.left=rect.left+'px';
+    processList.style.width=rect.width+'px';
+    processList.style.maxHeight=Math.max(0,Math.min(244,Math.max(below,above)))+'px';
+    processList.style.top=(below<160&&above>below?rect.top-processList.offsetHeight-4:rect.bottom+4)+'px';
+  }
+  function openProcessList(input,showAll=false){
+    if(processField&&processField!==input)closeProcessList();
+    const query=input.value.toLowerCase().replace(/\s/g,'');
+    const matches=processNames.filter(name=>showAll||name.toLowerCase().replace(/\s/g,'').includes(query));
+    if(!matches.length){closeProcessList();return;}
+    const options=matches.map((name,index)=>{
+      const option=document.createElement('button');
+      option.type='button';option.tabIndex=-1;option.id='report-process-option-'+index;
+      option.setAttribute('role','option');option.setAttribute('aria-selected','false');
+      option.textContent=name;
+      return option;
+    });
+    processField=input;
+    activeOption=-1;
+    input.removeAttribute('aria-activedescendant');
+    input.setAttribute('aria-expanded','true');
+    processList.replaceChildren(...options);
+    processList.hidden=false;
+    processList.scrollTop=0;
+    positionProcessList();
+  }
+  function chooseProcess(option){
+    const input=processField;
+    if(!input||!option)return;
+    input.value=option.textContent;
+    closeProcessList();
+    input.dispatchEvent(new Event('input',{bubbles:true}));
+    input.dispatchEvent(new Event('change',{bubbles:true}));
+    closeProcessList();
+  }
+  processRows.addEventListener('focusin',event=>{
+    if(event.target.matches('.process-name'))openProcessList(event.target,true);
+  });
+  processRows.addEventListener('click',event=>{
+    if(event.target.matches('.process-name')&&!processField)openProcessList(event.target,true);
+  });
+  processRows.addEventListener('input',event=>{
+    if(event.target.matches('.process-name')&&!event.isComposing&&document.activeElement===event.target)openProcessList(event.target);
+  });
+  processRows.addEventListener('compositionend',event=>{
+    if(event.target.matches('.process-name'))openProcessList(event.target);
+  });
+  processList.addEventListener('mousedown',event=>event.preventDefault());
+  processList.addEventListener('click',event=>chooseProcess(event.target.closest('[role=option]')));
+  document.addEventListener('pointerdown',event=>{
+    if(processField&&event.target!==processField&&!processList.contains(event.target))closeProcessList();
+  });
+  processRows.addEventListener('keydown',event=>{
+    const input=event.target;
+    if(!input.matches('.process-name')||event.isComposing)return;
+    if(event.key==='Tab'){closeProcessList();return;}
+    if(event.key==='Escape'&&processField){closeProcessList();event.preventDefault();return;}
+    if(event.key==='Enter'&&processField&&activeOption>=0){
+      event.preventDefault();event.stopPropagation();chooseProcess(processList.children[activeOption]);return;
+    }
+    if(event.key!=='ArrowDown'&&event.key!=='ArrowUp')return;
+    if(!processField)openProcessList(input,true);
+    if(!processField)return;
+    event.preventDefault();
+    processList.children[activeOption]?.setAttribute('aria-selected','false');
+    const count=processList.children.length;
+    activeOption=activeOption<0?(event.key==='ArrowDown'?0:count-1):(activeOption+(event.key==='ArrowDown'?1:-1)+count)%count;
+    const option=processList.children[activeOption];
+    option.setAttribute('aria-selected','true');
+    input.setAttribute('aria-activedescendant',option.id);
+    option.scrollIntoView({block:'nearest'});
+  });
+  window.addEventListener('scroll',positionProcessList,{passive:true});
+  window.addEventListener('resize',positionProcessList);
+  window.visualViewport?.addEventListener('resize',positionProcessList);
+  window.visualViewport?.addEventListener('scroll',positionProcessList);
+  $('#closeDailyEditor').addEventListener('click',closeProcessList);
   function resetPhotos(){
     reportPhotoSelectionVersion++;
     $$('#tbmPreview .uploaded-photo,#progressPreview .uploaded-photo').forEach(node=>{if(node.dataset.photoSrc?.startsWith('blob:'))URL.revokeObjectURL(node.dataset.photoSrc);node.remove();});
@@ -111,8 +212,8 @@
     const caption=document.createElement('small');caption.textContent=photo.type;el.append(button,caption);$(photo.type?.includes('TBM')?'#tbmPreview':'#progressPreview').appendChild(el);
   });updatePhotoCount('tbmPreview','tbmPhotoCount');updatePhotoCount('progressPreview','progressPhotoCount');}
   function fillRows(processes) {
-    const count=Math.max(Number(userSettings.processRows)||5,processes.length);
-    while($('#processRows').children.length<count)$('#addProcess').click();
+    const last=processes.findLastIndex(row=>row.name||row.today||row.work)+1;
+    resizeProcessRows(Math.max(Number(userSettings.processRows)||1,last));
     $$('#processRows .process-row').forEach((row,i)=>{const p=processes[i]||{};row.querySelector('.process-name').value=p.name||'';row.querySelector('input[type=number]:not(.cumulative-people)').value=p.today??'';row.querySelector('input[placeholder="세부 작업내용"]').value=p.work||'';});
   }
   async function photoData(forCloud=false) {
@@ -148,6 +249,7 @@
     if(allRows.some(p=>!p.name&&(p.today||p.work)))return notify('인원이나 작업내용을 입력한 줄의 공정명을 입력해주세요.');
     if(processes.some(p=>p.today<0||!Number.isInteger(p.today)))return notify('인원은 0 이상의 정수로 입력해주세요.');
     if(processes.some(p=>!p.today&&!p.work))return notify('입력한 공정의 인원 또는 작업내용을 입력해주세요.');
+    closeProcessList();
     saving=true;const submitButton=$('#reportSubmit');submitButton.disabled=true;submitButton.textContent='등록 중…';
     saveGauge.querySelector('progress').value=0;showSaveProgress('등록 준비 중',5);
     const card=editing||(pendingNewCard ||= document.createElement('button')),isNew=!editing;
@@ -208,6 +310,8 @@
       if(!data){
         const legacy=JSON.parse(localStorage.getItem('minWorksDailyDraftV2')||'null');
         if(!Array.isArray(legacy)||!legacy.length)return;
+        const legacyRows=legacy.filter(item=>item.name==='세부 작업내용').length||5;
+        resizeProcessRows(legacyRows);
         const fields=[...form.querySelectorAll('input,select,textarea')];
         legacy.forEach((item,i)=>{if(fields[i]&&fields[i].type!=='file')fields[i].value=item.value??'';});
         data={site:form.querySelector('select').value,date:form.querySelector('[type=date]').value,note:form.querySelector('textarea').value,processes:readRows(),photos:[]};
