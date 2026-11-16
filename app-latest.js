@@ -37,7 +37,7 @@
   let version=Number(window.MIN_WORKS_CLOUD_VERSION)||0,timer=null,started=false,saving=false,dirty=false;
   const token=()=>localStorage.getItem(TOKEN_KEY)||'';
   const uploadedPhotos=new WeakMap();
-  const saveProgress=text=>window.dispatchEvent(new CustomEvent('minworks:save-progress',{detail:{text}}));
+  const saveProgress=(text,percent)=>window.dispatchEvent(new CustomEvent('minworks:save-progress',{detail:{text,percent}}));
   async function request(path,options={}){
     const headers={...(options.headers||{}),Authorization:`Bearer ${token()}`};if(options.json)headers['Content-Type']='application/json';
     const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),options.form?90000:25000);
@@ -46,10 +46,10 @@
     finally{clearTimeout(timeout)}
   }
   async function writeSnapshot(payload,baseVersion){
-    saveProgress('일보 저장 중…');
+    saveProgress('일보 저장 중…',90);
     try{const result=await request('/company-state',{method:'PUT',json:{baseVersion,payload}});if(result.response.status>=500||(result.response.ok&&!Number.isFinite(result.data.version)))throw new Error(result.data.error||'서버 저장 결과를 확인하지 못했습니다.');return result}catch(error){
       // A lost response does not mean the write failed. Confirm before allowing a retry.
-      saveProgress('저장 결과 확인 중…');
+      saveProgress('저장 결과 확인 중…',96);
       try{const check=await request('/company-state');if(check.response.ok&&check.data.payload?.savedAt===payload.savedAt)return {response:check.response,data:{ok:true,version:check.data.version}}}catch{}
       throw error;
     }
@@ -59,9 +59,9 @@
   async function uploadPendingPhotos(){
     const cards=[...document.querySelectorAll('.report-card')],total=cards.reduce((n,c)=>n+(c.reportPhotos||[]).filter(p=>p.file instanceof File).length,0);let done=0;
     for(const card of cards){const photos=Array.isArray(card.reportPhotos)?card.reportPhotos:[];
-      for(const photo of photos){if(!(photo.file instanceof File))continue;const file=photo.file;saveProgress(`사진 저장 ${done+1}/${total}…`);let data=uploadedPhotos.get(file);
-        if(!data){const form=new FormData();form.append('file',file,file.name);form.append('site',card.dataset.site||'');form.append('category','report');const result=await request('/files',{method:'POST',form});data=result.data;if(!result.response.ok)throw new Error(data.error||'사진을 회사 저장소에 저장하지 못했습니다.');uploadedPhotos.set(file,data)}
-        if(!window.MIN_WORKS_TRANSACTION&&String(photo.src).startsWith('blob:'))URL.revokeObjectURL(photo.src);photo.src=data.url;photo.size=data.size;photo.id=data.id;delete photo.file;done++;
+      for(const photo of photos){if(!(photo.file instanceof File))continue;const file=photo.file;saveProgress('사진 저장 중…',10+Math.round(75*done/total));let data=uploadedPhotos.get(file);
+        if(!data){const form=new FormData();form.append('file',file,file.name);form.append('site',card.dataset.site||'');form.append('category','report');const result=await request('/files',{method:'POST',form});data=result.data;if(!result.response.ok)throw new Error(data.error||'사진을 회사 저장소에 저장하지 못했습니다.');if(!data.id||!data.url)throw new Error('사진 저장 결과를 확인하지 못했습니다.');uploadedPhotos.set(file,data)}
+        if(!window.MIN_WORKS_TRANSACTION&&String(photo.src).startsWith('blob:'))URL.revokeObjectURL(photo.src);photo.src=data.url;photo.size=data.size;photo.id=data.id;delete photo.file;done++;saveProgress('사진 저장 중…',10+Math.round(75*done/total));
       }
       card.dataset.cloudProcesses=JSON.stringify(card.reportProcesses||[]);card.dataset.cloudPhotos=JSON.stringify(photos.map(({file,...photo})=>photo));
     }
@@ -155,7 +155,6 @@ document.querySelectorAll('#processRows .process-row').forEach(row=>{const input
 document.getElementById('dailyForm').addEventListener('input',updateCumulativePeople);
 document.getElementById('dailyForm').addEventListener('change',updateCumulativePeople);
 document.getElementById('dailyForm').addEventListener('keydown',event=>{if(event.key==='Enter'&&event.target.tagName!=='TEXTAREA'){event.preventDefault();notify('공사일보는 아래 등록 버튼을 눌러 저장해주세요.')}});
-let submittingReport=false;
 document.getElementById('dailyForm').addEventListener('submit',e=>{e.preventDefault();window.MIN_WORKS_BATCH?.submit();});
 document.getElementById('photoBtn').addEventListener('click',()=>notify('카메라 기능은 정식 버전에서 연결됩니다.'));
 const tbmGalleryInput=document.getElementById('tbmGalleryInput');
@@ -167,23 +166,146 @@ function closePhotoSourceSheet(){photoSourceSheet.classList.remove('show')}
 function choosePhotoSource(input,containerId,countId,type){activePhotoInput=input;activePhotoMeta={containerId,countId,type};photoSourceSheet.classList.add('show')}
 photoSourceSheet.querySelector('header button').addEventListener('click',closePhotoSourceSheet);photoSourceSheet.querySelector('.photo-source-backdrop').addEventListener('click',closePhotoSourceSheet);
 photoSourceSheet.querySelector('[data-photo-source="gallery"]').addEventListener('click',()=>{closePhotoSourceSheet();if(activePhotoInput)openPhotoPicker(activePhotoInput)});
-photoSourceSheet.querySelector('[data-photo-source="camera"]').addEventListener('click',()=>{closePhotoSourceSheet();if(!activePhotoMeta)return;const camera=document.createElement('input');camera.type='file';camera.accept='image/*';camera.capture='environment';camera.addEventListener('change',async()=>{await addPhotoPreviews(camera,activePhotoMeta.containerId,activePhotoMeta.countId,activePhotoMeta.type);camera.remove()},{once:true});openPhotoPicker(camera)});
+const reportCameraInput=document.createElement('input');
+reportCameraInput.type='file';
+reportCameraInput.accept='image/*';
+reportCameraInput.setAttribute('capture','environment');
+reportCameraInput.hidden=true;
+document.body.appendChild(reportCameraInput);
+let cameraPhotoMeta=null;
+reportCameraInput.addEventListener('change',()=>{
+  if(cameraPhotoMeta)addPhotoPreviews(reportCameraInput,cameraPhotoMeta.containerId,cameraPhotoMeta.countId,cameraPhotoMeta.type);
+});
+photoSourceSheet.querySelector('[data-photo-source="camera"]').addEventListener('click',()=>{
+  closePhotoSourceSheet();
+  if(!activePhotoMeta)return;
+  cameraPhotoMeta={...activePhotoMeta};
+  openPhotoPicker(reportCameraInput);
+});
 document.getElementById('tbmGalleryBtn').addEventListener('click',()=>choosePhotoSource(tbmGalleryInput,'tbmPreview','tbmPhotoCount','TBM 사진'));
 document.getElementById('progressPhotoAdd').addEventListener('click',()=>choosePhotoSource(progressGalleryInput,'progressPreview','progressPhotoCount','진행사진'));
+const REPORT_PHOTO_LIMIT = 5 * 1024 * 1024;
+const reportPhotoTypes = new Set(['image/jpeg','image/png','image/webp']);
+const heicBrands = new Set(['heic','heix','hevc','hevx','heim','heis','hevm','hevs','mif1','msf1']);
+let pendingReportPhotos = Promise.resolve(true);
+
+function loadReportImage(blob) {
+  return new Promise((resolve,reject)=>{
+    const url=URL.createObjectURL(blob);
+    const image=new Image();
+    const finish=error=>{
+      clearTimeout(timeout);
+      image.onload=image.onerror=null;
+      URL.revokeObjectURL(url);
+      if(error)reject(error);else resolve(image);
+    };
+    const timeout=setTimeout(()=>finish(Error('사진을 읽는 데 시간이 오래 걸립니다.')),10000);
+    image.onload=()=>finish();
+    image.onerror=()=>finish(Error('사진을 읽지 못했습니다.'));
+    image.src=url;
+  });
+}
+
 async function preparePhotoFile(file){
-  const mode=userSettings?.photoQuality||'고화질';if(mode==='원본')return file;
-  try{const bitmap=await createImageBitmap(file,{imageOrientation:'from-image'}),limit=mode==='용량 절약'?1600:2400,scale=Math.min(1,limit/Math.max(bitmap.width,bitmap.height)),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));canvas.getContext('2d').drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close?.();const quality=mode==='용량 절약'?.72:.86,blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',quality));return blob?new File([blob],file.name.replace(/\.[^.]+$/,'.jpg'),{type:'image/jpeg',lastModified:Date.now()}):file}catch{return file}
-}
-async function addPhotoPreviews(input,containerId,countId,type){
-  const container=document.getElementById(containerId);
-  for(const original of [...input.files]){const file=await preparePhotoFile(original);
-    const card=document.createElement('div'),photoUrl=URL.createObjectURL(file);card.className='uploaded-photo';card.style.backgroundImage=`url(${photoUrl})`;card.dataset.photoSrc=photoUrl;card.dataset.photoType=type;card.dataset.photoSize=String(file.size||0);card.photoFile=file;
-    card.innerHTML=`<button type="button">×</button><small>${type} · ${userSettings?.photoQuality||'고화질'} · 방금 전</small>`;
-    card.querySelector('button').addEventListener('click',()=>{if(card.dataset.photoSrc?.startsWith('blob:'))URL.revokeObjectURL(card.dataset.photoSrc);card.remove();updatePhotoCount(containerId,countId)});
-    container.appendChild(card);
+  if(!file.size)throw Error('빈 파일입니다.');
+  const mode=userSettings?.photoQuality||'고화질';
+  const header=new Uint8Array(await file.slice(0,32).arrayBuffer());
+  const tag=(start,end)=>String.fromCharCode(...header.slice(start,end));
+  const mime=file.type.toLowerCase();
+  const actual=header[0]===255&&header[1]===216?'image/jpeg':
+    tag(1,4)==='PNG'?'image/png':
+    tag(0,4)==='RIFF'&&tag(8,12)==='WEBP'?'image/webp':'';
+  const heic=!actual&&(/\.hei[cf]$/i.test(file.name)||/^image\/hei[cf]/.test(mime)||
+    (tag(4,8)==='ftyp'&&heicBrands.has(tag(8,12))));
+  const supported=actual||(reportPhotoTypes.has(mime)?mime:'');
+  if(!heic&&supported&&file.size<=REPORT_PHOTO_LIMIT&&mode==='원본'){
+    return supported===mime?file:new File([file],file.name,{type:supported,lastModified:file.lastModified});
   }
-  updatePhotoCount(containerId,countId);input.value='';notify(type+'을 추가했습니다.');
+  let image;
+  const canvas=document.createElement('canvas');
+  try{
+    const source=supported&&supported!==mime?file.slice(0,file.size,supported):file;
+    try{
+      if(typeof createImageBitmap==='function')image=await createImageBitmap(source);
+    }catch{}
+    if(!image){
+      try{image=await loadReportImage(source);}
+      catch(error){
+        if(!heic)throw error;
+        let timeout;
+        try{
+          const converted=await Promise.race([
+            import('./assets/heic-to/heic-to-1.6.7.js').then(({heicTo})=>heicTo({blob:file,type:'image/jpeg',quality:.95})),
+            new Promise((_,reject)=>{timeout=setTimeout(()=>reject(Error('사진 변환 시간 초과')),30000);}),
+          ]);
+          image=await loadReportImage(converted);
+        }finally{clearTimeout(timeout);}
+      }
+    }
+    const width=image.naturalWidth||image.width,height=image.naturalHeight||image.height;
+    const limit=mode==='용량 절약'?1600:2400;
+    const scale=Math.min(1,limit/Math.max(width,height));
+    canvas.width=Math.max(1,Math.round(width*scale));
+    canvas.height=Math.max(1,Math.round(height*scale));
+    const ctx=canvas.getContext('2d',{alpha:false});
+    if(!ctx)throw Error('사진 변환을 시작하지 못했습니다.');
+    ctx.fillStyle='#fff';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(image,0,0,canvas.width,canvas.height);
+    const encode=quality=>new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',quality));
+    let blob=await encode(mode==='용량 절약'?.72:mode==='원본'?.93:.86);
+    if(blob?.size>REPORT_PHOTO_LIMIT)blob=await encode(.68);
+    if(!blob?.size||blob.size>REPORT_PHOTO_LIMIT)throw Error('사진을 저장 가능한 크기로 변환하지 못했습니다.');
+    return new File([blob],file.name.replace(/\.[^.]+$/,'')+'.jpg',{type:'image/jpeg',lastModified:file.lastModified});
+  }catch(error){
+    if(!heic&&supported&&file.size<=REPORT_PHOTO_LIMIT){
+      return supported===mime?file:new File([file],file.name,{type:supported,lastModified:file.lastModified});
+    }
+    throw Error(heic?'HEIC 사진을 변환하지 못했습니다. JPEG 사진을 다시 선택해 주세요.':(supported?'사진을 5MB 이하로 줄이지 못했습니다.':'지원하지 않는 사진 형식입니다. JPG·PNG·WEBP를 선택해 주세요.'),{cause:error});
+  }finally{
+    image?.close?.();
+    canvas.width=canvas.height=1;
+  }
 }
+function addPhotoPreviews(input,containerId,countId,type){
+  const container=document.getElementById(containerId);
+  const originals=Array.from(input.files||[]);
+  input.value='';
+  if(!originals.length)return pendingReportPhotos;
+  const previous=pendingReportPhotos;
+  preparingReportPhotos++;
+  const generation=reportPhotoSelectionVersion;
+  pendingReportPhotos=previous.then(async()=>{
+    let added=0,failed=false;
+    for(const original of originals){
+      try{
+        const file=await preparePhotoFile(original);
+        if(generation!==reportPhotoSelectionVersion)break;
+        const card=document.createElement('div'),photoUrl=URL.createObjectURL(file);
+        card.className='uploaded-photo';
+        card.style.backgroundImage=`url("${photoUrl}")`;
+        card.dataset.photoSrc=photoUrl;card.dataset.photoType=type;card.dataset.photoSize=String(file.size);
+        card.photoFile=file;
+        card.innerHTML='<button type="button" aria-label="사진 삭제">×</button><small></small>';
+        card.querySelector('small').textContent=type;
+        card.querySelector('button').addEventListener('click',()=>{
+          URL.revokeObjectURL(card.dataset.photoSrc);card.remove();updatePhotoCount(containerId,countId);
+        });
+        container.appendChild(card);
+        added++;
+      }catch(error){
+        if(generation!==reportPhotoSelectionVersion)break;
+        failed=true;
+        notify(`${original.name || '사진'} · ${error.message}`);
+      }
+    }
+    updatePhotoCount(containerId,countId);
+    if(added&&!failed)notify(type+'을 추가했습니다.');
+    return !failed;
+  }).finally(()=>preparingReportPhotos--);
+  return pendingReportPhotos;
+}
+let reportPhotoSelectionVersion=0,preparingReportPhotos=0;
 function updatePhotoCount(containerId,countId){const count=document.querySelectorAll(`#${containerId} .uploaded-photo, #${containerId} .photo.sample`).length;document.getElementById(countId).textContent=count+'장'}
 tbmGalleryInput.addEventListener('change',()=>addPhotoPreviews(tbmGalleryInput,'tbmPreview','tbmPhotoCount','TBM 사진'));
 progressGalleryInput.addEventListener('change',()=>addPhotoPreviews(progressGalleryInput,'progressPreview','progressPhotoCount','진행사진'));

@@ -1,0 +1,6 @@
+heic-to 1.6.7, unmodified browser CSP build.
+Upstream and build sources: https://github.com/hoppergee/heic-to
+Exact release archive, including source and build scripts:
+https://registry.npmjs.org/heic-to/-/heic-to-1.6.7.tgz
+Includes libheif: https://github.com/strukturag/libheif
+License: GNU LGPL v3 or later. See LICENSE.txt.

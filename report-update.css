@@ -116,3 +116,7 @@ body.ui-v54.mw-compact .mobile-nav{padding-bottom:env(safe-area-inset-bottom)}
 body.ui-v54 #riskView .sample-panel>header{gap:16px;align-items:center}
 body.ui-v54 #riskView .sample-panel>header>div{min-width:0}
 body.ui-v54 #riskView .risk-in-progress{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;width:auto;height:auto;min-height:26px;padding:6px 10px;line-height:1.4;white-space:nowrap;background:#fff1dd;color:#bc6b0c}
+
+.report-save-progress{display:grid;gap:5px;min-width:145px;margin-right:10px;color:#486329;font-size:12px;font-weight:700}
+.report-save-progress[hidden]{display:none}
+.report-save-progress progress{width:100%;height:7px;accent-color:#74a52d}

@@ -5,6 +5,7 @@
     const list = document.querySelector('#patchView .patch-list');
     if (!list) return;
     const notes = [
+      ['2026-11-16', '공사일보', '아이폰 사진 등록과 저장 진행률', '아이폰 HEIC 사진을 JPEG로 변환해 등록하고, 업로드와 회사 저장 단계를 진행률로 표시합니다. 새 공사일보는 서버 저장이 확인되면 민웍스 홈으로 돌아갑니다.'],
       ['2026-11-13', '현장서류', '담당자 입력·인쇄 보완', '공정표에서 작업 내용과 비고를 일정 막대 아래에 표시합니다. 위험성평가표 인쇄 외곽선과 근로자 안전 서약서 A4 배치를 보완했습니다. 교육서류 3종에 현장 담당자 입력을 추가하고, 화기작업허가서는 입력량에 따라 출력 크기를 조정합니다.'],
       ['2026-11-13', '현장서류', '사진대지 작성 화면 정리', '현장서류 메뉴를 사진대지 작성으로 변경했습니다. 프로젝트 기본정보에서 현장관리의 공사명·담당자·공사기간·발주처·공사금액을 불러오고, 사진을 등록해 A4 사진대지를 출력할 수 있습니다.'],
       ['2026-11-13', '협력업체', '소재지 자동 분류 개선', '수도권으로 등록된 업체와 김포·일산·고양시 등 경기 지역 주소를 경기 목록에 자동으로 분류합니다.'],
@@ -44,7 +45,7 @@
     });
     list.replaceChildren(...canonical);
     const caption = document.querySelector('#patchView .patch-title small');
-    if (caption) caption.textContent = '본판 적용 내역 · 최신순 · 2026. 11. 13 기준';
+    if (caption) caption.textContent = '본판 적용 내역 · 최신순 · 2026. 11. 16 기준';
     // Older modules still append their historical test notes during startup.
     // Keep this release list authoritative even when they run after DOMContentLoaded.
     new MutationObserver(() => {
