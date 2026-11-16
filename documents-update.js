@@ -5,12 +5,6 @@
   const $ = s => document.querySelector(s);
   const esc = v => String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   function init() {
-    const nav=$('.mobile-nav');
-    const items=[['dashboard','home','홈'],['daily','edit_note','공사일보'],['documents','folder_open','현장서류'],['issues','report_problem','이슈관리']];
-    nav.innerHTML=items.map(([view,icon,label])=>`<button type="button" data-view="${view}"><span class="material-symbols-rounded">${icon}</span><b>${label}</b></button>`).join('');
-    const sync=()=>nav.querySelectorAll('button').forEach(b=>b.classList.toggle('active',$('#'+b.dataset.view+'View')?.classList.contains('active')));
-    nav.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{window.showView(b.dataset.view);window.MIN_WORKS_TEST_UNREAD?.clear(b.dataset.view);sync();}));
-    document.querySelectorAll('.view').forEach(v=>new MutationObserver(sync).observe(v,{attributes:true,attributeFilter:['class']}));sync();
     const parent=$('.nav-parent[data-view="documents"]');
     const quick=document.createElement('button');quick.type='button';quick.className='tbm-quick';quick.textContent='TBM 작성';quick.setAttribute('aria-label','TBM일지 작성');parent.after(quick);
     const sub=document.createElement('button');sub.type='button';sub.className='nav-subgroup';sub.dataset.docFolder='tbm';sub.innerHTML='<span class="material-symbols-rounded">groups</span><b>TBM 일지</b>';

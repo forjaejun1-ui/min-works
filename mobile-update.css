@@ -33,3 +33,12 @@ html body.ui-v54.mw-compact .greeting-wrap{grid-column:1/-1!important;grid-row:3
 html body.ui-v54.mw-compact .security-user-button{grid-column:1/3!important;grid-row:2!important;justify-self:start}
 html body.ui-v54.mw-compact .mobile-header-shortcuts [data-mobile-action=menu]{grid-column:3!important;grid-row:2!important}
 }
+
+
+.mobile-nav[aria-label] button{min-height:44px}
+.mobile-nav[aria-label] .material-symbols-rounded{
+  width:1.15em;
+  height:1.15em;
+  overflow:hidden;
+  pointer-events:none;
+}

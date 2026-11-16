@@ -47,7 +47,7 @@
 <link rel="stylesheet" href="ui-foundation.css?v=57" />
 <link rel="stylesheet" href="ui-modern.css?v=57" />
 <link rel="stylesheet" href="ui-linear.css?v=57" />
-<link rel="stylesheet" href="report-update.css?v=process111"><link rel="stylesheet" href="documents-update.css?v=57"><link rel="stylesheet" href="safety-forms.css?v=docs20"><link rel="stylesheet" href="safety-native.css?v=photo107"><link rel="stylesheet" href="mobile-update.css?v=weather108"><link rel="stylesheet" href="storage-buy-guide.css?v=storage101" />
+<link rel="stylesheet" href="report-update.css?v=process111"><link rel="stylesheet" href="documents-update.css?v=57"><link rel="stylesheet" href="safety-forms.css?v=docs20"><link rel="stylesheet" href="safety-native.css?v=photo107"><link rel="stylesheet" href="mobile-update.css?v=mobile112"><link rel="stylesheet" href="storage-buy-guide.css?v=storage101" />
 <link rel="stylesheet" href="push-notifications.css?v=save103"><link rel="stylesheet" href="employee-account.css?v=login104"></head>
 <body class="ui-v54">
   <div class="mw-splash" id="mwSplash" role="status" aria-label="MIN WORKS 불러오는 중">
@@ -238,8 +238,13 @@
       </section>
     </main>
 
-    <nav class="mobile-nav">
-      <button class="active" data-view="dashboard"><span class="material-symbols-rounded">home</span>홈</button><button data-view="sites"><span class="material-symbols-rounded">construction</span>현장</button><button class="fab" data-view="daily" aria-label="공사일보"><span class="material-symbols-rounded">description</span></button><button data-view="finance"><span class="material-symbols-rounded">payments</span>자금</button><button data-view="issues"><span class="material-symbols-rounded">report_problem</span>이슈</button><button type="button" data-bottom-menu><span class="material-symbols-rounded">apps</span>전체메뉴</button>
+    <nav class="mobile-nav" aria-label="모바일 주요 메뉴">
+      <button type="button" class="active" data-view="dashboard"><span class="material-symbols-rounded" aria-hidden="true">home</span><b>홈</b></button>
+      <button type="button" data-view="sites"><span class="material-symbols-rounded" aria-hidden="true">apartment</span><b>현장관리</b></button>
+      <button type="button" data-view="daily"><span class="material-symbols-rounded" aria-hidden="true">edit_note</span><b>공사일보</b></button>
+      <button type="button" data-view="documents"><span class="material-symbols-rounded" aria-hidden="true">folder_open</span><b>현장서류</b></button>
+      <button type="button" data-view="issues"><span class="material-symbols-rounded" aria-hidden="true">report_problem</span><b>이슈관리</b></button>
+      <button type="button" data-view="vendors"><span class="material-symbols-rounded" aria-hidden="true">group</span><b>협력업체</b></button>
     </nav>
   </div>
 
@@ -255,12 +260,12 @@
   <div class="progress-modal" id="progressModal"><div class="progress-backdrop"></div><section><header><div><p class="eyebrow">PROGRESS UPDATE</p><h2>공정률 변경</h2><small id="progressSiteName">연세대학교 고를샘</small></div><button id="closeProgressModal">×</button></header><div class="progress-value"><b id="progressValue">72</b><span>%</span></div><input type="range" id="progressRange" min="0" max="100" value="72"><label>변경 사유<textarea id="progressNote" rows="3" placeholder="예: 목공 및 타일 공정 완료"></textarea></label><p><span class="material-symbols-rounded">history</span>변경자와 변경 시간이 자동으로 기록됩니다.</p><button class="primary full" id="saveProgress">공정률 저장</button></section></div>
   <div class="money-form-modal" id="paymentFormModal"><div class="money-modal-backdrop"></div><section><header><div><p class="eyebrow">SITE PAYMENT</p><h2>지출·기성 작성</h2><small>현장소장 작성</small></div><button data-close-money="paymentFormModal">×</button></header><div class="money-form-grid"><label>현장<select id="paymentSite"><option>연세대학교 고를샘</option><option>에잇세컨즈 AK분당점</option><option>알뜰주유소 시설개선</option><option>힐스테이트 아산</option></select></label><label>구분<select id="paymentType"><option>월 기성</option><option>월요일 긴급지출</option></select></label><label>금액<input id="paymentAmount" type="number" placeholder="금액 입력"></label><label>지급 희망일<input id="paymentDate" type="date" value="2026-09-10"></label></div><label>내용<textarea id="paymentMemo" rows="3" placeholder="인건비, 현지업체 결제 등 내용을 입력하세요."></textarea></label><button class="primary full" id="savePayment">작성 완료 · 공무부로 전달</button></section></div>
   <div class="money-form-modal" id="receivableFormModal"><div class="money-modal-backdrop"></div><section><header><div><p class="eyebrow">RECEIVABLE</p><h2>거래처 수금 예정 작성</h2><small>공무부·경리부 작성</small></div><button data-close-money="receivableFormModal">×</button></header><div class="money-form-grid"><label>거래처<input id="receivableClient" placeholder="거래처명"></label><label>현장<select id="receivableSite"><option>연세대학교 고를샘</option><option>에잇세컨즈 AK분당점</option><option>알뜰주유소 시설개선</option><option>힐스테이트 아산</option></select></label><label>청구 금액<input id="receivableAmount" type="number" placeholder="금액 입력"></label><label>입금 예정일<input id="receivableDate" type="date"></label></div><label>비고<textarea id="receivableMemo" rows="3" placeholder="청구 조건이나 입금 관련 내용을 입력하세요."></textarea></label><button class="primary full" id="saveReceivable">수금 예정 등록</button></section></div>
-<script src="navigation-refresh.js?v=vendors95"></script>
+<script src="navigation-refresh.js?v=mobile112"></script>
 <link rel="stylesheet" href="qa-board.css?v=qa97" />
 <script src="qa-board.js?v=qa97" defer></script>
 <link rel="stylesheet" href="guide-current.css?v=guide96" />
 <script src="employee-account.js?v=login105"></script><script src="app-latest.js?v=process111"></script><script src="vendor-integration.js?v=region106"></script>
 <script src="ui-experience.js?v=staff94"></script>
-<script src="report-update.js?v=process111"></script><script src="documents-update.js?v=issues22"></script><script src="safety-enhancements.js?v=docs20"></script><script src="safety-engine.js?v=field109"></script><script src="safety-native.js?v=field109"></script><script src="reader-admin.js?v=66"></script><script src="device-session.js?v=63"></script><script src="mobile-controls.js?v=weather108"></script><script src="issue-owner-sync.js?v=issues22"></script><script src="patch-notes-current.js?v=process111"></script><script src="schedule-integration.js?v=field109"></script><script src="guide-current.js?v=photo107"></script><link rel="stylesheet" href="qa-assistant.css?v=qa97" /><script src="qa-assistant.js?v=qa97"></script><script src="push-notifications.js?v=save103"></script></body>
+<script src="report-update.js?v=process111"></script><script src="documents-update.js?v=mobile112"></script><script src="safety-enhancements.js?v=docs20"></script><script src="safety-engine.js?v=field109"></script><script src="safety-native.js?v=field109"></script><script src="reader-admin.js?v=66"></script><script src="device-session.js?v=63"></script><script src="mobile-controls.js?v=weather108"></script><script src="issue-owner-sync.js?v=issues22"></script><script src="patch-notes-current.js?v=process111"></script><script src="schedule-integration.js?v=field109"></script><script src="guide-current.js?v=photo107"></script><link rel="stylesheet" href="qa-assistant.css?v=qa97" /><script src="qa-assistant.js?v=qa97"></script><script src="push-notifications.js?v=save103"></script></body>
 </html>
 

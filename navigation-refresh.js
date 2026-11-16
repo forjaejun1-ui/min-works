@@ -152,7 +152,5 @@
     setTimeout(() => toast.classList.remove('show'), 2200);
   }));
 
-  const mobileNav = document.querySelector('.mobile-nav');
-  if (mobileNav) mobileNav.innerHTML = '<button class="active" data-view="dashboard"><span class="material-symbols-rounded">home</span>홈</button><button data-view="sites"><span class="material-symbols-rounded">apartment</span>현장</button><button class="fab" data-view="daily" aria-label="공사일보"><span class="material-symbols-rounded">edit_note</span></button><button data-view="documents"><span class="material-symbols-rounded">folder_open</span>현장서류</button>';
   window.MIN_WORKS_SIDEBAR_READY = true;
 })();
