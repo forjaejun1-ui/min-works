@@ -28,5 +28,5 @@
  download.addEventListener('click',event=>{if(!download.hasAttribute('href'))event.preventDefault()});
  refresh();
  }
- document.addEventListener('DOMContentLoaded',()=>setTimeout(init,0));
+ if(window.minWorksScriptsReady)window.minWorksScriptsReady.then(init);else if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(init,0));else init();
 })();

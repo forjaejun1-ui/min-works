@@ -212,7 +212,7 @@
     const caption=document.createElement('small');caption.textContent=photo.type;el.append(button,caption);$(photo.type?.includes('TBM')?'#tbmPreview':'#progressPreview').appendChild(el);
   });updatePhotoCount('tbmPreview','tbmPhotoCount');updatePhotoCount('progressPreview','progressPhotoCount');}
   function fillRows(processes) {
-    const last=processes.findLastIndex(row=>row.name||row.today||row.work)+1;
+    const last=processes.reduce((count,row,i)=>row.name||row.today||row.work?i+1:count,0);
     resizeProcessRows(Math.max(Number(userSettings.processRows)||1,last));
     $$('#processRows .process-row').forEach((row,i)=>{const p=processes[i]||{};row.querySelector('.process-name').value=p.name||'';row.querySelector('input[type=number]:not(.cumulative-people)').value=p.today??'';row.querySelector('input[placeholder="세부 작업내용"]').value=p.work||'';});
   }
@@ -240,7 +240,7 @@
   window.addEventListener('minworks:save-progress',event=>{
     if(saving)showSaveProgress(event.detail.text,event.detail.percent);
   });
-  async function persist(){if(!window.MIN_WORKS_CLOUD)throw Error("회사 자료 연결을 확인해 주세요.");await window.MIN_WORKS_CLOUD.saveNow();}
+  async function persist(newCard){if(!window.MIN_WORKS_CLOUD)throw Error("회사 자료 연결을 확인해 주세요.");await window.MIN_WORKS_CLOUD.saveNow(newCard);}
   async function submit() {
     if(saving)return;
     const site=form.querySelector('select').value,date=form.querySelector('[type=date]').value,allRows=readRows(),processes=allRows.filter(p=>p.name);
@@ -272,7 +272,7 @@
       const total=processes.reduce((sum,p)=>sum+p.today,0);
       card.innerHTML=`<span class="report-file-icon"><span class="material-symbols-rounded">description</span></span><div><small>${esc(site)}</small><b>${Number(date.slice(5,7))}월 ${Number(date.slice(8,10))}일 공사일보</b><p>${processes.map(p=>esc(p.name)+' '+p.today+'명').join(' · ')} · 총출력 ${total}명 · 사진 ${photos.length}장</p></div><div class="report-author"><span>작성자</span><b>${esc(author)}</b><em class="owner-mark">${card.dataset.author===currentUser?'내 일보':''}</em></div><span class="report-status">작성 완료</span>`;
       if(isNew){$('#todayReports').appendChild(card);attachReportCard(card);}
-      recalculate();await persist();committed=true;showSaveProgress('등록 완료',100);
+      recalculate();await persist(isNew?card:null);committed=true;showSaveProgress('등록 완료',100);
       dirty=false;draftRevision++;clearTimeout(window.minWorksDraftTimer);try{localStorage.removeItem(draftStorage);localStorage.removeItem('minWorksDailyDraftV2');}catch{}
       editing=null;pendingNewCard=null;closeDailyEditor();showView(isNew?'dashboard':'daily');form.reset();fillRows([]);resetPhotos();updateCumulative();refresh();
       window.dispatchEvent(new Event('minworks:reports-changed'));
@@ -321,7 +321,7 @@
       form.querySelector('select').value=data.site;form.querySelector('[type=date]').value=data.date;form.querySelector('textarea').value=data.note||'';fillRows(data.processes||[]);loadPhotos(data.photos||[]);dirty=true;draftSaved=true;restoring=false;notify('임시저장한 내용을 불러왔습니다.');
     }catch{restoring=false;notify('초안을 불러오지 못했습니다. 기존 초안은 보관되어 있습니다.');}
   }
-  window.MIN_WORKS_BATCH={submit,edit,renderViewer,today,briefing,recent,managers,updateCumulative,saveDraft,restoreDraft,editorOpened,queueRefresh,hasDraft:()=>dirty||!!editing,openRecent:link=>{const card=sorted(link.dataset.reportSite)[0];if(card){showView('daily');card.click();}}};
+  window.MIN_WORKS_BATCH={submit,edit,refresh,renderViewer,today,briefing,recent,managers,updateCumulative,saveDraft,restoreDraft,editorOpened,queueRefresh,hasDraft:()=>dirty||!!editing,openRecent:link=>{const card=sorted(link.dataset.reportSite)[0];if(card){showView('daily');card.click();}}};
   function initialize(){
     updateSuggestions();fillRows([]);
     const syncWidth=()=>{const width=$('main').getBoundingClientRect().width;document.body.classList.toggle('mw-compact',width<=820);document.body.style.setProperty('--mw-frame-width',width+'px');};
@@ -359,7 +359,7 @@
       ['cloud_done','회사 자료 저장','로그인 후 회사 자료를 불러옵니다. 공사일보는 회사 저장 완료 안내를 확인하세요. 인터넷 연결이나 저장 충돌로 실패하면 작성 화면에 내용을 유지합니다.']
     ];
     if($('.help-grid'))$('.help-grid').innerHTML=topics.map(([icon,title,body],i)=>`<article class="help-card static"><span class="material-symbols-rounded">${icon}</span><div><small>${String(i+1).padStart(2,'0')}</small><h3>${title}</h3><p>${body}</p></div></article>`).join('');
-    const faq=[['새 일보가 보이지 않아요.','등록 후 자동으로 표시됩니다. 현장 필터가 다른 현장으로 선택되어 있으면 전체 현장을 선택하세요. 상단 새로고침 버튼은 입력 중인 내용을 지우지 않고 목록과 현장 정보를 갱신합니다.'],['작성 중 나갔어요.','자동 임시저장이 켜져 있으면 입력한 공정·사진·특이사항을 다시 불러옵니다. 저장 공간이 부족하면 안내가 표시되며 입력 내용은 유지됩니다.'],['오늘 사진이 없어요.','일보의 작업일이 오늘인지 확인하세요. 어제 작업을 오늘 등록해도 오늘 현장사진에 포함되지 않습니다.'],['누계는 어떻게 계산하나요?','같은 현장과 동일한 공정명의 인원을 해당 작업일까지 합칩니다. 공정명이 다르면 별도 공정으로 계산하므로 자동완성으로 이름을 통일하세요.'],['다른 기기에 자료가 안 보여요.','같은 직원 계정으로 로그인하고 인터넷 연결을 확인하세요. 회사 자료는 주기적으로 갱신됩니다. 작성 중인 화면에서는 자동 새로고침을 미루므로 저장 후 다시 확인하세요.'],['화면 모드는 어떻게 쓰나요?','상단에서 기기를 고르면 해당 폭을 미리 볼 수 있습니다. 실제 기기에서는 화면 폭에 맞춰 자동으로 재배치됩니다.']];
+    const faq=[['새 일보가 보이지 않아요.','등록 후 자동으로 표시됩니다. 현장 필터가 다른 현장으로 선택되어 있으면 전체 현장을 선택하세요. 상단 새로고침 버튼은 입력 중인 내용을 지우지 않고 목록과 현장 정보를 갱신합니다.'],['작성 중 나갔어요.','자동 임시저장이 켜져 있으면 입력한 공정·사진·특이사항을 다시 불러옵니다. 저장 공간이 부족하면 안내가 표시되며 입력 내용은 유지됩니다.'],['오늘 사진이 없어요.','일보의 작업일이 오늘인지 확인하세요. 어제 작업을 오늘 등록해도 오늘 현장사진에 포함되지 않습니다.'],['누계는 어떻게 계산하나요?','같은 현장과 동일한 공정명의 인원을 해당 작업일까지 합칩니다. 공정명이 다르면 별도 공정으로 계산하므로 자동완성으로 이름을 통일하세요.'],['다른 기기에 자료가 안 보여요.','같은 직원 계정으로 로그인하고 인터넷 연결을 확인하세요. 다른 직원이 변경한 자료가 있으면 ‘최신 회사 자료 보기’를 눌러 확인하세요.'],['화면 모드는 어떻게 쓰나요?','상단에서 기기를 고르면 해당 폭을 미리 볼 수 있습니다. 실제 기기에서는 화면 폭에 맞춰 자동으로 재배치됩니다.']];
     if($('.help-details'))$('.help-details').innerHTML='<div class="panel-head"><h2>자주 묻는 사용법</h2></div>'+faq.map(([q,a],i)=>`<details${i===0?' open':''}><summary><span>${i+1}</span>${q}<i class="material-symbols-rounded">expand_more</i></summary><div><p>${a}</p></div></details>`).join('');
     if($('.help-start p'))$('.help-start p').textContent='현장 등록 → 일보 작성 → 저장·확인 순서로 시작하세요. 아래 안내에 따라 사용해 주세요.';
   }

@@ -9,19 +9,24 @@
 /* v38 cloud snapshot bootstrap: apply the last server copy before event handlers are attached. */
 (() => {
   try {
-    const cached=JSON.parse(localStorage.getItem('minWorksCloudSnapshotV1')||'null');
-    const state=cached?.payload;if(!state)return;if(state.constructionReports&&!window.MIN_WORKS_TEST){for(const [key,value] of Object.entries(state.constructionReports)){if(['minworks-imports-v1','minworks-evaluations-v1','minworks-vendors-v1'].includes(key))localStorage.setItem(key,JSON.stringify(value))}}
+    const cached=window.minWorksInitialSnapshot || JSON.parse(localStorage.getItem('minWorksCloudSnapshotV1')||'null');
+    window.minWorksAppliedSnapshot=cached;
+    function storeSection(key,value){
+      try{if(localStorage.getItem(key)!==value)localStorage.setItem(key,value);}
+      catch{window.minWorksSectionStorageFull=true;}
+    }
+    const state=cached?.payload;if(!state)return;if(state.constructionReports&&!window.MIN_WORKS_TEST){for(const [key,value] of Object.entries(state.constructionReports)){if(['minworks-imports-v1','minworks-evaluations-v1','minworks-vendors-v1'].includes(key))storeSection(key,JSON.stringify(value))}}
     const parseNodes=html=>{const host=document.createElement('div');host.innerHTML=html||'';return [...host.children]};
     if(state.siteCards!=null){const host=document.querySelector('.site-list');if(host)host.replaceChildren(...parseNodes(state.siteCards))}
     if(state.siteRows!=null){const table=document.querySelector('.site-table');if(table){document.querySelectorAll('.site-table-row').forEach(node=>node.remove());parseNodes(state.siteRows).forEach(node=>table.appendChild(node))}}
     if(state.reports!=null){document.querySelectorAll('.report-card').forEach(node=>node.remove());const target=document.getElementById('todayReports');parseNodes(state.reports).forEach(node=>{try{node.reportProcesses=JSON.parse(node.dataset.cloudProcesses||'[]');node.reportPhotos=JSON.parse(node.dataset.cloudPhotos||'[]')}catch{}target?.appendChild(node)})}
     if(state.issues!=null){const host=document.querySelector('.issue-board');if(host)host.replaceChildren(...parseNodes(state.issues))}
-    if(Array.isArray(state.safetyRecords))localStorage.setItem('SafetyRecordsV1',JSON.stringify(state.safetyRecords));
-    if(Array.isArray(state.tbmReports))localStorage.setItem('minWorksTbmRecordsV1',JSON.stringify(state.tbmReports));
-    if(Array.isArray(state.payments))localStorage.setItem('minWorksPlannedPaymentsV2',JSON.stringify(state.payments));
-    if(Array.isArray(state.receivables))localStorage.setItem('minWorksReceivablesV2',JSON.stringify(state.receivables));
-    if(state.vendorDirectory&&typeof state.vendorDirectory==='object')localStorage.setItem('minWorksVendorDirectoryV1',JSON.stringify(state.vendorDirectory));
-    if(state.qaBoard&&typeof state.qaBoard==='object')localStorage.setItem('minWorksQaBoardV1',JSON.stringify(state.qaBoard));
+    if(Array.isArray(state.safetyRecords))storeSection('SafetyRecordsV1',JSON.stringify(state.safetyRecords));
+    if(Array.isArray(state.tbmReports))storeSection('minWorksTbmRecordsV1',JSON.stringify(state.tbmReports));
+    if(Array.isArray(state.payments))storeSection('minWorksPlannedPaymentsV2',JSON.stringify(state.payments));
+    if(Array.isArray(state.receivables))storeSection('minWorksReceivablesV2',JSON.stringify(state.receivables));
+    if(state.vendorDirectory&&typeof state.vendorDirectory==='object')storeSection('minWorksVendorDirectoryV1',JSON.stringify(state.vendorDirectory));
+    if(state.qaBoard&&typeof state.qaBoard==='object')storeSection('minWorksQaBoardV1',JSON.stringify(state.qaBoard));
     const names=[...document.querySelectorAll('.site-table-row')].map(row=>row.dataset.siteRow).filter(Boolean);
     ['#dailyForm>div:first-child select','#issueSite','#paymentSite','#receivableSite'].forEach(selector=>{const select=document.querySelector(selector);if(select){select.replaceChildren();names.forEach(name=>select.add(new Option(name,name)))}});
     const current=document.getElementById('currentSiteName');if(current&&names[0])current.textContent=names[0];
@@ -35,13 +40,14 @@
   'use strict';
   const API='https://min-works-api.forjaejun.workers.dev',TOKEN_KEY='minWorksSessionV1',CACHE_KEY='minWorksCloudSnapshotV1';
   let version=Number(window.MIN_WORKS_CLOUD_VERSION)||0,timer=null,started=false,saving=false,dirty=false;
+  let baseline=window.minWorksAppliedSnapshot?.payload || {};
   const token=()=>localStorage.getItem(TOKEN_KEY)||'';
   const uploadedPhotos=new WeakMap();
   const saveProgress=(text,percent)=>window.dispatchEvent(new CustomEvent('minworks:save-progress',{detail:{text,percent}}));
   async function request(path,options={}){
     const headers={...(options.headers||{}),Authorization:`Bearer ${token()}`};if(options.json)headers['Content-Type']='application/json';
     const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),options.form?90000:25000);
-    try{const response=await fetch(API+path,{method:options.method||'GET',headers,body:options.form||options.json&&JSON.stringify(options.json),signal:controller.signal});let data={};try{data=await response.json()}catch(error){if(controller.signal.aborted)throw error}return{response,data}}
+    try{const response=await fetch(API+path,{method:options.method||'GET',headers,cache:'no-store',body:options.form||options.json&&JSON.stringify(options.json),signal:controller.signal});let data={};try{data=await response.json()}catch(error){if(controller.signal.aborted)throw error}return{response,data}}
     catch(error){if(controller.signal.aborted){const e=new Error(options.form?'사진 저장 응답이 늦습니다. 입력 내용은 유지되니 잠시 후 다시 등록해 주세요.':'회사 서버 응답이 늦습니다. 입력 내용은 유지됩니다.');e.code='SAVE_TIMEOUT';throw e}throw error}
     finally{clearTimeout(timeout)}
   }
@@ -67,7 +73,7 @@
     }
   }
   function capture(){document.querySelectorAll('.report-card').forEach(card=>{card.dataset.cloudProcesses=JSON.stringify(card.reportProcesses||[]);card.dataset.cloudPhotos=JSON.stringify((card.reportPhotos||[]).map(({file,...photo})=>photo))});return{
-    ...(()=>{try{return JSON.parse(localStorage.getItem(CACHE_KEY)||'{}').payload||{}}catch{return{}}})(),
+    ...baseline,
     vendorDirectory:(()=>{try{return JSON.parse(localStorage.getItem('minWorksVendorDirectoryV1')||'null')||undefined}catch{return undefined}})(),
     siteCards:[...document.querySelectorAll('.site-list .site-card')].map(cleanOuter).join(''),
     siteRows:[...document.querySelectorAll('.site-table-row')].map(cleanOuter).join(''),
@@ -75,18 +81,150 @@
     issues:[...document.querySelectorAll('.issue-detail-card')].map(cleanOuter).join(''),
     constructionReports:Object.fromEntries(['minworks-imports-v1','minworks-evaluations-v1','minworks-vendors-v1'].map(key=>{try{return[key,JSON.parse(localStorage.getItem(key)||(key.includes('evaluations')?'{}':'[]'))]}catch{return[key,key.includes('evaluations')?{}:[]]}})),safetyRecords:readArray('SafetyRecordsV1'),tbmReports:readArray('minWorksTbmRecordsV1'),payments:readArray('minWorksPlannedPaymentsV2'),receivables:readArray('minWorksReceivablesV2'),qaBoard:(()=>{try{return JSON.parse(localStorage.getItem('minWorksQaBoardV1')||'{"posts":[],"plans":[]}')}catch{return{posts:[],plans:[]}}})(),savedAt:new Date().toISOString()
   }}
-  function cache(payload,nextVersion){try{localStorage.setItem(CACHE_KEY,JSON.stringify({version:nextVersion,payload}));}catch{notify("회사 저장은 완료됐지만 이 기기의 임시 보관 공간이 부족합니다.");}window.MIN_WORKS_CLOUD_VERSION=nextVersion;version=nextVersion}
+  function cache(payload,nextVersion){baseline=payload;try{localStorage.setItem(CACHE_KEY,JSON.stringify({version:nextVersion,payload}));}catch{/* The current session keeps the acknowledged server copy in memory. */}window.MIN_WORKS_CLOUD_VERSION=nextVersion;version=nextVersion}
   function isEditing(){if(window.MIN_WORKS_VENDOR_DIRTY||window.MIN_WORKS_SAFETY_DIRTY||window.MIN_WORKS_REPORT_DIRTY||window.MIN_WORKS_TRANSACTION||window.MIN_WORKS_TBM_DIRTY)return true;return !!document.querySelector('.modal.show,.daily-editor:not([hidden]),.report-viewer.show,.issue-peek.show,.export-modal.show,.report-download-modal.show')}
-  async function pull(reload=true){const{response,data}=await request('/company-state');if(!response.ok)throw new Error(data.error||'회사 자료를 불러오지 못했습니다.');if(data.version>version&&data.payload){if(reload&&isEditing())return data;if(reload){cache(data.payload,data.version);(window.MIN_WORKS_RELOAD_COMPANY || (()=>location.reload()))()}}return data}
-  function mergeHtml(remoteHtml,localHtml,type){const host=document.createElement('div'),items=new Map(),key=node=>type==='site'?node.dataset.siteId||node.dataset.site||node.dataset.siteRow:type==='report'?`${node.dataset.site||''}|${node.dataset.createdAt||node.outerHTML}`:node.dataset.issueId||`${node.dataset.issueCard||''}|${node.querySelector('h3')?.textContent||node.outerHTML}`;host.innerHTML=remoteHtml||'';[...host.children].forEach(node=>items.set(key(node),node.outerHTML));host.innerHTML=localHtml||'';[...host.children].forEach(node=>items.set(key(node),node.outerHTML));return[...items.values()].join('')}
-  function mergePayload(remote={},local={}){if(remote.constructionReports&&local.constructionReports&&JSON.stringify(remote.constructionReports)!==JSON.stringify(local.constructionReports))throw new Error('보고서 저장 충돌: 다른 창의 수정이 있어 자동 덮어쓰기를 중단했습니다. 현재 자료를 보존한 뒤 다시 확인해 주세요.');const union=(first,second)=>[...new Map([...(Array.isArray(first)?first:[]),...(Array.isArray(second)?second:[])].map(item=>[JSON.stringify(item),item])).values()];const mergeById=(a,b)=>[...new Map([...(Array.isArray(a)?a:[]),...(Array.isArray(b)?b:[])].map(item=>[item.id,item])).values()];if(remote.safetyRecords&&local.safetyRecords&&JSON.stringify(remote.safetyRecords)!==JSON.stringify(local.safetyRecords))throw Error('안전서류가 다른 기기에서 변경되었습니다. 새로고침 후 다시 저장해 주세요.');return{...remote,...local,vendorDirectory:remote.vendorDirectory||local.vendorDirectory,safetyRecords:local.safetyRecords||remote.safetyRecords||[],tbmReports:[...new Map([...(remote.tbmReports||[]),...(local.tbmReports||[])].map(r=>[r.id,r])).values()],constructionReports:remote.constructionReports||local.constructionReports,siteCards:mergeHtml(remote.siteCards,local.siteCards,'site'),siteRows:mergeHtml(remote.siteRows,local.siteRows,'site'),reports:mergeHtml(remote.reports,local.reports,'report'),issues:mergeHtml(remote.issues,local.issues,'issue'),payments:union(remote.payments,local.payments),receivables:union(remote.receivables,local.receivables),qaBoard:{posts:mergeById(remote.qaBoard?.posts,local.qaBoard?.posts),plans:mergeById(remote.qaBoard?.plans,local.qaBoard?.plans)},savedAt:new Date().toISOString()}}
-  async function save(explicit=false){if(saving||(!explicit&&window.MIN_WORKS_TRANSACTION))return;if(!token()){if(explicit)throw new Error("로그인이 필요합니다.");return;}clearTimeout(timer);saving=true;dirty=false;try{await uploadPendingPhotos();let payload=capture(),baseVersion=version,merged=false;if(!explicit){try{const previous=JSON.parse(localStorage.getItem(CACHE_KEY)||'null')?.payload;if(previous&&JSON.stringify({...previous,savedAt:''})===JSON.stringify({...payload,savedAt:''}))return;}catch{}}let{response,data}=await writeSnapshot(payload,baseVersion);if(response.status===409&&explicit)throw new Error("다른 직원이 자료를 변경했습니다. 작성 내용은 유지됩니다. 임시저장 후 새로고침하여 다시 확인하세요.");if(response.status===409){const latest=await request('/company-state');if(!latest.response.ok)throw new Error(latest.data.error||'최신 회사 자료를 불러오지 못했습니다.');payload=mergePayload(latest.data.payload,payload);baseVersion=Number(latest.data.version)||0;merged=true;({response,data}=await writeSnapshot(payload,baseVersion));if(response.ok)notify('다른 직원의 변경사항과 합쳐 저장했습니다.')}if(!response.ok)throw new Error(data.error||'회사 자료를 저장하지 못했습니다.');cache(payload,data.version);if(merged){(window.MIN_WORKS_RELOAD_COMPANY || (()=>location.reload()))();return}window.refreshMinWorksStorage?.()}catch(error){if(explicit)throw error;notify(error.message)}finally{saving=false;if(dirty)timer=setTimeout(save,3000)}}
+  function offerUpdate(){
+    if(document.getElementById('companyUpdateButton'))return;
+    const button=document.createElement('button');
+    button.id='companyUpdateButton';button.type='button';button.className='primary';
+    button.textContent='최신 회사 자료 보기';
+    button.style.cssText='position:fixed;bottom:calc(80px + env(safe-area-inset-bottom));right:16px;z-index:100';
+    button.onclick=()=>{
+      if(isEditing()||saving||dirty){notify('작성 중인 내용을 저장하거나 닫은 뒤 다시 눌러주세요.');return;}
+      window.MIN_WORKS_RELOAD_COMPANY();
+    };
+    document.body.appendChild(button);
+  }
+  async function pull(showUpdate=true){
+    const {response,data}=await request('/company-state');
+    if(!response.ok||!Number.isInteger(data.version))throw new Error(data.error||'회사 자료를 불러오지 못했습니다.');
+    if(showUpdate && data.version>version && !saving && !dirty && !isEditing()){
+      const latest=data.payload;
+      const otherKeys=new Set([...Object.keys(baseline),...Object.keys(latest||{})]);
+      otherKeys.delete('reports');otherKeys.delete('savedAt');
+      if(latest && [...otherKeys].every(key=>!differs(latest[key],baseline[key]))){
+        if(latest.reports!==baseline.reports){
+          const host=document.createElement('div');
+          host.innerHTML=latest.reports||'';
+          const target=document.getElementById('todayReports');
+          if(!target){offerUpdate();return data;}
+          const reports=[...host.children];
+          for(const card of reports){
+            card.reportProcesses=JSON.parse(card.dataset.cloudProcesses||'[]');
+            card.reportPhotos=JSON.parse(card.dataset.cloudPhotos||'[]');
+            attachReportCard(card);
+          }
+          document.querySelectorAll('.report-card').forEach(node=>node.remove());
+          target.append(...reports);
+          window.MIN_WORKS_BATCH.refresh();
+          rendered.reports=capture().reports;
+        }
+        cache(latest,data.version);
+        document.getElementById('companyUpdateButton')?.remove();
+      }else offerUpdate();
+    }else if(showUpdate && data.version===0 && version>0)offerUpdate();
+    return data;
+  }
+  async function insertReport(card){
+    const html=cleanOuter(card);
+    let source={payload:baseline,version};
+    for(let attempt=0;attempt<3;attempt++){
+      const previous=source.payload || {};
+      const holder=document.createElement('div');
+      holder.innerHTML=previous.reports || '';
+      const existing=[...holder.children].find(node=>node.dataset.recordId===card.dataset.recordId);
+      if(existing){
+        if(existing.dataset.createdAt!==card.dataset.createdAt||existing.dataset.author!==card.dataset.author)throw Error('일보 번호가 겹쳤습니다. 작성 내용을 유지합니다.');
+        if(existing.dataset.note!==card.dataset.note || existing.dataset.reportDate!==card.dataset.reportDate ||
+           existing.dataset.cloudProcesses!==card.dataset.cloudProcesses || existing.dataset.cloudPhotos!==card.dataset.cloudPhotos)
+          throw Error('같은 번호의 일보가 이미 저장되어 내용이 달라졌습니다. 저장된 일보를 확인해 주세요.');
+        if(source.version!==version)offerUpdate();
+        return;
+      }
+      const next={...previous,reports:(previous.reports || '')+html,savedAt:new Date().toISOString()};
+      const {response,data}=await writeSnapshot(next,source.version);
+      if(response.ok){
+        if(source.version===version)cache(next,data.version);
+        else offerUpdate(); // Other sections on screen still represent the older version.
+        return;
+      }
+      if(response.status!==409)throw Error(data.error||'공사일보를 저장하지 못했습니다.');
+      source=await pull(false);
+    }
+    throw Error('회사 자료가 연속으로 변경됐습니다. 등록을 다시 눌러주세요.');
+  }
+  function differs(a,b){return JSON.stringify(a)!==JSON.stringify(b);}
+  async function save(explicit=false,newCard=null){
+    if(saving||(!explicit&&window.MIN_WORKS_TRANSACTION))return;
+    if(!token()){if(explicit)throw Error('로그인이 필요합니다.');return;}
+    clearTimeout(timer);
+    const pendingChanges=dirty;
+    saving=true;dirty=false;
+    try{
+      await uploadPendingPhotos();
+      if(!explicit&&window.MIN_WORKS_TRANSACTION)return;
+      if(newCard){
+        await insertReport(newCard);
+        rendered.reports=[...document.querySelectorAll('.report-card')].map(cleanOuter).join('');
+        if(pendingChanges)dirty=true;
+      }else{
+        if(window.minWorksSectionStorageFull){
+          if(explicit)throw Error('기기의 임시 보관 공간이 부족해 회사 자료를 안전하게 갱신할 수 없습니다.');
+          return;
+        }
+        const local=capture();
+        const changes=Object.keys(local).filter(key=>key!=='savedAt' && (!version||differs(local[key],rendered[key])));
+        if(!changes.length)return;
+        const patch=Object.fromEntries(changes.map(key=>[key,local[key]]));
+        let next={...baseline,...patch,savedAt:local.savedAt};
+        let result=await writeSnapshot(next,version);
+        let usedLatest=false;
+        if(result.response.status===409){
+          const latest=await pull(false);
+          offerUpdate();
+          if(changes.some(key=>differs(baseline[key],latest.payload?.[key]) && differs(patch[key],latest.payload?.[key])))
+            throw Error('같은 자료가 다른 기기에서 수정됐습니다. 작성 내용은 유지됩니다. 최신 자료를 확인해 주세요.');
+          next={...latest.payload,...patch,savedAt:local.savedAt};
+          result=await writeSnapshot(next,latest.version);
+          usedLatest=true;
+        }
+        if(!result.response.ok)throw Error(result.data.error||'회사 자료를 저장하지 못했습니다.');
+        if(!usedLatest)cache(next,result.data.version);
+        rendered=local;
+      }
+      try{window.refreshMinWorksStorage?.();}catch(error){console.warn('Storage display refresh failed',error);}
+    }catch(error){
+      if(explicit)throw error;
+      notify(error.message);
+    }finally{
+      saving=false;
+      if(dirty)timer=setTimeout(save,3000);
+    }
+  }
   function queue(){if(window.MIN_WORKS_TRANSACTION)return;if(!started||document.body.classList.contains('auth-pending'))return;dirty=true;if(saving)return;clearTimeout(timer);timer=setTimeout(save,900)}
-  window.MIN_WORKS_CLOUD={saveNow:async()=>{if(!started)throw new Error("회사 자료 연결을 확인한 뒤 다시 저장해 주세요.");const until=Date.now()+30000;if(saving)saveProgress('이전 저장 완료 기다리는 중…');while(saving){if(Date.now()>until)throw new Error("이전 저장을 기다리는 중입니다. 잠시 뒤 다시 저장하세요.");await new Promise(r=>setTimeout(r,100));}return save(true);}};
+  window.MIN_WORKS_CLOUD={saveNow:async(newCard=null)=>{if(!started)await init();const until=Date.now()+30000;if(saving)saveProgress('이전 저장 완료 기다리는 중…');while(saving){if(Date.now()>until)throw new Error("이전 저장을 기다리는 중입니다. 잠시 뒤 다시 저장하세요.");await new Promise(r=>setTimeout(r,100));}return save(true,newCard);}};
   window.addEventListener('minworks:qa-changed',queue);
-  function startObservers(){if(started)return;started=true;['.site-list','.site-table','#dailyListScreen','#issuesView','#mwPaymentList','#mwReceivableList'].forEach(selector=>{const node=document.querySelector(selector);if(node)new MutationObserver(queue).observe(node,{childList:true,subtree:true,attributes:true,attributeFilter:['data-progress','data-status','data-comments','data-due','data-checks','data-issue-owner']})});document.addEventListener('click',event=>{if(event.target.closest('#savePayment,#saveReceivable,#mwSavePayment,#mwSaveReceivable,#saveIssue,#saveIssueOwnerChange,#createSite,#deleteIssue,#toggleIssueStatus,#addIssueComment,#checkReport,[data-site-edit],[data-site-delete],.record-edit-button,.record-delete-button'))setTimeout(queue,100)});setInterval(async()=>{if(saving||dirty||!token())return;try{await pull(true)}catch{}},15000)}
-  async function init(){if(!token())return;try{const remote=await pull(false);if(remote.version===0&&version>0){localStorage.removeItem(CACHE_KEY);window.MIN_WORKS_CLOUD_VERSION=0;version=0;(window.MIN_WORKS_RELOAD_COMPANY || (()=>location.reload()))();return}if(remote.version>version&&remote.payload){cache(remote.payload,remote.version);(window.MIN_WORKS_RELOAD_COMPANY || (()=>location.reload()))();return}startObservers();if(remote.version===0)queue();window.refreshMinWorksStorage?.()}catch(error){notify(error.message)}}
-  document.addEventListener('minworks:user-ready',()=>setTimeout(init,200));window.addEventListener('minworks:reports-changed',queue);
+  function startObservers(){if(started)return;started=true;['.site-list','.site-table','#dailyListScreen','#issuesView','#mwPaymentList','#mwReceivableList'].forEach(selector=>{const node=document.querySelector(selector);if(node)new MutationObserver(queue).observe(node,{childList:true,subtree:true,attributes:true,attributeFilter:['data-progress','data-status','data-comments','data-due','data-checks','data-issue-owner']})});document.addEventListener('click',event=>{if(event.target.closest('#savePayment,#saveReceivable,#mwSavePayment,#mwSaveReceivable,#saveIssue,#saveIssueOwnerChange,#createSite,#deleteIssue,#toggleIssueStatus,#addIssueComment,#checkReport,[data-site-edit],[data-site-delete],.record-edit-button,.record-delete-button'))setTimeout(queue,100)});setInterval(async()=>{if(document.hidden||saving||dirty||!token())return;try{await pull(true)}catch{}},15000)}
+  let connecting, rendered;
+  function init(){
+    if(started)return Promise.resolve();
+    if(!token())return Promise.reject(Error('로그인이 필요합니다.'));
+    if(!connecting)connecting=(async()=>{
+      const remote=window.minWorksInitialSnapshot || await pull(false);
+      if(remote.version!==version){
+        // A new login or recovered offline session must hydrate the full screen first.
+        if(!isEditing() && !window.minWorksBootHadToken){window.MIN_WORKS_RELOAD_COMPANY();throw Error('최신 회사 자료를 여는 중입니다.');}
+        offerUpdate();
+      }
+      rendered=capture();
+      window.minWorksInitialSnapshot=null;window.minWorksAppliedSnapshot=null;
+      startObservers();
+      if(remote.version===0 && version===0)queue();
+      window.refreshMinWorksStorage?.();
+    })().finally(()=>{connecting=null;});
+    return connecting;
+  }
+  document.addEventListener('minworks:user-ready',()=>init().catch(error=>notify(error.message)));window.addEventListener('minworks:reports-changed',queue);
 })();
 
 /* SOURCE: app.js */
@@ -1662,7 +1800,7 @@ applyExtendedSettings();
     installButton.querySelector('small').textContent = '홈 화면에서 실행하세요';
   });
 
-  if (!window.MIN_WORKS_TEST && 'serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+  if (!window.MIN_WORKS_TEST && 'serviceWorker' in navigator) {const register=()=>navigator.serviceWorker.register('./sw.js').catch(()=>{});if(document.readyState==='complete')register();else window.addEventListener('load',register,{once:true});}
 
   const hashView = location.hash.replace('#', '');
   if (['dashboard', 'sites', 'daily', 'risk', 'documents', 'finance', 'vendors', 'issues', 'settings', 'help', 'patch', 'qa', 'storage'].includes(hashView)) window.showView?.(hashView);
@@ -2176,7 +2314,8 @@ window.MIN_WORKS_CONFIG = Object.freeze({
   let currentUser = null;
   let codeTimer = null;
 
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initSecurity,{once:true});else initSecurity();
+  if(window.minWorksScriptsReady)window.minWorksScriptsReady.then(initSecurity);
+  else if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initSecurity,{once:true});else initSecurity();
 
   async function initSecurity() {
     document.body.classList.add('auth-pending');
