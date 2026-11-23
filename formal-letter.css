@@ -1,0 +1,51 @@
+#lettersView {--ink:#182621;--soft:#53685e;--edge:#dce5db;color:var(--ink);max-width:1350px;margin:0 auto}
+#lettersView .letter-head {display:flex;align-items:center;justify-content:flex-start;gap:16px;margin:4px 0 23px}
+#lettersView .letter-mark {display:grid;place-items:center;flex:none;width:54px;height:54px;border-radius:17px;background:#dbedb6;color:#364d29;font-size:28px}
+#lettersView h2 {font-size:clamp(25px,3vw,38px);letter-spacing:-.055em;line-height:1.14;margin:0}
+#lettersView .letter-head p,#lettersView .letter-pane small {color:var(--soft);line-height:1.55}
+#lettersView .letter-head p {margin:6px 0 0;font-size:14px}
+#lettersView .letter-grid {display:grid;grid-template-columns:1fr 1fr;gap:16px}
+#lettersView .letter-pane {display:flex;flex-direction:column;align-items:stretch;min-width:0;padding:clamp(17px,2vw,28px);border:1px solid var(--edge);border-radius:18px;background:white}
+#lettersView .letter-result {background:#f4f8f1}
+#lettersView h3 {display:flex;align-items:center;gap:9px;margin:0 0 22px;font-size:19px;letter-spacing:-.04em}
+#lettersView h3 span {font-size:21px;color:#526d3e}
+#lettersView label {font-size:13px;font-weight:700;margin:0 0 7px}
+#lettersView select,#lettersView textarea {box-sizing:border-box;background:white;border:1px solid #cad7c9;border-radius:10px;color:var(--ink);font:inherit;width:100%}
+#lettersView select {padding:10px 12px;margin-bottom:16px}
+#lettersView textarea {padding:14px;min-height:190px;line-height:1.7;flex:1;resize:vertical}
+#lettersView textarea::placeholder {color:#758179}
+#lettersView :is(textarea,select,button):focus-visible {outline:3px solid #82ad5f;outline-offset:2px}
+#lettersView .letter-foot {display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px}
+#lettersView .letter-foot>span {color:var(--soft);font-size:12px;line-height:1.5}
+#lettersView button {flex:none;display:inline-flex;align-items:center;gap:6px;background:#263e30;border:1px solid #263e30;color:white;border-radius:10px;padding:11px 14px;min-height:42px;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+#lettersView button .material-symbols-rounded {font-size:18px}
+#lettersView #letterCopy {background:white;color:var(--ink);border-color:var(--edge)}
+#lettersView button:disabled {opacity:.46;cursor:default}
+#lettersView small {margin-top:13px;font-size:11px}
+@media(max-width:820px){#lettersView .letter-grid {grid-template-columns:1fr}#lettersView textarea,#lettersView select {font-size:16px}#lettersView .letter-head {align-items:flex-start}#lettersView .letter-pane {padding:16px}}
+#lettersView .letter-input {margin-bottom:16px;padding:16px 22px}
+#lettersView .letter-input-head,#lettersView .letter-brand,#lettersView .letter-pair {display:flex;align-items:center;gap:10px}
+#lettersView .letter-input-head {justify-content:space-between;margin-bottom:10px;flex-wrap:wrap}
+#lettersView .letter-input-head>label:first-child {font-size:17px}
+#lettersView .letter-input-head label {margin:0}
+#lettersView .letter-purpose {display:flex;align-items:center;gap:8px;white-space:nowrap}
+#lettersView .letter-purpose select {width:auto;margin:0;padding:6px 9px}
+#lettersView #letterMemo {min-height:80px}
+#letterCount {align-self:flex-end;color:#65716a;font-size:11px;margin-top:4px}
+#lettersView .letter-brand {margin-bottom:14px;min-height:44px}
+#lettersView .letter-brand>span {border-radius:11px;background:#e7f0e4;color:#375e3e;padding:9px;font-size:22px}
+#lettersView [data-letter-provider=pc] .letter-brand>span {background:#e7edf3;color:#38556c}
+#lettersView .letter-brand h3 {margin:0;font-size:21px}
+#lettersView .letter-brand p,#lettersView details p {margin:3px 0 0;color:#53685e;font-size:13px;line-height:1.5}
+#lettersView [data-letter-provider=pc] {background:#f7f9fb}
+#lettersView .letter-run {align-self:flex-start;margin-bottom:16px}
+#lettersView .letter-output {min-height:185px}
+#lettersView .letter-copy,#lettersView #letterPair {background:white;color:#253e32;border-color:#cbd6cc}
+#lettersView .letter-privacy {display:block;margin:12px 3px}
+#lettersView details {font-size:13px;margin:-4px 0 12px}
+#lettersView details summary {cursor:pointer;color:#354e64;font-weight:700;width:fit-content;padding:4px 0}
+#lettersView details a {display:inline-block;margin:8px 0;color:#285c41;font-weight:700}
+#lettersView .letter-pair input {min-width:0;flex:1;padding:9px;border:1px solid #ccd7cf;border-radius:7px}
+@media(max-width:820px){#lettersView .letter-input{padding:16px}#lettersView .letter-pair input{font-size:16px}}
+#lettersView .letter-glyph {display:grid;place-items:center;flex:none;box-sizing:border-box;width:42px;height:42px;font:700 20px/1 monospace}#lettersView #letterConnect{margin:12px 0 0}#lettersView .letter-brand{min-height:48px}
+@media(max-width:700px){.mobile-all-menu .mobile-menu-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.mobile-menu-grid>button{min-width:0;overflow:hidden}.mobile-menu-grid .material-symbols-rounded{max-width:100%;overflow:hidden}.mobile-all-menu>section{max-height:90dvh;overflow-y:auto}}

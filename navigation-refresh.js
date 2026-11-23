@@ -34,6 +34,7 @@
       </div>
     </div>
     <button class="nav-item" data-view="vendors"><span class="nav-icon material-symbols-rounded">group</span><b>협력업체</b></button>
+    <button class="nav-item" data-view="letters"><span class="nav-icon" aria-hidden="true">✎</span><b>공문다듬기</b></button>
     <button class="nav-item" data-view="issues"><span class="nav-icon material-symbols-rounded">report_problem</span><b>이슈 관리</b></button>
     <div class="nav-divider"></div>
     <button class="nav-item nav-utility" data-view="settings"><span class="nav-icon material-symbols-rounded">settings</span><b>설정</b></button>

@@ -82,7 +82,7 @@
     constructionReports:Object.fromEntries(['minworks-imports-v1','minworks-evaluations-v1','minworks-vendors-v1'].map(key=>{try{return[key,JSON.parse(localStorage.getItem(key)||(key.includes('evaluations')?'{}':'[]'))]}catch{return[key,key.includes('evaluations')?{}:[]]}})),safetyRecords:readArray('SafetyRecordsV1'),tbmReports:readArray('minWorksTbmRecordsV1'),payments:readArray('minWorksPlannedPaymentsV2'),receivables:readArray('minWorksReceivablesV2'),qaBoard:(()=>{try{return JSON.parse(localStorage.getItem('minWorksQaBoardV1')||'{"posts":[],"plans":[]}')}catch{return{posts:[],plans:[]}}})(),savedAt:new Date().toISOString()
   }}
   function cache(payload,nextVersion){baseline=payload;try{localStorage.setItem(CACHE_KEY,JSON.stringify({version:nextVersion,payload}));}catch{/* The current session keeps the acknowledged server copy in memory. */}window.MIN_WORKS_CLOUD_VERSION=nextVersion;version=nextVersion}
-  function isEditing(){if(window.MIN_WORKS_VENDOR_DIRTY||window.MIN_WORKS_SAFETY_DIRTY||window.MIN_WORKS_REPORT_DIRTY||window.MIN_WORKS_TRANSACTION||window.MIN_WORKS_TBM_DIRTY)return true;return !!document.querySelector('.modal.show,.daily-editor:not([hidden]),.report-viewer.show,.issue-peek.show,.export-modal.show,.report-download-modal.show')}
+  function isEditing(){if(document.querySelector('#lettersView.active') && ['letterMemo','letter-gemini','letter-pc'].some(id=>document.getElementById(id)?.value.trim()))return true;if(window.MIN_WORKS_VENDOR_DIRTY||window.MIN_WORKS_SAFETY_DIRTY||window.MIN_WORKS_REPORT_DIRTY||window.MIN_WORKS_TRANSACTION||window.MIN_WORKS_TBM_DIRTY)return true;return !!document.querySelector('.modal.show,.daily-editor:not([hidden]),.report-viewer.show,.issue-peek.show,.export-modal.show,.report-download-modal.show')}
   function offerUpdate(){
     if(document.getElementById('companyUpdateButton'))return;
     const button=document.createElement('button');
@@ -230,7 +230,7 @@
 /* SOURCE: app.js */
 const views = document.querySelectorAll('.view');
 const navButtons = document.querySelectorAll('[data-view]');
-const titles = {dashboard:'좋은 아침입니다',sites:'현장관리',daily:'공사일보',documents:'현장서류',finance:'공사보고·분석',vendors:'협력업체',issues:'이슈 관리',calendar:'회사 일정',settings:'사용자 설정',help:'앱 사용법',patch:'패치노트',qa:'버그·개선 Q&A',storage:'저장공간 정리'};
+const titles = {dashboard:'좋은 아침입니다',sites:'현장관리',daily:'공사일보',documents:'현장서류',finance:'공사보고·분석',vendors:'협력업체',letters:'공문다듬기',issues:'이슈 관리',calendar:'회사 일정',settings:'사용자 설정',help:'앱 사용법',patch:'패치노트',qa:'버그·개선 Q&A',storage:'저장공간 정리'};
 function currentSiteNames(){return [...new Set([...document.querySelectorAll('.site-table-row')].map(row=>row.dataset.siteRow?.trim()).filter(Boolean))]}
 function syncOperationalSiteOptions(){
   const names=currentSiteNames(),selectors=['#dailyForm>div:first-child select','#issueSite','#paymentSite','#receivableSite','#mwPaymentSite','#mwReceivableSite'];
@@ -1549,7 +1549,7 @@ applyExtendedSettings();
     }
     const sheet = document.createElement('div');
     sheet.className = 'mobile-all-menu';
-    sheet.innerHTML = `<div class="mobile-menu-backdrop"></div><section><header><div><p class="eyebrow">ALL MENU</p><h2>전체 메뉴</h2></div><button class="mobile-menu-close" aria-label="닫기">×</button></header><div class="mobile-menu-grid"><button data-menu-view="dashboard"><span class="material-symbols-rounded">home</span><b>홈</b></button><button data-menu-view="sites"><span class="material-symbols-rounded">construction</span><b>현장관리</b></button><button data-menu-view="daily"><span class="material-symbols-rounded">description</span><b>공사일보</b></button><button data-menu-view="documents"><span class="material-symbols-rounded">folder_open</span><b>현장서류</b></button><button data-menu-view="vendors"><span class="material-symbols-rounded">group</span><b>협력업체</b></button><button data-menu-view="settings"><span class="material-symbols-rounded">settings</span><b>설정</b></button><button data-menu-view="help"><span class="material-symbols-rounded">help</span><b>사용법</b></button><button data-menu-view="patch"><span class="material-symbols-rounded">new_releases</span><b>패치노트</b></button><button data-menu-view="qa"><span class="material-symbols-rounded">forum</span><b>버그·개선 Q&amp;A</b></button><button data-menu-view="storage"><span class="material-symbols-rounded">storage</span><b>저장공간</b></button></div></section>`;
+    sheet.innerHTML = `<div class="mobile-menu-backdrop"></div><section><header><div><p class="eyebrow">ALL MENU</p><h2>전체 메뉴</h2></div><button class="mobile-menu-close" aria-label="닫기">×</button></header><div class="mobile-menu-grid"><button data-menu-view="dashboard"><span class="material-symbols-rounded">home</span><b>홈</b></button><button data-menu-view="sites"><span class="material-symbols-rounded">construction</span><b>현장관리</b></button><button data-menu-view="daily"><span class="material-symbols-rounded">description</span><b>공사일보</b></button><button data-menu-view="documents"><span class="material-symbols-rounded">folder_open</span><b>현장서류</b></button><button data-menu-view="vendors"><span class="material-symbols-rounded">group</span><b>협력업체</b></button><button data-menu-view="letters"><span aria-hidden="true">✎</span><b>공문다듬기</b></button><button data-menu-view="issues"><span class="material-symbols-rounded">report_problem</span><b>이슈 관리</b></button><button data-menu-view="settings"><span class="material-symbols-rounded">settings</span><b>설정</b></button><button data-menu-view="help"><span class="material-symbols-rounded">help</span><b>사용법</b></button><button data-menu-view="patch"><span class="material-symbols-rounded">new_releases</span><b>패치노트</b></button><button data-menu-view="qa"><span class="material-symbols-rounded">forum</span><b>버그·개선 Q&amp;A</b></button><button data-menu-view="storage"><span class="material-symbols-rounded">storage</span><b>저장공간</b></button></div></section>`;
     document.body.appendChild(sheet);
     sheet.querySelector('.mobile-menu-close').addEventListener('click', closeMenu);
     sheet.querySelector('.mobile-menu-backdrop').addEventListener('click', closeMenu);
@@ -1803,7 +1803,7 @@ applyExtendedSettings();
   if (!window.MIN_WORKS_TEST && 'serviceWorker' in navigator) {const register=()=>navigator.serviceWorker.register('./sw.js').catch(()=>{});if(document.readyState==='complete')register();else window.addEventListener('load',register,{once:true});}
 
   const hashView = location.hash.replace('#', '');
-  if (['dashboard', 'sites', 'daily', 'risk', 'documents', 'finance', 'vendors', 'issues', 'settings', 'help', 'patch', 'qa', 'storage'].includes(hashView)) window.showView?.(hashView);
+  if (['dashboard', 'sites', 'daily', 'risk', 'documents', 'finance', 'vendors', 'letters', 'issues', 'settings', 'help', 'patch', 'qa', 'storage'].includes(hashView)) window.showView?.(hashView);
 })();
 
 
